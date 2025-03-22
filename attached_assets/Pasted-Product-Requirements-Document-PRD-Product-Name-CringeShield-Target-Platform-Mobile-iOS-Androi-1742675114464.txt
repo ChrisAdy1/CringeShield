@@ -1,0 +1,119 @@
+Product Requirements Document (PRD)
+Product Name: CringeShield
+Target Platform: Mobile (iOS & Android)
+Primary Users: People with camera shyness or fear of appearing cringe on video
+Tech Stack Requirements: Tech stack agnostic, but UI components must use shadcn/ui
+
+1. Problem Statement
+Many individuals feel uncomfortable speaking on camera due to fear of judgment, looking awkward, or sounding "cringe." This prevents them from participating in video-based platforms like TikTok, Instagram, or Zoom. This app aims to help users gradually overcome this anxiety through AI coaching, practice sessions, feedback, and positive reinforcement.
+
+2. Goals
+Help users build confidence in speaking on camera
+
+Provide AI-driven feedback in a non-judgmental way
+
+Offer progressive exercises and tools for improvement
+
+Allow users to track their comfort level and progress over time
+
+3. User Stories
+As a user:
+I want to practice speaking on camera without anyone watching
+
+I want AI to give me feedback on my tone, clarity, facial expressions, and posture
+
+I want to blur or cartoonize my face while I practice to reduce anxiety
+
+I want to track my progress in comfort/confidence over time
+
+I want encouraging, non-critical feedback to help me improve
+
+I want prompts or scripts I can read or improvise from
+
+I want the UI to feel calming, supportive, and low-pressure
+
+4. Key Features
+4.1. Practice Mode
+Record yourself speaking with optional visual filters (blur, cartoon, silhouette)
+
+Prompts (e.g., introduce yourself, talk about your day, random topic generator)
+
+4.2. AI Feedback Engine
+Analyze speech for clarity, filler words, tone, pace
+
+Analyze facial expressions for engagement, eye contact (if not obscured)
+
+Provide gentle feedback + suggestions for improvement
+
+Option to generate a confidence score (private)
+
+4.3. Face Obscuring Filters
+Real-time filters to reduce anxiety:
+
+Blurred face
+
+Cartoon overlay
+
+Avatar replacement
+
+Blacked-out or silhouette mode
+
+4.4. Progress Tracker
+Confidence and comfort graph
+
+Streaks, completed sessions, goals achieved
+
+Optional journaling after each session
+
+4.5. Encouragement Layer
+Motivational quotes
+
+AI-generated positive reinforcement
+
+Personal affirmations from past progress
+
+4.6. Prompt Generator
+Select category (casual, interview, storytelling, etc.)
+
+AI generates daily or random speaking challenges
+
+5. UI/UX Requirements
+Component Library: Use shadcn/ui for all components
+
+Design Vibe: Calming, modern, minimal UI
+
+Use rounded cards, soothing colors, positive microcopy
+
+Accessible design (WCAG AA)
+
+Clear call-to-actions and no overwhelming interfaces
+
+6. Non-Functional Requirements
+Privacy First: No data or video uploads by default (everything stays local unless opted in)
+
+Offline Functionality: Basic features (recording, journaling, local analysis) work offline
+
+Performance: Smooth real-time recording and feedback under low resource usage
+
+Security: Local data encryption for sensitive recordings or progress
+
+7. Open Questions
+Should the app include a social or sharing component (optional for extroverts)?
+
+Will users want to receive AI-generated video feedback (ex: demo by avatar)?
+
+How often should users get feedback (every session or every few)?
+
+8. MVP Requirements
+Record + practice mode
+
+AI text-based feedback on voice + delivery
+
+At least 1 face obscuring filter
+
+Prompt generator with categories
+
+Progress tracking (basic confidence graph)
+
+Use shadcn/ui for all UI components
+
