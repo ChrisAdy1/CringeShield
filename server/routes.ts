@@ -109,6 +109,12 @@ async function initializePrompts() {
     { category: "introduction", text: "Imagine you're meeting new neighbors. How would you introduce yourself?" },
     { category: "introduction", text: "Practice a 30-second elevator pitch about your professional background." },
     
+    { category: "social_media", text: "Create a 30-second TikTok-style intro about something you're passionate about." },
+    { category: "social_media", text: "Record a YouTube-style welcome to your channel and explain what content viewers can expect." },
+    { category: "social_media", text: "Do a quick review of your favorite app or product as if for an Instagram story." },
+    { category: "social_media", text: "Create a short tutorial on how to do something you're good at, perfect for a social media reel." },
+    { category: "social_media", text: "Practice a trending challenge or dance explanation as if teaching your followers." },
+    
     { category: "random", text: "If you could have any superpower, what would it be and how would you use it?" },
     { category: "random", text: "Describe your dream home in detail." },
     { category: "random", text: "What's something you believe that most people disagree with?" }

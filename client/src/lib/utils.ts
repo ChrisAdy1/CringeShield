@@ -119,6 +119,12 @@ export const promptCategories = [
     icon: 'users'
   },
   { 
+    id: 'social_media', 
+    name: 'Social Media', 
+    description: 'Content for TikTok, YouTube, Instagram',
+    icon: 'video'
+  },
+  { 
     id: 'random', 
     name: 'Random Topics', 
     description: 'Unexpected conversation starters',
@@ -147,6 +153,22 @@ export function getDailyTip(): { tip: string; category: string } {
     { 
       tip: "Smile naturally at the beginning and end of your recording - it helps you appear more confident.", 
       category: "Body Language" 
+    },
+    { 
+      tip: "For TikTok-style videos, try to capture attention in the first 3 seconds with an engaging hook.", 
+      category: "Social Media" 
+    },
+    { 
+      tip: "When creating YouTube content, remember to include a clear call-to-action for viewers.", 
+      category: "Social Media" 
+    },
+    { 
+      tip: "For Instagram Reels, match your energy to the platform - be enthusiastic and dynamic.", 
+      category: "Social Media" 
+    },
+    { 
+      tip: "Social media audiences have short attention spans - practice getting your point across quickly and clearly.", 
+      category: "Social Media" 
     }
   ];
   
