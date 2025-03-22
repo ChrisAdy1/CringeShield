@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Play, X } from 'lucide-react';
 import VideoRecorder from '@/components/VideoRecorder';
 import PromptGenerator from '@/components/PromptGenerator';
+import SocialMediaFrame from '@/components/SocialMediaFrame';
 import { faceFilterOptions, promptCategories } from '@/lib/utils';
 import { Prompt } from '@/lib/types';
 
@@ -24,6 +25,7 @@ interface PracticeModalProps {
 const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onComplete }) => {
   const [selectedFilter, setSelectedFilter] = useState('blur');
   const [selectedCategory, setSelectedCategory] = useState('casual');
+  const [selectedPlatform, setSelectedPlatform] = useState<'tiktok' | 'youtube' | 'instagram' | 'none'>('none');
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
@@ -44,6 +46,16 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
 
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
+    // Reset platform selection when changing categories
+    if (value !== 'social_media') {
+      setSelectedPlatform('none');
+    } else if (selectedPlatform === 'none') {
+      setSelectedPlatform('tiktok');
+    }
+  };
+  
+  const handlePlatformChange = (value: string) => {
+    setSelectedPlatform(value as 'tiktok' | 'youtube' | 'instagram' | 'none');
   };
 
   const handlePromptGenerated = (prompt: Prompt) => {
@@ -115,18 +127,46 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
             </Select>
           </div>
           
+          {selectedCategory === 'social_media' && (
+            <div>
+              <Label htmlFor="platform">Choose a platform</Label>
+              <Select value={selectedPlatform} onValueChange={handlePlatformChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a social media platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="tiktok">TikTok</SelectItem>
+                  <SelectItem value="youtube">YouTube</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
           <PromptGenerator 
             category={selectedCategory} 
             onPromptGenerated={handlePromptGenerated} 
           />
           
-          <VideoRecorder 
-            filterType={selectedFilter}
-            isRecording={isRecording}
-            onStartRecording={handleStartRecording}
-            onStopRecording={handleStopRecording}
-            onRecordingComplete={handleRecordingComplete}
-          />
+          {selectedCategory === 'social_media' && selectedPlatform !== 'none' ? (
+            <SocialMediaFrame platform={selectedPlatform as 'tiktok' | 'youtube' | 'instagram'}>
+              <VideoRecorder 
+                filterType={selectedFilter}
+                isRecording={isRecording}
+                onStartRecording={handleStartRecording}
+                onStopRecording={handleStopRecording}
+                onRecordingComplete={handleRecordingComplete}
+              />
+            </SocialMediaFrame>
+          ) : (
+            <VideoRecorder 
+              filterType={selectedFilter}
+              isRecording={isRecording}
+              onStartRecording={handleStartRecording}
+              onStopRecording={handleStopRecording}
+              onRecordingComplete={handleRecordingComplete}
+            />
+          )}
         </div>
         
         <DialogFooter className="flex justify-between">
