@@ -114,6 +114,11 @@ async function initializePrompts() {
     { category: "social_media", text: "Do a quick review of your favorite app or product as if for an Instagram story." },
     { category: "social_media", text: "Create a short tutorial on how to do something you're good at, perfect for a social media reel." },
     { category: "social_media", text: "Practice a trending challenge or dance explanation as if teaching your followers." },
+    { category: "social_media", text: "Share a day-in-the-life TikTok style video starting with 'POV: You're watching me...'" },
+    { category: "social_media", text: "Create an unboxing video introduction for a YouTube channel." },
+    { category: "social_media", text: "Record an Instagram-style product recommendation with your honest review." },
+    { category: "social_media", text: "Film a reaction video to an imaginary viral trend that's taking over social media." },
+    { category: "social_media", text: "Practice speaking directly to camera for a YouTube vlog introduction." },
     
     { category: "random", text: "If you could have any superpower, what would it be and how would you use it?" },
     { category: "random", text: "Describe your dream home in detail." },
