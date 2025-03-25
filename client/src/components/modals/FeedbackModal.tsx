@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Eye, X } from 'lucide-react';
@@ -20,8 +20,20 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
   onSave,
   onTryAgain
 }) => {
+  const isMobile = useIsMobile();
+  const [selectedRating, setSelectedRating] = useState<FeedbackRating | null>(null);
+  
   const handleRatingClick = (rating: FeedbackRating) => {
-    onSave(rating);
+    setSelectedRating(rating);
+  };
+  
+  const handleSave = () => {
+    if (selectedRating) {
+      onSave(selectedRating);
+    } else {
+      // Default to 'okay' if no rating selected
+      onSave('okay');
+    }
   };
 
   if (!feedback) {
@@ -30,75 +42,83 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={`${isMobile ? 'max-w-[95%] p-4' : 'sm:max-w-md'} overflow-y-auto max-h-[90vh]`}>
         <DialogHeader>
-          <DialogTitle>Practice Feedback</DialogTitle>
+          <DialogTitle className="text-center">Practice Feedback</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 py-2">
-          <div>
-            <div className="flex items-center mb-3">
-              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+        <div className={`${isMobile ? 'space-y-4' : 'space-y-6'} py-2`}>
+          <div className="bg-green-50 rounded-lg p-3">
+            <div className="flex items-center mb-2">
+              <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-4 w-4 text-green-600" />
               </div>
-              <h3 className="font-medium ml-2">Strengths</h3>
+              <h3 className="font-medium ml-2 text-green-800">Strengths</h3>
             </div>
-            <ul className="pl-10 space-y-2 text-sm text-gray-700">
+            <ul className={`${isMobile ? 'pl-6' : 'pl-10'} space-y-2 text-sm text-gray-700`}>
               {feedback.strengths.map((strength, index) => (
-                <li key={index}>{strength}</li>
+                <li key={index} className="leading-tight">{strength}</li>
               ))}
             </ul>
           </div>
           
-          <div>
-            <div className="flex items-center mb-3">
-              <div className="w-8 h-8 rounded-full bg-primary bg-opacity-20 flex items-center justify-center">
-                <Eye className="h-5 w-5 text-primary" />
+          <div className="bg-blue-50 rounded-lg p-3">
+            <div className="flex items-center mb-2">
+              <div className="w-7 h-7 rounded-full bg-primary bg-opacity-20 flex items-center justify-center">
+                <Eye className="h-4 w-4 text-primary" />
               </div>
-              <h3 className="font-medium ml-2">Things to Improve</h3>
+              <h3 className="font-medium ml-2 text-primary">Areas to Improve</h3>
             </div>
-            <ul className="pl-10 space-y-2 text-sm text-gray-700">
+            <ul className={`${isMobile ? 'pl-6' : 'pl-10'} space-y-2 text-sm text-gray-700`}>
               {feedback.improvements.map((improvement, index) => (
-                <li key={index}>{improvement}</li>
+                <li key={index} className="leading-tight">{improvement}</li>
               ))}
             </ul>
           </div>
           
-          <div>
-            <label className="text-sm font-medium text-gray-700 mb-1 block">
-              How did you feel during this session?
+          <div className="pt-2">
+            <label className="text-sm font-medium text-gray-700 mb-2 block text-center">
+              How did you feel during this practice?
             </label>
-            <div className="flex space-x-2 mt-2">
+            <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'space-x-2'} mt-2`}>
               <Button 
-                variant="outline" 
-                className="flex-1" 
+                variant={selectedRating === 'nervous' ? 'default' : 'outline'} 
+                className={`${isMobile ? 'py-6' : 'flex-1'} touch-target`} 
                 onClick={() => handleRatingClick('nervous')}
               >
-                😰 Nervous
+                <span className="text-lg mr-2">😰</span> Nervous
               </Button>
               <Button 
-                variant="outline" 
-                className="flex-1" 
+                variant={selectedRating === 'okay' ? 'default' : 'outline'} 
+                className={`${isMobile ? 'py-6' : 'flex-1'} touch-target`} 
                 onClick={() => handleRatingClick('okay')}
               >
-                😐 Okay
+                <span className="text-lg mr-2">😐</span> Okay
               </Button>
               <Button 
-                variant="outline" 
-                className="flex-1" 
+                variant={selectedRating === 'confident' ? 'default' : 'outline'} 
+                className={`${isMobile ? 'py-6' : 'flex-1'} touch-target`} 
                 onClick={() => handleRatingClick('confident')}
               >
-                😊 Confident
+                <span className="text-lg mr-2">😊</span> Confident
               </Button>
             </div>
           </div>
         </div>
         
-        <DialogFooter className="flex space-x-3">
-          <Button variant="default" className="flex-1" onClick={() => onSave('okay')}>
+        <DialogFooter className={`${isMobile ? 'flex-col space-y-2' : 'flex space-x-3'} mt-4`}>
+          <Button 
+            variant="default" 
+            className={`${isMobile ? 'w-full py-6' : 'flex-1'} touch-target`} 
+            onClick={handleSave}
+          >
             Save Feedback
           </Button>
-          <Button variant="outline" onClick={onTryAgain}>
+          <Button 
+            variant="outline" 
+            className={`${isMobile ? 'w-full py-6' : ''} touch-target`} 
+            onClick={onTryAgain}
+          >
             Try Again
           </Button>
         </DialogFooter>
