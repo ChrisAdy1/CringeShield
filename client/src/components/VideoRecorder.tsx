@@ -1,8 +1,9 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { Button } from '@/components/ui/button';
-import { MicIcon, VideoIcon, StopCircleIcon, RefreshCwIcon } from 'lucide-react';
+import { MicIcon, VideoIcon, StopCircleIcon, RefreshCwIcon, Camera } from 'lucide-react';
 import { FaceFilter } from './FaceFilter';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface VideoRecorderProps {
   filterType: string;
@@ -19,11 +20,14 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
   onStartRecording,
   onStopRecording
 }) => {
+  const isMobile = useIsMobile();
   const webcamRef = useRef<Webcam>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
   const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
   const [error, setError] = useState<string | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState<number>(0);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Request camera permission
   useEffect(() => {
@@ -46,6 +50,27 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
     []
   );
 
+  // Track recording duration
+  useEffect(() => {
+    if (isRecording) {
+      setRecordingDuration(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    }
+    
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+    };
+  }, [isRecording]);
+
   // Complete recording and pass the blob
   useEffect(() => {
     if (recordedChunks.length > 0 && !isRecording) {
@@ -54,8 +79,15 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
       });
       onRecordingComplete(blob);
       setRecordedChunks([]);
+      setRecordingDuration(0);
     }
   }, [recordedChunks, isRecording, onRecordingComplete]);
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleStartRecording = useCallback(() => {
     setRecordedChunks([]);
@@ -116,27 +148,71 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
 
   return (
     <div className="relative overflow-hidden rounded-lg">
-      <div className="aspect-video bg-black rounded-lg overflow-hidden">
+      <div className={`${isMobile ? 'aspect-[9/16]' : 'aspect-video'} bg-black rounded-lg overflow-hidden relative`}>
         <Webcam
           audio={true}
           ref={webcamRef}
           muted={true}
           className="w-full h-full object-cover"
+          videoConstraints={{
+            facingMode: "user",
+            width: isMobile ? { ideal: 720 } : { ideal: 1280 },
+            height: isMobile ? { ideal: 1280 } : { ideal: 720 }
+          }}
         />
         <FaceFilter filterType={filterType} webcamRef={webcamRef} />
+        
+        {/* Recording indicator and timer */}
+        {isRecording && (
+          <div className="absolute top-4 left-0 right-0 flex justify-center">
+            <div className="bg-black/60 px-3 py-1 rounded-full flex items-center text-white text-sm">
+              <div className="w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse"></div>
+              {formatTime(recordingDuration)}
+            </div>
+          </div>
+        )}
       </div>
       
-      <div className="flex justify-center mt-4 space-x-3">
-        {!isRecording ? (
-          <Button onClick={handleStartRecording} className="flex items-center">
-            <VideoIcon className="mr-2 h-4 w-4" />
-            Start Recording
-          </Button>
+      <div className={`flex justify-center mt-4 ${isMobile ? 'pb-4' : ''}`}>
+        {isMobile ? (
+          // Mobile-optimized recording controls
+          <div className="flex flex-col items-center">
+            {!isRecording ? (
+              <button 
+                onClick={handleStartRecording}
+                className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg"
+                aria-label="Start recording"
+              >
+                <Camera className="w-8 h-8" />
+              </button>
+            ) : (
+              <button 
+                onClick={handleStopRecording}
+                className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
+                aria-label="Stop recording"
+              >
+                <StopCircleIcon className="w-8 h-8" />
+              </button>
+            )}
+            <span className="mt-2 text-sm text-gray-600">
+              {!isRecording ? 'Tap to record' : 'Tap to stop'}
+            </span>
+          </div>
         ) : (
-          <Button variant="destructive" onClick={handleStopRecording} className="flex items-center">
-            <StopCircleIcon className="mr-2 h-4 w-4" />
-            Stop Recording
-          </Button>
+          // Desktop controls
+          <div className="space-x-3">
+            {!isRecording ? (
+              <Button onClick={handleStartRecording} className="flex items-center" size="lg">
+                <VideoIcon className="mr-2 h-4 w-4" />
+                Start Recording
+              </Button>
+            ) : (
+              <Button variant="destructive" onClick={handleStopRecording} className="flex items-center" size="lg">
+                <StopCircleIcon className="mr-2 h-4 w-4" />
+                Stop Recording
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>

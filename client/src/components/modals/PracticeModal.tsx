@@ -9,6 +9,7 @@ import PromptGenerator from '@/components/PromptGenerator';
 import SocialMediaFrame from '@/components/SocialMediaFrame';
 import { faceFilterOptions, promptCategories } from '@/lib/utils';
 import { Prompt } from '@/lib/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PracticeModalProps {
   open: boolean;
