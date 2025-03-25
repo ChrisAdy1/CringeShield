@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Eye, X } from 'lucide-react';
 import { AIFeedback, FeedbackRating } from '@/lib/types';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FeedbackModalProps {
   open: boolean;

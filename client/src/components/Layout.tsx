@@ -58,20 +58,23 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
 
       {/* Mobile Bottom Navigation */}
       {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10 pb-safe">
           <div className="flex justify-around items-center">
             {navItems.map((item) => (
               <Link key={item.path} href={item.path}>
                 <a
                   className={cn(
-                    "flex flex-col items-center pt-2 pb-1 px-2",
+                    "flex flex-col items-center justify-center pt-3 pb-2 px-2 w-full min-h-[60px]",
                     currentPath === item.path
                       ? "text-primary"
                       : "text-gray-500"
                   )}
                 >
                   <item.icon className="w-6 h-6 mb-1" />
-                  <span className="text-xs">{item.label}</span>
+                  <span className="text-xs font-medium">{item.label}</span>
+                  {currentPath === item.path && (
+                    <span className="absolute bottom-0 w-1/2 h-1 bg-primary rounded-t-full"></span>
+                  )}
                 </a>
               </Link>
             ))}

@@ -24,6 +24,7 @@ interface PracticeModalProps {
 }
 
 const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onComplete }) => {
+  const isMobile = useIsMobile();
   const [selectedFilter, setSelectedFilter] = useState('blur');
   const [selectedCategory, setSelectedCategory] = useState('casual');
   const [selectedPlatform, setSelectedPlatform] = useState<'tiktok' | 'youtube' | 'instagram' | 'none'>('none');
@@ -31,6 +32,7 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
   const [isRecording, setIsRecording] = useState(false);
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [settingsExpanded, setSettingsExpanded] = useState(!isMobile);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -90,64 +92,84 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={`${isMobile ? 'max-w-[95%] p-4' : 'sm:max-w-md'} overflow-y-auto max-h-[90vh]`}>
         <DialogHeader>
           <DialogTitle>Video Practice</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-2">
-          <div>
-            <Label htmlFor="filter">Choose a filter</Label>
-            <Select value={selectedFilter} onValueChange={handleFilterChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a filter" />
-              </SelectTrigger>
-              <SelectContent>
-                {faceFilterOptions.map(filter => (
-                  <SelectItem key={filter.id} value={filter.id}>
-                    {filter.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="category">Choose a category</Label>
-            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a prompt category" />
-              </SelectTrigger>
-              <SelectContent>
-                {promptCategories.map(category => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {selectedCategory === 'social_media' && (
-            <div>
-              <Label htmlFor="platform">Choose a platform</Label>
-              <Select value={selectedPlatform} onValueChange={handlePlatformChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a social media platform" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="tiktok">TikTok</SelectItem>
-                  <SelectItem value="youtube">YouTube</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                </SelectContent>
-              </Select>
+          {isMobile && (
+            <div className="pb-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSettingsExpanded(!settingsExpanded)}
+                className="w-full flex justify-between items-center"
+              >
+                {settingsExpanded ? 'Hide Settings' : 'Show Settings'}
+                <span className="inline-block transition-transform duration-200" style={{ transform: settingsExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                  ▼
+                </span>
+              </Button>
             </div>
           )}
           
-          <PromptGenerator 
-            category={selectedCategory} 
-            onPromptGenerated={handlePromptGenerated} 
-          />
+          {(!isMobile || settingsExpanded) && (
+            <div className={`space-y-3 ${isMobile ? 'pb-3' : ''}`}>
+              <div>
+                <Label htmlFor="filter" className="text-sm">Choose a filter</Label>
+                <Select value={selectedFilter} onValueChange={handleFilterChange}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {faceFilterOptions.map(filter => (
+                      <SelectItem key={filter.id} value={filter.id}>
+                        {filter.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="category" className="text-sm">Choose a category</Label>
+                <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a prompt category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {promptCategories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {selectedCategory === 'social_media' && (
+                <div>
+                  <Label htmlFor="platform" className="text-sm">Choose a platform</Label>
+                  <Select value={selectedPlatform} onValueChange={handlePlatformChange}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select a social media platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tiktok">TikTok</SelectItem>
+                      <SelectItem value="youtube">YouTube</SelectItem>
+                      <SelectItem value="instagram">Instagram</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              <PromptGenerator 
+                category={selectedCategory} 
+                onPromptGenerated={handlePromptGenerated} 
+              />
+            </div>
+          )}
           
           {selectedCategory === 'social_media' && selectedPlatform !== 'none' ? (
             <SocialMediaFrame platform={selectedPlatform as 'tiktok' | 'youtube' | 'instagram'}>
@@ -170,10 +192,10 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
           )}
         </div>
         
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className={`${isMobile ? 'mt-2' : 'mt-4'} flex justify-between`}>
           <DialogClose asChild>
-            <Button variant="outline" className="gap-1">
-              <X size={16} />
+            <Button variant="outline" className="gap-1" size={isMobile ? "sm" : "default"}>
+              <X size={isMobile ? 14 : 16} />
               Close
             </Button>
           </DialogClose>
