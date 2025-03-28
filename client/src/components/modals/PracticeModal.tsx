@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Play, X } from 'lucide-react';
+import { Play, X, FileText, Shuffle, Eye, EyeOff, BookText } from 'lucide-react';
 import VideoRecorder from '@/components/VideoRecorder';
 import PromptGenerator from '@/components/PromptGenerator';
 import SocialMediaFrame from '@/components/SocialMediaFrame';
+import CustomScriptInput from '@/components/CustomScriptInput';
+import Teleprompter from '@/components/Teleprompter';
 import { faceFilterOptions, promptCategories } from '@/lib/utils';
-import { Prompt } from '@/lib/types';
+import { Prompt, CustomScript } from '@/lib/types';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PracticeModalProps {
@@ -19,7 +21,8 @@ interface PracticeModalProps {
     filterType: string,
     duration: number,
     promptCategory: string,
-    promptText: string
+    promptText: string,
+    isCustomScript?: boolean
   }) => void;
 }
 
@@ -29,10 +32,13 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
   const [selectedCategory, setSelectedCategory] = useState('casual');
   const [selectedPlatform, setSelectedPlatform] = useState<'tiktok' | 'youtube' | 'instagram' | 'none'>('none');
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
+  const [customScript, setCustomScript] = useState<CustomScript | null>(null);
+  const [showCustomScriptInput, setShowCustomScriptInput] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [settingsExpanded, setSettingsExpanded] = useState(!isMobile);
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -40,8 +46,31 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
       setIsRecording(false);
       setRecordingStartTime(null);
       setRecordedBlob(null);
+      setShowCustomScriptInput(false);
+      setCustomScript(null);
+      setShowTeleprompter(false);
     }
   }, [open]);
+  
+  // Handle custom script selection
+  const handleCustomScriptSelected = (script: CustomScript) => {
+    setCustomScript(script);
+    setShowCustomScriptInput(false);
+    
+    // Create a synthetic prompt object for the custom script
+    const customPrompt: Prompt = {
+      id: -1, // Negative ID to indicate it's not from the database
+      category: 'custom',
+      text: script.text
+    };
+    
+    setCurrentPrompt(customPrompt);
+  };
+  
+  // Toggle teleprompter visibility during recording
+  const toggleTeleprompter = () => {
+    setShowTeleprompter(!showTeleprompter);
+  };
 
   const handleFilterChange = (value: string) => {
     setSelectedFilter(value);
@@ -79,13 +108,15 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
     
     if (recordingStartTime && currentPrompt) {
       const duration = (Date.now() - recordingStartTime) / 1000; // in seconds
+      const isCustom = customScript !== null || currentPrompt.id < 0;
       
       onComplete({
         recordingBlob: blob,
         filterType: selectedFilter,
         duration,
-        promptCategory: selectedCategory,
-        promptText: currentPrompt.text
+        promptCategory: isCustom ? 'custom' : selectedCategory,
+        promptText: currentPrompt.text,
+        isCustomScript: isCustom
       });
     }
   };
@@ -164,15 +195,91 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
                 </div>
               )}
               
-              <PromptGenerator 
-                category={selectedCategory} 
-                onPromptGenerated={handlePromptGenerated} 
-              />
+              {/* Custom Script Button */}
+              <div className="flex justify-between items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCustomScriptInput(true)}
+                  className={`gap-1 ${isMobile ? 'text-xs py-1 px-2' : ''}`}
+                >
+                  <FileText size={isMobile ? 14 : 16} />
+                  Custom Script
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Find random category
+                    const randomCategoryIndex = Math.floor(Math.random() * promptCategories.length);
+                    const randomCategory = promptCategories[randomCategoryIndex].id;
+                    handleCategoryChange(randomCategory);
+                  }}
+                  className={`gap-1 ${isMobile ? 'text-xs py-1 px-2' : ''}`}
+                >
+                  <Shuffle size={isMobile ? 14 : 16} />
+                  Random
+                </Button>
+              </div>
+              
+              {!showCustomScriptInput && (
+                <PromptGenerator 
+                  category={selectedCategory} 
+                  onPromptGenerated={handlePromptGenerated} 
+                />
+              )}
+              
+              {showCustomScriptInput && (
+                <CustomScriptInput
+                  onScriptSelected={handleCustomScriptSelected}
+                  onCancel={() => setShowCustomScriptInput(false)}
+                />
+              )}
             </div>
           )}
           
           {selectedCategory === 'social_media' && selectedPlatform !== 'none' ? (
             <SocialMediaFrame platform={selectedPlatform as 'tiktok' | 'youtube' | 'instagram'}>
+              <div className="relative">
+                <VideoRecorder 
+                  filterType={selectedFilter}
+                  isRecording={isRecording}
+                  onStartRecording={handleStartRecording}
+                  onStopRecording={handleStopRecording}
+                  onRecordingComplete={handleRecordingComplete}
+                />
+                {currentPrompt && (
+                  <Teleprompter 
+                    text={currentPrompt.text}
+                    isVisible={showTeleprompter}
+                    isRecording={isRecording}
+                  />
+                )}
+                
+                {/* Teleprompter toggle button */}
+                {currentPrompt && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleTeleprompter}
+                    className={`
+                      absolute ${isMobile ? 'top-2 right-2' : 'top-3 right-3'}
+                      gap-1 bg-white/80 hover:bg-white
+                      ${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8 p-0'}
+                    `}
+                  >
+                    {showTeleprompter ? (
+                      <EyeOff size={isMobile ? 14 : 16} />
+                    ) : (
+                      <BookText size={isMobile ? 14 : 16} />
+                    )}
+                  </Button>
+                )}
+              </div>
+            </SocialMediaFrame>
+          ) : (
+            <div className="relative">
               <VideoRecorder 
                 filterType={selectedFilter}
                 isRecording={isRecording}
@@ -180,15 +287,34 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
                 onStopRecording={handleStopRecording}
                 onRecordingComplete={handleRecordingComplete}
               />
-            </SocialMediaFrame>
-          ) : (
-            <VideoRecorder 
-              filterType={selectedFilter}
-              isRecording={isRecording}
-              onStartRecording={handleStartRecording}
-              onStopRecording={handleStopRecording}
-              onRecordingComplete={handleRecordingComplete}
-            />
+              {currentPrompt && (
+                <Teleprompter 
+                  text={currentPrompt.text}
+                  isVisible={showTeleprompter}
+                  isRecording={isRecording}
+                />
+              )}
+              
+              {/* Teleprompter toggle button */}
+              {currentPrompt && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleTeleprompter}
+                  className={`
+                    absolute ${isMobile ? 'top-2 right-2' : 'top-3 right-3'}
+                    gap-1 bg-white/80 hover:bg-white
+                    ${isMobile ? 'h-7 w-7 p-0' : 'h-8 w-8 p-0'}
+                  `}
+                >
+                  {showTeleprompter ? (
+                    <EyeOff size={isMobile ? 14 : 16} />
+                  ) : (
+                    <BookText size={isMobile ? 14 : 16} />
+                  )}
+                </Button>
+              )}
+            </div>
           )}
         </div>
         

@@ -4,6 +4,7 @@ export interface User {
 }
 
 export type FeedbackRating = 'nervous' | 'okay' | 'confident';
+export type SelfReflectionRating = 1 | 2 | 3 | 4 | 5;
 
 export interface PracticeSession {
   id: number;
@@ -14,6 +15,8 @@ export interface PracticeSession {
   filter: string;
   confidenceScore: number;
   userRating?: FeedbackRating;
+  selfReflectionRating?: SelfReflectionRating;
+  isCustomScript?: boolean;
   aiNotes?: AIFeedback;
 }
 
@@ -47,4 +50,19 @@ export interface ProgressData {
   sessionsCompleted: number;
   streak: number;
   latestScore: number;
+  selfReflectionRatings?: { date: string; rating: SelfReflectionRating }[];
+}
+
+export interface CustomScript {
+  id: string;
+  text: string;
+  title: string;
+  createdAt: string;
+}
+
+export interface UserPreferences {
+  hasSeenOnboarding: boolean;
+  showTimer: boolean;
+  enableFaceFilters: boolean;
+  favoritePrompts: number[];
 }
