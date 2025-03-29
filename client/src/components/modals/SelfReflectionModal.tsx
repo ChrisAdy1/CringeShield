@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SelfReflectionRating } from '@/lib/types';
-import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Icons for ratings
+import { 
+  Frown, 
+  Meh, 
+  Smile, 
+  ThumbsUp, 
+  Flame 
+} from 'lucide-react';
 
 interface SelfReflectionModalProps {
   open: boolean;
@@ -14,82 +23,106 @@ interface SelfReflectionModalProps {
 
 const SelfReflectionModal: React.FC<SelfReflectionModalProps> = ({ 
   open, 
-  onOpenChange,
+  onOpenChange, 
   onComplete 
 }) => {
   const isMobile = useIsMobile();
-  const [rating, setRating] = useState<SelfReflectionRating | null>(null);
+  const [selectedRating, setSelectedRating] = useState<SelfReflectionRating | null>(null);
   const [note, setNote] = useState('');
-  const { addReflection } = useSelfReflections();
-  
-  const handleSubmit = () => {
-    if (rating) {
-      addReflection(rating, note.trim() || undefined);
-      onComplete(rating, note.trim() || undefined);
-      setRating(null);
+
+  // Reset state when modal opens
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen === false && selectedRating) {
+      // If closing with a selected rating, complete the reflection
+      onComplete(selectedRating, note.trim() || undefined);
+    }
+    
+    if (newOpen === true) {
+      // Reset when opening
+      setSelectedRating(null);
       setNote('');
     }
+    
+    onOpenChange(newOpen);
   };
-  
-  const ratingEmojis = [
-    { rating: 1, emoji: '😣', label: 'Very Nervous' },
-    { rating: 2, emoji: '😟', label: 'Nervous' },
-    { rating: 3, emoji: '😐', label: 'Neutral' },
-    { rating: 4, emoji: '😊', label: 'Confident' },
-    { rating: 5, emoji: '😃', label: 'Very Confident' },
+
+  const ratings = [
+    { value: 1, icon: Frown, label: 'Uncomfortable' },
+    { value: 2, icon: Meh, label: 'Nervous' },
+    { value: 3, icon: Smile, label: 'Okay' },
+    { value: 4, icon: ThumbsUp, label: 'Good' },
+    { value: 5, icon: Flame, label: 'Confident!' }
   ];
-  
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className={`sm:max-w-md ${isMobile ? 'p-4' : 'p-6'}`}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
-        <DialogHeader className="text-center">
-          <DialogTitle className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold`}>
-            How did that feel?
-          </DialogTitle>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className={`${isMobile ? 'max-w-[95%] p-4' : 'sm:max-w-md'}`}>
+        <DialogHeader>
+          <DialogTitle className="text-center">How did that feel?</DialogTitle>
         </DialogHeader>
         
-        <div className="py-4">
-          <div className="flex justify-center items-center gap-2 mb-6">
-            {ratingEmojis.map(item => (
-              <Button
-                key={item.rating}
-                variant={rating === item.rating ? "default" : "outline"}
-                onClick={() => setRating(item.rating as SelfReflectionRating)}
-                className={`
-                  flex flex-col items-center ${isMobile ? 'p-2' : 'p-3'}
-                  ${rating === item.rating ? 'bg-primary text-primary-foreground' : ''}
-                  transition-all
-                `}
-              >
-                <span className={`text-${isMobile ? 'xl' : '2xl'} mb-1`}>{item.emoji}</span>
-                <span className={`text-${isMobile ? 'xs' : 'sm'}`}>{item.label}</span>
-              </Button>
-            ))}
+        <div className="py-6">
+          <div className="flex justify-center mb-6">
+            <div className="flex gap-2 sm:gap-4">
+              {ratings.map((rating) => {
+                const Icon = rating.icon;
+                return (
+                  <Button
+                    key={rating.value}
+                    type="button"
+                    variant={selectedRating === rating.value ? "default" : "outline"}
+                    className={`
+                      rounded-full flex flex-col p-0 h-auto w-auto
+                      ${isMobile ? 'min-w-14 min-h-14' : 'min-w-16 min-h-16'}
+                      ${selectedRating === rating.value ? 'border-2 shadow-md' : ''}
+                      transition-all duration-200
+                    `}
+                    onClick={() => setSelectedRating(rating.value as SelfReflectionRating)}
+                  >
+                    <div className={`
+                      flex flex-col items-center justify-center 
+                      ${isMobile ? 'p-3' : 'p-4'}
+                    `}>
+                      <Icon 
+                        className={`
+                          mb-1 
+                          ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}
+                          ${selectedRating === rating.value ? 'text-white' : ''}
+                        `} 
+                      />
+                      <span className={`
+                        text-xs font-medium 
+                        ${selectedRating === rating.value ? 'text-white' : 'text-muted-foreground'}
+                      `}>
+                        {rating.label}
+                      </span>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="reflection-note" className="text-sm font-medium">
-              Additional notes (optional)
-            </label>
+            <Label htmlFor="note" className="text-sm">Notes (optional)</Label>
             <Textarea
-              id="reflection-note"
-              placeholder="Share any thoughts about your performance..."
+              id="note"
+              placeholder="Add any thoughts about your performance..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              rows={3}
-              className="resize-none"
+              className="min-h-[80px]"
             />
           </div>
         </div>
         
         <DialogFooter className="flex justify-end">
           <Button 
-            onClick={handleSubmit} 
-            disabled={!rating}
-            className={isMobile ? 'w-full' : ''}
+            onClick={() => {
+              if (selectedRating) {
+                onComplete(selectedRating, note.trim() || undefined);
+              }
+            }}
+            disabled={!selectedRating}
           >
             Save Reflection
           </Button>
