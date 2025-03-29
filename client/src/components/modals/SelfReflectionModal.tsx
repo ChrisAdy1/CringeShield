@@ -46,19 +46,20 @@ const SelfReflectionModal: React.FC<SelfReflectionModalProps> = ({
     onOpenChange(newOpen);
   };
 
+  // Rating options with mood and labels using our brand-safe palette colors
   const ratings = [
-    { value: 1, icon: Frown, label: 'Uncomfortable' },
-    { value: 2, icon: Meh, label: 'Nervous' },
-    { value: 3, icon: Smile, label: 'Okay' },
-    { value: 4, icon: ThumbsUp, label: 'Good' },
-    { value: 5, icon: Flame, label: 'Confident!' }
+    { value: 1, icon: Frown, label: 'Uncomfortable', bgColor: 'bg-[#E0E0E0]', textColor: 'text-[#444444]' },
+    { value: 2, icon: Meh, label: 'Nervous', bgColor: 'bg-[#E0E0E0]', textColor: 'text-[#444444]' },
+    { value: 3, icon: Smile, label: 'Okay', bgColor: 'bg-[#FFD6A5]', textColor: 'text-[#444444]' }, // Warning Peach
+    { value: 4, icon: ThumbsUp, label: 'Good', bgColor: 'bg-[#C7F9CC]', textColor: 'text-[#444444]' }, // Success Mint
+    { value: 5, icon: Flame, label: 'Confident!', bgColor: 'bg-[#C7F9CC]', textColor: 'text-[#444444]' } // Success Mint
   ];
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className={`${isMobile ? 'max-w-[95%] p-4' : 'sm:max-w-md'}`}>
+      <DialogContent className={`${isMobile ? 'max-w-[95%] p-4' : 'sm:max-w-md'} bg-white border border-[#EDE9FE] shadow-md`}>
         <DialogHeader>
-          <DialogTitle className="text-center">How did that feel?</DialogTitle>
+          <DialogTitle className="text-center text-[#444444]">How did that feel?</DialogTitle>
         </DialogHeader>
         
         <div className="py-6">
@@ -70,12 +71,14 @@ const SelfReflectionModal: React.FC<SelfReflectionModalProps> = ({
                   <Button
                     key={rating.value}
                     type="button"
-                    variant={selectedRating === rating.value ? "default" : "outline"}
+                    variant="outline"
                     className={`
                       rounded-full flex flex-col p-0 h-auto w-auto
                       ${isMobile ? 'min-w-14 min-h-14' : 'min-w-16 min-h-16'}
-                      ${selectedRating === rating.value ? 'border-2 shadow-md' : ''}
-                      transition-all duration-200
+                      ${selectedRating === rating.value 
+                        ? `${rating.bgColor} border-2 border-[#9A7DFF] shadow-md` 
+                        : 'bg-white border border-[#EDE9FE]'}
+                      transition-all duration-200 hover:border-[#9A7DFF]
                     `}
                     onClick={() => setSelectedRating(rating.value as SelfReflectionRating)}
                   >
@@ -87,12 +90,16 @@ const SelfReflectionModal: React.FC<SelfReflectionModalProps> = ({
                         className={`
                           mb-1 
                           ${isMobile ? 'h-5 w-5' : 'h-6 w-6'}
-                          ${selectedRating === rating.value ? 'text-white' : ''}
+                          ${selectedRating === rating.value 
+                            ? 'text-[#444444]' 
+                            : 'text-[#9A7DFF]'}
                         `} 
                       />
                       <span className={`
                         text-xs font-medium 
-                        ${selectedRating === rating.value ? 'text-white' : 'text-muted-foreground'}
+                        ${selectedRating === rating.value 
+                          ? rating.textColor 
+                          : 'text-[#9A7DFF]'}
                       `}>
                         {rating.label}
                       </span>
@@ -123,6 +130,7 @@ const SelfReflectionModal: React.FC<SelfReflectionModalProps> = ({
               }
             }}
             disabled={!selectedRating}
+            className="bg-[#9A7DFF] hover:bg-[#9A7DFF]/90 transition-all disabled:bg-[#E0E0E0]"
           >
             Save Reflection
           </Button>

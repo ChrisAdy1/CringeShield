@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { PlusIcon, ExternalLink, MessageCircle, Briefcase, BookOpen, Users, Presentation, Shuffle, LightbulbIcon, TrendingUp, ChevronRight } from 'lucide-react';
 import { calculateStreak, getLastSevenDays, getDailyTip, promptCategories } from '@/lib/utils';
-import { ProgressData, PracticeSession } from '@/lib/types';
+import { ProgressData, PracticeSession, SelfReflectionRating, FeedbackRating } from '@/lib/types';
 import PracticeModal from '@/components/modals/PracticeModal';
 import FeedbackModal from '@/components/modals/FeedbackModal';
 import SelfReflectionModal from '@/components/modals/SelfReflectionModal';
@@ -174,11 +174,11 @@ const Home: React.FC = () => {
     setIsOnboardingModalOpen(false);
   };
   
-  // Get the confidence score color based on value
+  // Get the confidence score color based on value using our brand-safe palette
   const getConfidenceColor = (score: number) => {
-    if (score >= 70) return 'bg-green-500';
-    if (score >= 30) return 'bg-yellow-500';
-    return 'bg-gray-300';
+    if (score >= 70) return 'bg-[#C7F9CC]'; // Success Mint
+    if (score >= 30) return 'bg-[#FFD6A5]'; // Warning Peach
+    return 'bg-[#E0E0E0]'; // Light Gray
   };
   
   // Optional: Fade-in effect for sections

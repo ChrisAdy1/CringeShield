@@ -1,0 +1,54 @@
+# 🔧 CringeShield – MVP Polishing Tasks (Based on UI Flow)
+
+## 🎨 Updated Color Palette (Brand-Safe, Calming)
+
+Primary Purple:     #9A7DFF     // Softer than default Replit purple
+Accent Lavender:    #EDE9FE     // Card backgrounds, onboarding, hover states
+Success Mint:       #C7F9CC     // Confidence boost indicators, success messages
+Warning Peach:      #FFD6A5     // Gentle alerts or reflection prompts
+Text Dark Gray:     #444444     // Comfortable for body text
+
+## ✅ ONBOARDING (Screen 1)
+- [ ] Show this tour only for first-time users (use localStorage flag: `hasSeenTour`)
+- [ ] Add 3–4 screens max:
+    1. Welcome + benefit
+    2. Pick prompt or write your own
+    3. Record + reflect
+    4. Track confidence over time
+- [ ] Use Accent Lavender (#EDE9FE) for tour background
+- [ ] Highlight primary action with soft purple (#9A7DFF)
+- [ ] Add smooth "Next" and "Skip" transitions
+- [ ] Auto-focus "Start Quick Practice" or "Start Video Practice" at the end of tour
+
+## ✅ DASHBOARD PAGE (Screens 2–4)
+
+### 1. Confidence Tracker
+- [ ] Use a color-changing confidence bar:
+    - 0–30% = light gray (#E0E0E0)
+    - 30–70% = Warning Peach (#FFD6A5)
+    - 70–100% = Success Mint (#C7F9CC)
+- [ ] Add animated increase when new session added
+- [ ] Placeholder graph line across the week, even if no data
+
+### 2. Start a Practice Session
+- [ ] Confirm “Quick Practice” auto-generates a random prompt from all categories
+- [ ] Add logic to store which mode was used (Quick or Video) in session tracking
+
+### 3. Prompt Categories
+- [ ] Add basic filter logic (optional): when clicking a category, filter prompts on next screen
+- [ ] Add “Write Your Own” card or toggle in the category section or prompt picker
+- [ ] Use Accent Lavender as card background hover or selected state
+
+### 4. Daily Tip
+- [ ] Optional: Rotate tips daily (use simple array and date-based index)
+- [ ] Store `lastTipDate` in localStorage to avoid changing too often
+- [ ] Highlight the tip card with soft background (e.g., #EDE9FE) and lightbulb icon in #9A7DFF
+
+### 5. Friendly Microcopy (Polish)
+- [ ] Update empty state text for “0 sessions completed” → “Let’s get your first one done!”
+- [ ] Same for 0% confidence: “Your confidence journey starts here!”
+
+### 6. Footer
+- [ ] Add linkable Help / Privacy / Terms
+- [ ] Optional: make “CringeShield – Your safe space to practice speaking” a clickable About link
+

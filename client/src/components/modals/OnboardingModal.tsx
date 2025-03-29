@@ -8,7 +8,8 @@ import {
   Settings2Icon,
   ChevronLeft,
   ChevronRight,
-  CheckCircle2Icon
+  CheckCircle2Icon,
+  MessageCircle
 } from 'lucide-react';
 
 interface OnboardingModalProps {
@@ -24,31 +25,25 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onComplete }) =
       title: "Welcome to CringeShield",
       description: "Overcome camera shyness and practice speaking with confidence. Let's get you started!",
       icon: VideoIcon,
-      color: "bg-blue-100 text-blue-700"
+      color: "bg-[#EDE9FE] text-[#9A7DFF]" // Accent Lavender bg, Primary Purple text
     },
     {
-      title: "Create Practice Sessions",
-      description: "Record yourself speaking with our face filters to reduce self-consciousness.",
-      icon: VideoIcon,
-      color: "bg-purple-100 text-purple-700"
-    },
-    {
-      title: "Use Custom Scripts",
-      description: "Practice with our prompts or create your own custom scripts.",
+      title: "Pick Prompts or Create Your Own",
+      description: "Choose from our library of prompts or write custom scripts for your practice sessions.",
       icon: PenIcon,
-      color: "bg-green-100 text-green-700"
+      color: "bg-[#EDE9FE] text-[#9A7DFF]" // Accent Lavender bg, Primary Purple text
     },
     {
-      title: "Track Your Progress",
-      description: "See your confidence grow over time with detailed analytics.",
-      icon: BarChart3Icon,
-      color: "bg-amber-100 text-amber-700"
+      title: "Record and Reflect",
+      description: "Practice with face filters and get personalized feedback on your performance.",
+      icon: VideoIcon,
+      color: "bg-[#EDE9FE] text-[#9A7DFF]" // Accent Lavender bg, Primary Purple text
     },
     {
-      title: "Customize Your Experience",
-      description: "Adjust settings to match your preferences and comfort level.",
-      icon: Settings2Icon,
-      color: "bg-red-100 text-red-700"
+      title: "Track Your Confidence",
+      description: "Watch your speaking confidence grow over time with detailed analytics.",
+      icon: BarChart3Icon, 
+      color: "bg-[#EDE9FE] text-[#9A7DFF]" // Accent Lavender bg, Primary Purple text
     }
   ];
   
@@ -77,7 +72,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onComplete }) =
     <Dialog open={open} onOpenChange={(isOpen) => {
       if (!isOpen) onComplete();
     }}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-[#EDE9FE] shadow-md">
         <div className="relative">
           {/* Progress indicators */}
           <div className="absolute top-4 left-0 right-0 flex justify-center gap-1 z-10">
@@ -86,10 +81,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onComplete }) =
                 key={index}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   index === currentStep 
-                    ? 'w-6 bg-primary' 
+                    ? 'w-6 bg-[#9A7DFF]' 
                     : index < currentStep 
-                      ? 'w-6 bg-primary/40' 
-                      : 'w-2 bg-gray-300'
+                      ? 'w-6 bg-[#9A7DFF]/40' 
+                      : 'w-2 bg-[#E0E0E0]'
                 }`}
               />
             ))}
@@ -102,100 +97,114 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ open, onComplete }) =
                 <Icon className="h-8 w-8" />
               </div>
               
-              <h3 className="text-xl font-semibold mb-2">
+              <h3 className="text-xl font-semibold mb-2 text-[#444444]">
                 {currentStepData.title}
               </h3>
               
-              <p className="text-muted-foreground mb-8">
+              <p className="text-[#444444] mb-8">
                 {currentStepData.description}
               </p>
               
-              {/* Illustration or image could go here */}
-              <div className="h-48 w-full bg-slate-100 rounded-lg mb-6 flex items-center justify-center">
+              {/* Illustration with brand-safe colors */}
+              <div className="h-48 w-full bg-[#EDE9FE] rounded-lg mb-6 flex items-center justify-center">
                 {currentStep === 0 && (
                   <div className="text-center p-4">
-                    <h4 className="font-medium mb-2">Build your confidence on camera</h4>
-                    <p className="text-sm text-muted-foreground">Practice makes perfect!</p>
+                    <div className="mb-4 flex justify-center">
+                      <div className="relative">
+                        <div className="h-20 w-20 rounded-full bg-white shadow-md flex items-center justify-center border-2 border-[#9A7DFF]">
+                          <span className="text-2xl">😊</span>
+                        </div>
+                        <div className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-[#9A7DFF] flex items-center justify-center shadow-md">
+                          <VideoIcon className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                    <h4 className="font-medium mb-2 text-[#444444]">Build your confidence on camera</h4>
+                    <p className="text-sm text-[#9A7DFF]">Practice makes perfect!</p>
                   </div>
                 )}
                 {currentStep === 1 && (
                   <div className="text-center p-4">
-                    <div className="flex justify-center mb-2">
-                      <div className="relative">
-                        <div className="h-16 w-16 rounded-full bg-slate-300 flex items-center justify-center">
-                          <span className="text-slate-600">🙂</span>
-                        </div>
-                        <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center">
-                          <VideoIcon className="h-3 w-3 text-slate-600" />
-                        </div>
+                    <div className="flex justify-center mb-4 gap-3">
+                      <div className="h-16 w-28 bg-white shadow-md rounded-lg p-2 flex items-center justify-center border border-[#9A7DFF]">
+                        <MessageCircle className="h-5 w-5 text-[#9A7DFF] mr-2" />
+                        <span className="text-sm text-[#444444]">Prompts</span>
+                      </div>
+                      <div className="h-16 w-28 bg-white shadow-md rounded-lg p-2 flex items-center justify-center border border-[#9A7DFF]">
+                        <PenIcon className="h-5 w-5 text-[#9A7DFF] mr-2" />
+                        <span className="text-sm text-[#444444]">My Script</span>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">Different filters hide your real face</p>
+                    <p className="text-sm text-[#444444]">Choose from our library or write your own</p>
                   </div>
                 )}
                 {currentStep === 2 && (
                   <div className="text-center p-4">
-                    <div className="flex justify-center mb-2">
-                      <div className="h-16 w-32 bg-slate-200 rounded p-2 flex items-center justify-center">
-                        <PenIcon className="h-4 w-4 text-slate-600 mr-2" />
-                        <span className="text-sm text-slate-600">My Script</span>
+                    <div className="flex justify-center space-x-3 mb-4">
+                      <div className="relative">
+                        <div className="h-16 w-16 rounded-full bg-[#C7F9CC] flex items-center justify-center">
+                          <span className="text-xl">😄</span>
+                        </div>
+                        <div className="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-[#9A7DFF] flex items-center justify-center">
+                          <VideoIcon className="h-3 w-3 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-start space-y-1 justify-center">
+                        <div className="h-2 w-16 bg-[#C7F9CC] rounded-full"></div>
+                        <div className="h-2 w-12 bg-[#9A7DFF] rounded-full"></div>
+                        <div className="h-2 w-14 bg-[#EDE9FE] rounded-full"></div>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">Create and save your own practice content</p>
+                    <p className="text-sm text-[#444444]">Record with filters & get AI feedback</p>
                   </div>
                 )}
                 {currentStep === 3 && (
                   <div className="text-center p-4">
-                    <div className="flex justify-center mb-2">
-                      <div className="h-16 w-32 flex flex-col items-center justify-center">
-                        <div className="flex h-10 w-full">
-                          <div className="h-full w-2 bg-slate-300 rounded-sm mr-1"></div>
-                          <div className="h-8 w-2 bg-slate-300 rounded-sm mr-1"></div>
-                          <div className="h-6 w-2 bg-slate-300 rounded-sm mr-1"></div>
-                          <div className="h-full w-2 bg-primary rounded-sm mr-1"></div>
-                          <div className="h-7 w-2 bg-slate-300 rounded-sm mr-1"></div>
-                          <div className="h-9 w-2 bg-slate-300 rounded-sm"></div>
+                    <div className="flex justify-center mb-4">
+                      <div className="h-20 w-44 flex flex-col items-center justify-center bg-white rounded-lg shadow-md p-3">
+                        <div className="flex h-12 w-full justify-center">
+                          <div className="h-4/5 w-3 bg-[#E0E0E0] rounded-sm mr-1"></div>
+                          <div className="h-3/5 w-3 bg-[#FFD6A5] rounded-sm mr-1"></div>
+                          <div className="h-1/2 w-3 bg-[#FFD6A5] rounded-sm mr-1"></div>
+                          <div className="h-full w-3 bg-[#C7F9CC] rounded-sm mr-1"></div>
+                          <div className="h-4/5 w-3 bg-[#C7F9CC] rounded-sm mr-1"></div>
+                          <div className="h-3/4 w-3 bg-[#C7F9CC] rounded-sm"></div>
                         </div>
-                        <div className="w-full h-px bg-slate-300 mt-1"></div>
+                        <div className="w-full h-px bg-[#EDE9FE] mt-2"></div>
+                        <div className="text-xs text-[#9A7DFF] mt-1 font-medium">Your confidence is growing!</div>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">See your confidence grow over time</p>
-                  </div>
-                )}
-                {currentStep === 4 && (
-                  <div className="text-center p-4">
-                    <div className="flex justify-center mb-2">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex items-center">
-                          <div className="h-4 w-8 bg-primary rounded-full mr-2"></div>
-                          <span className="text-sm text-slate-600">Face filters</span>
-                        </div>
-                        <div className="flex items-center">
-                          <div className="h-4 w-8 bg-slate-300 rounded-full mr-2"></div>
-                          <span className="text-sm text-slate-600">Timer display</span>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Adjust the app to your needs</p>
+                    <p className="text-sm text-[#444444]">Track your progress over time</p>
                   </div>
                 )}
               </div>
             </div>
             
-            {/* Navigation buttons */}
+            {/* Navigation buttons with brand-safe colors */}
             <div className="flex items-center justify-between">
               {currentStep === 0 ? (
-                <Button variant="ghost" onClick={handleSkip}>
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSkip}
+                  className="text-[#444444] hover:text-[#9A7DFF] hover:bg-[#EDE9FE] transition-colors"
+                >
                   Skip tour
                 </Button>
               ) : (
-                <Button variant="outline" onClick={handlePrevious}>
+                <Button 
+                  variant="outline" 
+                  onClick={handlePrevious}
+                  className="border-[#EDE9FE] text-[#444444] hover:bg-[#EDE9FE] hover:text-[#9A7DFF] transition-all"
+                >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Back
                 </Button>
               )}
               
-              <Button onClick={handleNext}>
+              <Button 
+                onClick={handleNext}
+                className="bg-[#9A7DFF] hover:bg-[#9A7DFF]/90 transition-all"
+              >
                 {currentStep === steps.length - 1 ? (
                   <>
                     Get Started
