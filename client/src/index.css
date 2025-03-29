@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --accent-lavender: 255 245 255; /* #EDE9FE */
+    --success-mint: 199 249 204; /* #C7F9CC */
+    --warning-peach: 255 214 165; /* #FFD6A5 */
+    --text-dark-gray: 68 68 68; /* #444444 */
+    --light-gray: 224 224 224; /* #E0E0E0 */
+  }
+
   * {
     @apply border-border;
   }
@@ -13,6 +21,7 @@
     padding-top: env(safe-area-inset-top);
     padding-right: env(safe-area-inset-right);
     padding-left: env(safe-area-inset-left);
+    color: rgb(var(--text-dark-gray));
   }
 }
 
@@ -38,5 +47,55 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  
+  /* Custom color utilities */
+  .bg-accent-lavender {
+    background-color: rgb(var(--accent-lavender));
+  }
+  
+  .text-accent-lavender {
+    color: rgb(var(--accent-lavender));
+  }
+  
+  .bg-success-mint {
+    background-color: rgb(var(--success-mint));
+  }
+  
+  .text-success-mint {
+    color: rgb(var(--success-mint));
+  }
+  
+  .bg-warning-peach {
+    background-color: rgb(var(--warning-peach));
+  }
+  
+  .text-warning-peach {
+    color: rgb(var(--warning-peach));
+  }
+  
+  .bg-text-dark-gray {
+    background-color: rgb(var(--text-dark-gray));
+  }
+  
+  .text-dark-gray {
+    color: rgb(var(--text-dark-gray));
+  }
+  
+  .bg-light-gray {
+    background-color: rgb(var(--light-gray));
+  }
+  
+  /* Confidence score color bands */
+  .confidence-low {
+    background-color: rgb(var(--light-gray));
+  }
+  
+  .confidence-medium {
+    background-color: rgb(var(--warning-peach));
+  }
+  
+  .confidence-high {
+    background-color: rgb(var(--success-mint));
   }
 }
