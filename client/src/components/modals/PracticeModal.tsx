@@ -248,6 +248,8 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
                   onStartRecording={handleStartRecording}
                   onStopRecording={handleStopRecording}
                   onRecordingComplete={handleRecordingComplete}
+                  promptCategory={`social_media_${selectedPlatform}`}
+                  promptText={currentPrompt?.text || ''}
                 />
                 {currentPrompt && (
                   <Teleprompter 
@@ -286,6 +288,8 @@ const PracticeModal: React.FC<PracticeModalProps> = ({ open, onOpenChange, onCom
                 onStartRecording={handleStartRecording}
                 onStopRecording={handleStopRecording}
                 onRecordingComplete={handleRecordingComplete}
+                promptCategory={selectedCategory}
+                promptText={currentPrompt?.text || ''}
               />
               {currentPrompt && (
                 <Teleprompter 

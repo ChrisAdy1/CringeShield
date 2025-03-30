@@ -1,9 +1,10 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { Button } from '@/components/ui/button';
-import { MicIcon, VideoIcon, StopCircleIcon, RefreshCwIcon, Camera } from 'lucide-react';
+import { MicIcon, VideoIcon, StopCircleIcon, RefreshCwIcon, Camera, Download } from 'lucide-react';
 import { FaceFilter } from './FaceFilter';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { formatDate } from '@/lib/utils';
 
 interface VideoRecorderProps {
   filterType: string;
@@ -11,6 +12,8 @@ interface VideoRecorderProps {
   isRecording: boolean;
   onStartRecording: () => void;
   onStopRecording: () => void;
+  promptCategory?: string;
+  promptText?: string;
 }
 
 const VideoRecorder: React.FC<VideoRecorderProps> = ({
@@ -18,7 +21,9 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
   onRecordingComplete,
   isRecording,
   onStartRecording,
-  onStopRecording
+  onStopRecording,
+  promptCategory = 'practice',
+  promptText = ''
 }) => {
   const isMobile = useIsMobile();
   const webcamRef = useRef<Webcam>(null);
@@ -71,17 +76,44 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
     };
   }, [isRecording]);
 
+  // State to store the recorded blob for download
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [showDownloadButton, setShowDownloadButton] = useState(false);
+
   // Complete recording and pass the blob
   useEffect(() => {
     if (recordedChunks.length > 0 && !isRecording) {
       const blob = new Blob(recordedChunks, {
         type: 'video/webm'
       });
+      setRecordedBlob(blob);
       onRecordingComplete(blob);
-      setRecordedChunks([]);
-      setRecordingDuration(0);
+      setShowDownloadButton(true);
     }
   }, [recordedChunks, isRecording, onRecordingComplete]);
+  
+  // Handle downloading the recording
+  const handleDownload = useCallback(() => {
+    if (recordedBlob) {
+      // Create a date-based filename
+      const date = formatDate(new Date());
+      const category = promptCategory.replace(/\s+/g, '-').toLowerCase();
+      const filename = `cringe-shield-${category}-${date}.webm`;
+      
+      // Create download link
+      const url = URL.createObjectURL(recordedBlob);
+      const a = document.createElement('a');
+      document.body.appendChild(a);
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
+  }, [recordedBlob, promptCategory]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -91,6 +123,8 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
 
   const handleStartRecording = useCallback(() => {
     setRecordedChunks([]);
+    setShowDownloadButton(false);
+    setRecordedBlob(null);
     
     if (webcamRef.current && webcamRef.current.stream) {
       mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream, {
@@ -177,31 +211,68 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
         {isMobile ? (
           // Mobile-optimized recording controls
           <div className="flex flex-col items-center">
-            {!isRecording ? (
-              <button 
-                onClick={handleStartRecording}
-                className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg"
-                aria-label="Start recording"
-              >
-                <Camera className="w-8 h-8" />
-              </button>
+            {showDownloadButton ? (
+              <>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleStartRecording}
+                    className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg"
+                    aria-label="Record again"
+                  >
+                    <Camera className="w-8 h-8" />
+                  </button>
+                  <button 
+                    onClick={handleDownload}
+                    className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg"
+                    aria-label="Download recording"
+                  >
+                    <Download className="w-8 h-8" />
+                  </button>
+                </div>
+                <div className="flex mt-2 gap-6">
+                  <span className="text-sm text-gray-600">Record again</span>
+                  <span className="text-sm text-gray-600">Download</span>
+                </div>
+              </>
+            ) : !isRecording ? (
+              <>
+                <button 
+                  onClick={handleStartRecording}
+                  className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg"
+                  aria-label="Start recording"
+                >
+                  <Camera className="w-8 h-8" />
+                </button>
+                <span className="mt-2 text-sm text-gray-600">Tap to record</span>
+              </>
             ) : (
-              <button 
-                onClick={handleStopRecording}
-                className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
-                aria-label="Stop recording"
-              >
-                <StopCircleIcon className="w-8 h-8" />
-              </button>
+              <>
+                <button 
+                  onClick={handleStopRecording}
+                  className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
+                  aria-label="Stop recording"
+                >
+                  <StopCircleIcon className="w-8 h-8" />
+                </button>
+                <span className="mt-2 text-sm text-gray-600">Tap to stop</span>
+              </>
             )}
-            <span className="mt-2 text-sm text-gray-600">
-              {!isRecording ? 'Tap to record' : 'Tap to stop'}
-            </span>
           </div>
         ) : (
           // Desktop controls
           <div className="space-x-3">
-            {!isRecording ? (
+            {showDownloadButton ? (
+              <>
+                <Button onClick={handleStartRecording} className="flex items-center" variant="outline" size="lg">
+                  <VideoIcon className="mr-2 h-4 w-4" />
+                  Record Again
+                </Button>
+                <Button onClick={handleDownload} className="flex items-center" variant="default" size="lg">
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Recording
+                </Button>
+              </>
+            ) : !isRecording ? (
               <Button onClick={handleStartRecording} className="flex items-center" size="lg">
                 <VideoIcon className="mr-2 h-4 w-4" />
                 Start Recording
