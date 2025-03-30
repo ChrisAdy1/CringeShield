@@ -39,20 +39,42 @@ const Recording: React.FC = () => {
   const [showTeleprompter, setShowTeleprompter] = useState(true);
   const { preferences } = useUserPreferences();
   
+  // Camera error state
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
   // Set up camera
   useEffect(() => {
     async function setupCamera() {
       try {
+        // First try just video without audio in case audio is causing issues
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: true, 
-          audio: true 
+          video: { facingMode: "user" }, 
+          audio: false 
         });
         
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
+        
+        // After video succeeds, try to add audio separately
+        try {
+          const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const videoTracks = stream.getVideoTracks();
+          const audioTracks = audioStream.getAudioTracks();
+          
+          // Combine tracks if available
+          if (videoTracks.length > 0 && audioTracks.length > 0) {
+            const combinedStream = new MediaStream([...videoTracks, ...audioTracks]);
+            if (videoRef.current) {
+              videoRef.current.srcObject = combinedStream;
+            }
+          }
+        } catch (audioErr) {
+          console.warn('Could not access microphone, continuing with video only');
+        }
       } catch (err) {
         console.error('Error accessing camera:', err);
+        setCameraError('Unable to access camera. Please make sure camera permissions are granted and try again.');
       }
     }
     
@@ -186,23 +208,41 @@ const Recording: React.FC = () => {
       
       {/* Camera view */}
       <div className="flex-1 relative">
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
-          muted 
-          className="w-full h-full object-cover"
-        />
-        
-        {/* Teleprompter overlay */}
-        {showTeleprompter && recordingType !== 'free' && (
-          <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-4 text-white max-h-[30%] overflow-y-auto">
-            <p className="text-lg leading-relaxed">
-              {recordingType === 'script' && script 
-                ? script.text 
-                : promptText}
-            </p>
+        {cameraError ? (
+          <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gray-100">
+            <div className="text-red-500 mb-4 text-5xl">📷</div>
+            <h3 className="text-lg font-medium mb-2">Camera Access Error</h3>
+            <p className="text-center text-muted-foreground mb-4">{cameraError}</p>
+            <div className="flex flex-col space-y-2">
+              <Button onClick={() => navigate('/prompts')}>
+                Go Back to Prompts
+              </Button>
+              <Button variant="outline" onClick={skipToPostSession}>
+                Skip to Feedback (Demo)
+              </Button>
+            </div>
           </div>
+        ) : (
+          <>
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline 
+              muted 
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Teleprompter overlay */}
+            {showTeleprompter && recordingType !== 'free' && (
+              <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-4 text-white max-h-[30%] overflow-y-auto">
+                <p className="text-lg leading-relaxed">
+                  {recordingType === 'script' && script 
+                    ? script.text 
+                    : promptText}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
       

@@ -23,7 +23,7 @@ const Home: React.FC = () => {
     : 'No sessions yet';
   
   // Handle the first time user or returning user
-  const isFirstTime = !preferences.hasSeenOnboarding || !preferences.confidenceTier;
+  const isFirstTime = !preferences.hasSeenOnboarding || !preferences.hasCompletedAssessment;
   
   // Get badges
   const earnedBadgeDetails = getEarnedBadgeDetails();
