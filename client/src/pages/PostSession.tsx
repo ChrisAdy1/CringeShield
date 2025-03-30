@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Play, Repeat, Home } from 'lucide-react';
+import { Play, Repeat, Home, Download } from 'lucide-react';
 import { useBadges } from '@/hooks/useBadges';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { SelfReflectionRating } from '@/lib/types';
@@ -83,6 +83,21 @@ const PostSession: React.FC = () => {
     // In a real app, this would open the recording playback
     if (session && session.recordingUrl) {
       window.open(session.recordingUrl, '_blank');
+    }
+  };
+  
+  // Handle downloading the recording
+  const handleDownloadRecording = () => {
+    if (session && session.recordingUrl) {
+      const date = new Date().toISOString().slice(0, 10);
+      const filename = `cringe-shield-recording-${date}.webm`;
+      
+      const a = document.createElement('a');
+      a.href = session.recordingUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
   
@@ -177,6 +192,25 @@ const PostSession: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
+        
+        {/* Recording info */}
+        {session?.recordingUrl && (
+          <Card className="mb-4 border-green-200 bg-green-50">
+            <CardContent className="p-4 text-center">
+              <p className="text-sm mb-1">
+                Your recording is ready! You can download it to your device.
+              </p>
+              <Button 
+                variant="default" 
+                onClick={handleDownloadRecording}
+                className="mt-2 bg-green-600 hover:bg-green-700"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Recording
+              </Button>
+            </CardContent>
+          </Card>
+        )}
         
         {/* Action buttons */}
         <div className="flex space-x-2">

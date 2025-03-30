@@ -300,22 +300,28 @@ const Recording: React.FC = () => {
       <div className="p-4 bg-background">
         <div className="flex justify-center items-center space-x-4">
           {isRecording ? (
-            <Button
-              variant="destructive"
-              size="lg"
-              className="rounded-full h-14 w-14 flex items-center justify-center"
-              onClick={stopRecording}
-            >
-              <Square className="h-6 w-6" />
-            </Button>
+            <div className="flex flex-col items-center">
+              <Button
+                variant="destructive"
+                size="lg"
+                className="rounded-full h-14 w-14 flex items-center justify-center mb-2"
+                onClick={stopRecording}
+              >
+                <Square className="h-6 w-6" />
+              </Button>
+              <span className="text-sm font-medium">Stop</span>
+            </div>
           ) : (
-            <Button
-              size="lg"
-              className="rounded-full h-14 w-14 flex items-center justify-center bg-red-500 hover:bg-red-600"
-              onClick={startRecording}
-            >
-              <Circle className="h-6 w-6" fill="currentColor" />
-            </Button>
+            <div className="flex flex-col items-center">
+              <Button
+                size="lg"
+                className="rounded-full h-14 w-14 flex items-center justify-center bg-red-500 hover:bg-red-600 mb-2"
+                onClick={startRecording}
+              >
+                <Circle className="h-6 w-6" fill="currentColor" />
+              </Button>
+              <span className="text-sm font-medium">Start</span>
+            </div>
           )}
         </div>
         
@@ -337,6 +343,11 @@ const Recording: React.FC = () => {
           {recordingType === 'prompt' && "Speaking from prompt"}
           {recordingType === 'script' && "Reading from script"}
           {recordingType === 'free' && "Free talking mode"}
+          
+          <div className="mt-2 text-xs bg-gray-100 p-2 rounded-md">
+            After recording, you'll be taken to a review screen where you can download your video 
+            or get a report. Your video stays on your device and is not uploaded anywhere.
+          </div>
         </div>
       </div>
     </div>
