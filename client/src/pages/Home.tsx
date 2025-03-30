@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { PlusIcon, ExternalLink, MessageCircle, Briefcase, BookOpen, Users, Presentation, Shuffle, LightbulbIcon, TrendingUp, ChevronRight } from 'lucide-react';
 import { calculateStreak, getLastSevenDays, getDailyTip, promptCategories } from '@/lib/utils';
-import { ProgressData, PracticeSession, SelfReflectionRating, FeedbackRating } from '@/lib/types';
+import { ProgressData, PracticeSession, SelfReflectionRating, FeedbackRating, ConfidenceTier } from '@/lib/types';
 import PracticeModal from '@/components/modals/PracticeModal';
 import FeedbackModal from '@/components/modals/FeedbackModal';
 import SelfReflectionModal from '@/components/modals/SelfReflectionModal';
 import OnboardingModal from '@/components/modals/OnboardingModal';
+import ConfidenceAssessmentModal from '@/components/modals/ConfidenceAssessmentModal';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
@@ -149,9 +150,10 @@ const Home: React.FC = () => {
   // Self-reflection modal state
   const [isSelfReflectionModalOpen, setIsSelfReflectionModalOpen] = useState(false);
   
-  // User preferences for onboarding
-  const { preferences, markOnboardingComplete } = useUserPreferences();
+  // User preferences for onboarding and confidence assessment
+  const { preferences, markOnboardingComplete, saveConfidenceAssessment } = useUserPreferences();
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(!preferences.hasSeenOnboarding);
+  const [isConfidenceAssessmentOpen, setIsConfidenceAssessmentOpen] = useState(false);
   
   // Self-reflection hook
   const { addReflection } = useSelfReflections();
@@ -172,6 +174,17 @@ const Home: React.FC = () => {
   const handleOnboardingComplete = () => {
     markOnboardingComplete();
     setIsOnboardingModalOpen(false);
+    
+    // Only show the confidence assessment if user hasn't completed it yet
+    if (!preferences.hasCompletedAssessment) {
+      setIsConfidenceAssessmentOpen(true);
+    }
+  };
+  
+  // Handle confidence assessment completion
+  const handleConfidenceAssessmentComplete = (tier: ConfidenceTier) => {
+    saveConfidenceAssessment(tier);
+    setIsConfidenceAssessmentOpen(false);
   };
   
   // Get the confidence score color based on value using our brand-safe palette
@@ -432,6 +445,13 @@ const Home: React.FC = () => {
       <OnboardingModal
         open={isOnboardingModalOpen}
         onComplete={handleOnboardingComplete}
+      />
+      
+      {/* Confidence Assessment Modal */}
+      <ConfidenceAssessmentModal
+        open={isConfidenceAssessmentOpen}
+        onOpenChange={setIsConfidenceAssessmentOpen}
+        onComplete={handleConfidenceAssessmentComplete}
       />
       
       {/* Conditional tooltip based on onboarding */}

@@ -5,6 +5,7 @@ export interface User {
 
 export type FeedbackRating = 'nervous' | 'okay' | 'confident';
 export type SelfReflectionRating = 1 | 2 | 3 | 4 | 5;
+export type ConfidenceTier = 'shy_starter' | 'growing_speaker' | 'confident_creator';
 
 export interface PracticeSession {
   id: number;
@@ -65,4 +66,6 @@ export interface UserPreferences {
   showTimer: boolean;
   enableFaceFilters: boolean;
   favoritePrompts: number[];
+  confidenceTier?: ConfidenceTier;
+  hasCompletedAssessment: boolean;
 }

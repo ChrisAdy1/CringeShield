@@ -1,11 +1,12 @@
-import { UserPreferences } from '@/lib/types';
+import { UserPreferences, ConfidenceTier } from '@/lib/types';
 import useLocalStorage from './useLocalStorage';
 
 const defaultPreferences: UserPreferences = {
   hasSeenOnboarding: false,
   showTimer: true,
   enableFaceFilters: true,
-  favoritePrompts: []
+  favoritePrompts: [],
+  hasCompletedAssessment: false
 };
 
 export function useUserPreferences() {
@@ -47,11 +48,20 @@ export function useUserPreferences() {
     updatePreference('favoritePrompts', currentFavorites);
   };
 
+  const saveConfidenceAssessment = (tier: ConfidenceTier) => {
+    setPreferences((prev) => ({
+      ...prev,
+      confidenceTier: tier,
+      hasCompletedAssessment: true
+    }));
+  };
+
   return {
     preferences,
     updatePreference,
     markOnboardingComplete,
     toggleSetting,
-    toggleFavoritePrompt
+    toggleFavoritePrompt,
+    saveConfidenceAssessment
   };
 }
