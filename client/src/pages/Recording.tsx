@@ -6,6 +6,12 @@ import { ArrowLeft, Circle, Square, FastForward } from 'lucide-react';
 import { useCustomScripts } from '@/hooks/useCustomScripts';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
 
+// Define BlobEvent type if not available
+interface BlobEvent extends Event {
+  data: Blob;
+  timecode?: number;
+}
+
 const Recording: React.FC = () => {
   const [, navigate] = useLocation();
   const [, params] = useRoute('/recording');
@@ -91,28 +97,61 @@ const Recording: React.FC = () => {
   
   // Start recording
   const startRecording = () => {
-    if (!videoRef.current || !videoRef.current.srcObject) return;
+    if (!videoRef.current || !videoRef.current.srcObject) {
+      console.error('No video source found for recording');
+      return;
+    }
     
     chunksRef.current = [];
     const stream = videoRef.current.srcObject as MediaStream;
     
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
+    try {
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
+      mediaRecorderRef.current = mediaRecorder;
+    } catch (err) {
+      console.warn('MediaRecorder with specified options not supported, trying fallback', err);
+      try {
+        // Try a simpler configuration as fallback
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+      } catch (fallbackErr) {
+        console.error('MediaRecorder not supported in this browser', fallbackErr);
+        setCameraError('Recording is not supported in this browser. Try a different browser or device.');
+        return;
+      }
+    }
     
-    mediaRecorder.ondataavailable = (e) => {
+    if (!mediaRecorderRef.current) {
+      console.error('MediaRecorder not initialized');
+      return;
+    }
+    
+    mediaRecorderRef.current.ondataavailable = (e: BlobEvent) => {
       if (e.data.size > 0) {
         chunksRef.current.push(e.data);
       }
     };
     
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-      setRecordedBlob(blob);
+    mediaRecorderRef.current.onstop = () => {
+      try {
+        if (chunksRef.current && chunksRef.current.length > 0) {
+          const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+          setRecordedBlob(blob);
+        } else {
+          console.warn('No chunks available when recording stopped');
+        }
+      } catch (err) {
+        console.error('Error creating blob from chunks:', err);
+      }
     };
     
     // Start the recorder
-    mediaRecorder.start();
-    setIsRecording(true);
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } else {
+      console.error('MediaRecorder not initialized');
+    }
     
     // Start timer
     timerRef.current = setInterval(() => {
@@ -132,6 +171,17 @@ const Recording: React.FC = () => {
       }
       
       // Save session data in a simplistic way for MVP
+      let recordingUrl;
+      try {
+        // Only create object URL if we have valid chunks
+        if (chunksRef.current && chunksRef.current.length > 0) {
+          const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+          recordingUrl = URL.createObjectURL(blob);
+        }
+      } catch (err) {
+        console.error('Error creating URL for recording:', err);
+      }
+      
       const sessionData = {
         id: Date.now(),
         date: new Date().toISOString(),
@@ -139,7 +189,7 @@ const Recording: React.FC = () => {
         type: recordingType,
         promptId: promptId || undefined,
         promptText: promptText || (script ? script.text : ''),
-        recordingUrl: URL.createObjectURL(chunksRef.current[0]), // This is temporary and won't persist
+        recordingUrl: recordingUrl, // May be undefined, which is OK for MVP
       };
       
       // Store in local storage
