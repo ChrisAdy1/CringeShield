@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { PlusIcon, ExternalLink, MessageCircle, Briefcase, BookOpen, Users, Presentation, Shuffle, LightbulbIcon, TrendingUp, ChevronRight } from 'lucide-react';
+import { PlusIcon, ExternalLink, MessageCircle, Briefcase, BookOpen, Users, Presentation, Shuffle, LightbulbIcon, TrendingUp, ChevronRight, Medal } from 'lucide-react';
 import { calculateStreak, getLastSevenDays, getDailyTip, promptCategories } from '@/lib/utils';
 import { ProgressData, PracticeSession, SelfReflectionRating, FeedbackRating, ConfidenceTier } from '@/lib/types';
 import PracticeModal from '@/components/modals/PracticeModal';
@@ -12,9 +12,11 @@ import FeedbackModal from '@/components/modals/FeedbackModal';
 import SelfReflectionModal from '@/components/modals/SelfReflectionModal';
 import OnboardingModal from '@/components/modals/OnboardingModal';
 import ConfidenceAssessmentModal from '@/components/modals/ConfidenceAssessmentModal';
+import BadgeDisplay from '@/components/BadgeDisplay';
 import useLocalStorage from '@/hooks/useLocalStorage';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useBadges } from '@/hooks/useBadges';
 import { apiRequest } from '@/lib/queryClient';
 
 const Home: React.FC = () => {
@@ -119,10 +121,27 @@ const Home: React.FC = () => {
         filter: pendingSession.filterType,
         confidenceScore: pendingSession.confidenceScore,
         userRating: userRating,
-        aiNotes: pendingSession.aiNotes
+        aiNotes: pendingSession.aiNotes,
+        // Add badge-related fields
+        scriptUsed: pendingSession.isCustomScript || false,
+        mode: pendingSession.isCustomScript ? 'script' : 'prompted',
+        retries: pendingSession.retries || 0
       };
       
-      setSessions([...sessions, newSession]);
+      // Save session
+      const updatedSessions = [...sessions, newSession];
+      setSessions(updatedSessions);
+      
+      // Check for "First Step" badge on the first session
+      if (updatedSessions.length === 1) {
+        checkSession(newSession, { totalSessions: 1 });
+      }
+      
+      // Check for other badges
+      if (newSession.scriptUsed) {
+        checkSession(newSession, { totalSessions: updatedSessions.length });
+      }
+      
       setPendingSession(null);
       setIsFeedbackModalOpen(false);
     }
@@ -130,7 +149,17 @@ const Home: React.FC = () => {
 
   const handleTryAgain = () => {
     setIsFeedbackModalOpen(false);
-    setPendingSession(null);
+    
+    // Increment retries count for the "Bounce Back" badge
+    if (pendingSession) {
+      setPendingSession({
+        ...pendingSession,
+        retries: (pendingSession.retries || 0) + 1
+      });
+    } else {
+      setPendingSession(null);
+    }
+    
     setIsPracticeModalOpen(true);
   };
 
@@ -158,9 +187,31 @@ const Home: React.FC = () => {
   // Self-reflection hook
   const { addReflection } = useSelfReflections();
   
+  // Badges hook
+  const { checkSession } = useBadges();
+  
   // Handle self-reflection completion
   const handleSelfReflectionComplete = (rating: SelfReflectionRating, note?: string) => {
     addReflection(rating, note);
+    
+    // Get last session to check for badges
+    if (sessions.length > 0) {
+      const lastSession = sessions[sessions.length - 1];
+      
+      // Update session with note (for "Reflector" badge)
+      const updatedSession = {
+        ...lastSession,
+        note
+      };
+      
+      // Save the updated session
+      const updatedSessions = [...sessions.slice(0, -1), updatedSession];
+      setSessions(updatedSessions);
+      
+      // Check for badges
+      checkSession(updatedSession, { totalSessions: sessions.length });
+    }
+    
     setIsSelfReflectionModalOpen(false);
   };
   
@@ -394,6 +445,18 @@ const Home: React.FC = () => {
             </Card>
           ))}
         </div>
+      </section>
+
+      {/* Achievements Section */}
+      <section className="mb-8 opacity-0 transition-opacity duration-500">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold flex items-center">
+            <Medal className="h-5 w-5 mr-2 text-primary" />
+            Your Achievements
+          </h2>
+          <BadgeDisplay compact={true} />
+        </div>
+        <BadgeDisplay />
       </section>
 
       {/* Daily Tip */}

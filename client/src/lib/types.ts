@@ -19,6 +19,10 @@ export interface PracticeSession {
   selfReflectionRating?: SelfReflectionRating;
   isCustomScript?: boolean;
   aiNotes?: AIFeedback;
+  scriptUsed?: boolean;
+  mode?: string;
+  retries?: number;
+  note?: string;
 }
 
 export interface AIFeedback {
