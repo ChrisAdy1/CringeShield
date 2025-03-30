@@ -171,25 +171,48 @@ const Recording: React.FC = () => {
       }
       
       // Save session data in a simplistic way for MVP
-      let recordingUrl;
+      let recordingBlob;
+      // Generate ID once for use in both the recording key and session data
+      const sessionId = Date.now();
+      
       try {
-        // Only create object URL if we have valid chunks
+        // Store the actual blob for access in the post-session screen
         if (chunksRef.current && chunksRef.current.length > 0) {
-          const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-          recordingUrl = URL.createObjectURL(blob);
+          recordingBlob = new Blob(chunksRef.current, { type: 'video/webm' });
+          
+          // Store blob in a session-specific localStorage item
+          // This is not ideal for large files, but works for demo purposes
+          const reader = new FileReader();
+          reader.readAsDataURL(recordingBlob);
+          reader.onloadend = function() {
+            const base64data = reader.result;
+            // Store separately from session data to avoid localStorage size limits
+            localStorage.setItem(`recording-${sessionId}`, base64data as string);
+          };
         }
       } catch (err) {
-        console.error('Error creating URL for recording:', err);
+        console.error('Error creating blob from recording:', err);
       }
       
-      const sessionData = {
-        id: Date.now(),
+      // Define sessionData with proper type annotation to avoid implicit 'any'
+      const sessionData: {
+        id: number;
+        date: string;
+        duration: number;
+        type: string;
+        promptId?: number | string;
+        promptText?: string;
+        recordingKey: string;
+        hasRecording: boolean;
+      } = {
+        id: sessionId,
         date: new Date().toISOString(),
         duration: recordingTime,
         type: recordingType,
         promptId: promptId || undefined,
         promptText: promptText || (script ? script.text : ''),
-        recordingUrl: recordingUrl, // May be undefined, which is OK for MVP
+        recordingKey: `recording-${sessionId}`, // Key to look up the recording in localStorage
+        hasRecording: !!recordingBlob, // Flag to indicate if recording exists
       };
       
       // Store in local storage
@@ -211,14 +234,28 @@ const Recording: React.FC = () => {
   
   // Skip recording (for demo purposes)
   const skipToPostSession = () => {
-    // Create a simple mock session for demo
-    const sessionData = {
-      id: Date.now(),
+    // Generate an ID for the session
+    const sessionId = Date.now();
+    
+    // Create a simple mock session for demo with proper typing
+    const sessionData: {
+      id: number;
+      date: string;
+      duration: number;
+      type: string;
+      promptId?: number | string;
+      promptText?: string;
+      recordingKey: string;
+      hasRecording: boolean;
+    } = {
+      id: sessionId,
       date: new Date().toISOString(),
       duration: 30, // Mock 30 seconds
       type: recordingType,
       promptId: promptId || undefined,
       promptText: promptText || (script ? script.text : ''),
+      recordingKey: `recording-${sessionId}`, // Include key for consistency
+      hasRecording: false // Indicate there's no actual recording data
     };
     
     // Store in local storage

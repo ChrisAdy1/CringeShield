@@ -78,22 +78,33 @@ const PostSession: React.FC = () => {
     }
   };
   
-  // Handle watching the recording
-  const handleWatchRecording = () => {
-    // In a real app, this would open the recording playback
-    if (session && session.recordingUrl) {
-      window.open(session.recordingUrl, '_blank');
+  // Create URL from base64 data
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  
+  // Get recording data from localStorage when session loads
+  useEffect(() => {
+    if (session && session.recordingKey) {
+      const recordingData = localStorage.getItem(session.recordingKey);
+      if (recordingData) {
+        // For data URLs, we can just use them directly
+        try {
+          setRecordingUrl(recordingData);
+        } catch (err) {
+          console.error('Error setting recording URL:', err);
+        }
+      }
     }
-  };
+  }, [session]);
   
   // Handle downloading the recording
   const handleDownloadRecording = () => {
-    if (session && session.recordingUrl) {
+    if (recordingUrl) {
       const date = new Date().toISOString().slice(0, 10);
       const filename = `cringe-shield-recording-${date}.webm`;
       
+      // Create temporary anchor element for download
       const a = document.createElement('a');
-      a.href = session.recordingUrl;
+      a.href = recordingUrl;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
@@ -193,10 +204,18 @@ const PostSession: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Recording info */}
-        {session?.recordingUrl && (
+        {/* Recording preview and download */}
+        {recordingUrl && (
           <Card className="mb-4 border-green-200 bg-green-50">
             <CardContent className="p-4 text-center">
+              {/* Video preview embedded */}
+              <div className="mb-3 bg-black rounded-md overflow-hidden">
+                <video 
+                  src={recordingUrl} 
+                  controls 
+                  className="max-w-full mx-auto"
+                />
+              </div>
               <p className="text-sm mb-1">
                 Your recording is ready! You can download it to your device.
               </p>
@@ -217,19 +236,10 @@ const PostSession: React.FC = () => {
           <Button 
             variant="outline" 
             className="flex-1 flex items-center justify-center"
-            onClick={handleWatchRecording}
-            disabled={!session?.recordingUrl}
-          >
-            <Play className="mr-2 h-4 w-4" />
-            Watch
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex-1 flex items-center justify-center"
             onClick={handleRetry}
           >
             <Repeat className="mr-2 h-4 w-4" />
-            Retry
+            Try Again
           </Button>
           <Button 
             variant="outline" 
