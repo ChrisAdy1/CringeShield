@@ -20,55 +20,76 @@ export interface Badge {
 
 export const badges: Badge[] = [
   {
-    id: "first_step",
-    name: "First Step",
-    icon: "🎉",
-    check: (userData: any) => userData && userData.totalSessions === 1,
+    id: 'first_step',
+    name: 'First Step',
+    icon: '🎯',
+    check: (session: Session, userData: UserData) => {
+      return userData.totalSessions === 1;
+    }
   },
   {
-    id: "smooth_reader",
-    name: "Smooth Reader",
-    icon: "📜",
-    check: (session: any) => session && session.scriptUsed === true,
+    id: 'smooth_reader',
+    name: 'Smooth Reader',
+    icon: '📝',
+    check: (session: Session) => {
+      return !!session.scriptUsed || session.mode === 'script';
+    }
   },
   {
-    id: "free_spirit",
-    name: "Free Spirit",
-    icon: "💬",
-    check: (session: any) => session && session.mode === "freeTalk",
+    id: 'free_spirit',
+    name: 'Free Spirit',
+    icon: '🦅',
+    check: (session: Session) => {
+      return session.mode === 'free';
+    }
   },
   {
-    id: "bounce_back",
-    name: "Bounce Back",
-    icon: "🔁",
-    check: (session: any) => session && (session.retries || 0) > 0,
+    id: 'bounce_back',
+    name: 'Bounce Back',
+    icon: '🔄',
+    check: (session: Session) => {
+      return !!session.retries && session.retries > 0;
+    }
   },
   {
-    id: "reflector",
-    name: "Reflector",
-    icon: "🧠",
-    check: (session: any) => session && !!session.note,
+    id: 'reflector',
+    name: 'Reflector',
+    icon: '🤔',
+    check: (session: Session) => {
+      return !!session.note && session.note.length > 0;
+    }
   },
+  {
+    id: 'regular',
+    name: 'Regular',
+    icon: '⭐',
+    check: (session: Session, userData: UserData) => {
+      return userData.totalSessions >= 5;
+    }
+  },
+  {
+    id: 'dedicated',
+    name: 'Dedicated',
+    icon: '🌟',
+    check: (session: Session, userData: UserData) => {
+      return userData.totalSessions >= 10;
+    }
+  },
+  {
+    id: 'master',
+    name: 'Master',
+    icon: '👑',
+    check: (session: Session, userData: UserData) => {
+      return userData.totalSessions >= 25;
+    }
+  }
 ];
 
 export function checkEarnedBadges(
   session: Session, 
   userData: UserData, 
-  alreadyEarned: string[] = []
 ): string[] {
   return badges
-    .filter((b) => {
-      // Check if badge is already earned
-      if (alreadyEarned.includes(b.id)) {
-        return false;
-      }
-      
-      // Determine which parameter to pass based on the badge
-      if (b.id === "first_step") {
-        return b.check(userData);
-      } else {
-        return b.check(session);
-      }
-    })
-    .map((b) => b.id);
+    .filter(badge => badge.check(session, userData))
+    .map(badge => badge.name);
 }

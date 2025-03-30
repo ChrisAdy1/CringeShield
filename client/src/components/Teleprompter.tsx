@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import React, { useEffect, useRef } from 'react';
 
 interface TeleprompterProps {
   text: string;
@@ -7,74 +6,69 @@ interface TeleprompterProps {
   isRecording: boolean;
 }
 
-const Teleprompter: React.FC<TeleprompterProps> = ({ text, isVisible, isRecording }) => {
-  const isMobile = useIsMobile();
+const Teleprompter: React.FC<TeleprompterProps> = ({ 
+  text, 
+  isVisible, 
+  isRecording 
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<number | null>(null);
   
-  // Auto-scroll effect when recording is active
+  // Auto-scroll when recording
   useEffect(() => {
-    if (!isVisible || !isRecording || !containerRef.current || !contentRef.current) return;
+    // Clear any existing scroll interval
+    if (scrollRef.current) {
+      clearInterval(scrollRef.current);
+      scrollRef.current = null;
+    }
     
-    // Get the height of the content and container
-    const containerHeight = containerRef.current.clientHeight;
-    const contentHeight = contentRef.current.scrollHeight;
-    const scrollDistance = contentHeight - containerHeight;
-    
-    if (scrollDistance <= 0) return; // No need to scroll
-    
-    // Calculate scroll duration based on content length (roughly 3s per 100 chars)
-    const baseDuration = 3000; // Base duration in milliseconds
-    const durationPerChar = 30; // Additional ms per character
-    const scrollDuration = Math.max(
-      baseDuration,
-      Math.min(60000, baseDuration + (text.length * durationPerChar))
-    );
-    
-    // Smooth scroll animation
-    const startTime = Date.now();
-    const scroll = () => {
-      if (!containerRef.current || !isRecording || !isVisible) return;
+    // Start auto-scroll if recording and visible
+    if (isRecording && isVisible && containerRef.current) {
+      // Calculate scroll speed based on text length
+      // Adjust the divisor to control scroll speed
+      const textLength = text.length;
+      const scrollSpeed = Math.max(40, Math.min(70, 60 - (textLength / 500)));
       
-      const elapsedTime = Date.now() - startTime;
-      const progress = Math.min(1, elapsedTime / scrollDuration);
-      const scrollTop = scrollDistance * progress;
-      
-      containerRef.current.scrollTop = scrollTop;
-      
-      if (progress < 1 && isRecording && isVisible) {
-        requestAnimationFrame(scroll);
-      }
-    };
-    
-    // Start scrolling
-    const animationId = requestAnimationFrame(scroll);
+      scrollRef.current = window.setInterval(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop += 1;
+        }
+      }, scrollSpeed);
+    }
     
     // Cleanup
     return () => {
-      cancelAnimationFrame(animationId);
-      if (containerRef.current) {
-        containerRef.current.scrollTop = 0;
+      if (scrollRef.current) {
+        clearInterval(scrollRef.current);
       }
     };
-  }, [text, isVisible, isRecording]);
+  }, [isRecording, isVisible, text]);
   
-  if (!isVisible) return null;
+  // Reset scroll position when visibility changes
+  useEffect(() => {
+    if (containerRef.current && !isVisible) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, [isVisible]);
+  
+  if (!isVisible) {
+    return null;
+  }
   
   return (
     <div 
-      className={`
-        absolute inset-x-0 bottom-0 bg-black/70 text-white overflow-y-auto
-        ${isMobile ? 'max-h-24 p-2 mb-16' : 'max-h-28 p-3 mb-20'}
-        rounded-md backdrop-blur-sm
-        border-t border-white/20
-      `}
-      style={{ zIndex: 20 }}
       ref={containerRef}
+      className="absolute bottom-0 left-0 right-0 bg-black/70 p-4 text-white max-h-[30%] overflow-y-auto"
+      style={{
+        scrollBehavior: 'smooth'
+      }}
     >
-      <div ref={contentRef} className={`${isMobile ? 'text-sm' : 'text-base'} leading-relaxed`}>
+      <p className="text-lg leading-relaxed whitespace-pre-line">
         {text}
-      </div>
+      </p>
+      
+      {/* Add extra space at the bottom to allow complete scrolling */}
+      <div className="h-32"></div>
     </div>
   );
 };

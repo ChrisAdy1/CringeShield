@@ -4,9 +4,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
-import Practice from "@/pages/Practice";
-import Progress from "@/pages/Progress";
-import Settings from "@/pages/Settings";
+import Onboarding from "@/pages/Onboarding";
+import Prompts from "@/pages/Prompts";
+import Recording from "@/pages/Recording";
+import PostSession from "@/pages/PostSession";
+import Badges from "@/pages/Badges";
 
 function Router() {
   const [location] = useLocation();
@@ -15,9 +17,11 @@ function Router() {
     <Layout currentPath={location}>
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/practice" component={Practice} />
-        <Route path="/progress" component={Progress} />
-        <Route path="/settings" component={Settings} />
+        <Route path="/onboarding" component={Onboarding} />
+        <Route path="/prompts" component={Prompts} />
+        <Route path="/recording" component={Recording} />
+        <Route path="/post-session" component={PostSession} />
+        <Route path="/badges" component={Badges} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

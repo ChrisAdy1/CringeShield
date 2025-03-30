@@ -1,67 +1,79 @@
-import { UserPreferences, ConfidenceTier } from '@/lib/types';
+import { useState, useCallback } from 'react';
 import useLocalStorage from './useLocalStorage';
+import { UserPreferences, ConfidenceTier } from '@/lib/types';
 
 const defaultPreferences: UserPreferences = {
   hasSeenOnboarding: false,
   showTimer: true,
   enableFaceFilters: true,
   favoritePrompts: [],
-  hasCompletedAssessment: false
+  hasCompletedAssessment: false,
 };
 
 export function useUserPreferences() {
   const [preferences, setPreferences] = useLocalStorage<UserPreferences>(
-    'user-preferences', 
+    'user-preferences',
     defaultPreferences
   );
 
-  const updatePreference = <K extends keyof UserPreferences>(
+  // Generic update function for any preference
+  const updatePreference = useCallback(<K extends keyof UserPreferences>(
     key: K, 
     value: UserPreferences[K]
   ) => {
-    setPreferences((prev) => ({
+    setPreferences(prev => ({
       ...prev,
       [key]: value
     }));
-  };
+  }, [setPreferences]);
 
-  const markOnboardingComplete = () => {
+  // Specific preference updates
+  const markOnboardingComplete = useCallback(() => {
     updatePreference('hasSeenOnboarding', true);
-  };
+  }, [updatePreference]);
 
-  const toggleSetting = (key: 'showTimer' | 'enableFaceFilters') => {
-    updatePreference(key, !preferences[key]);
-  };
+  const toggleTimer = useCallback(() => {
+    updatePreference('showTimer', !preferences.showTimer);
+  }, [preferences.showTimer, updatePreference]);
 
-  const toggleFavoritePrompt = (promptId: number) => {
-    const currentFavorites = [...preferences.favoritePrompts];
-    const index = currentFavorites.indexOf(promptId);
-    
-    if (index >= 0) {
-      // Remove from favorites
-      currentFavorites.splice(index, 1);
-    } else {
-      // Add to favorites
-      currentFavorites.push(promptId);
+  const toggleFaceFilters = useCallback(() => {
+    updatePreference('enableFaceFilters', !preferences.enableFaceFilters);
+  }, [preferences.enableFaceFilters, updatePreference]);
+
+  const addFavoritePrompt = useCallback((promptId: number) => {
+    if (!preferences.favoritePrompts.includes(promptId)) {
+      updatePreference('favoritePrompts', [...preferences.favoritePrompts, promptId]);
     }
-    
-    updatePreference('favoritePrompts', currentFavorites);
-  };
+  }, [preferences.favoritePrompts, updatePreference]);
 
-  const saveConfidenceAssessment = (tier: ConfidenceTier) => {
-    setPreferences((prev) => ({
+  const removeFavoritePrompt = useCallback((promptId: number) => {
+    updatePreference(
+      'favoritePrompts', 
+      preferences.favoritePrompts.filter(id => id !== promptId)
+    );
+  }, [preferences.favoritePrompts, updatePreference]);
+
+  const saveConfidenceAssessment = useCallback((tier: ConfidenceTier) => {
+    setPreferences(prev => ({
       ...prev,
       confidenceTier: tier,
       hasCompletedAssessment: true
     }));
-  };
+  }, [setPreferences]);
+
+  const resetPreferences = useCallback(() => {
+    setPreferences(defaultPreferences);
+  }, [setPreferences]);
 
   return {
     preferences,
     updatePreference,
     markOnboardingComplete,
-    toggleSetting,
-    toggleFavoritePrompt,
-    saveConfidenceAssessment
+    toggleTimer,
+    toggleFaceFilters,
+    addFavoritePrompt,
+    removeFavoritePrompt,
+    saveConfidenceAssessment,
+    resetPreferences
   };
 }

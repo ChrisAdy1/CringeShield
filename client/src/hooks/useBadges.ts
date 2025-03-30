@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
 import useLocalStorage from './useLocalStorage';
-import { badges, checkEarnedBadges, Badge } from '@/lib/badgeLogic';
-import { useToast } from '@/hooks/use-toast';
+import { badges, Badge, checkEarnedBadges } from '@/lib/badgeLogic';
 import { PracticeSession } from '@/lib/types';
 
 interface BadgeState {
@@ -10,66 +9,73 @@ interface BadgeState {
 }
 
 export function useBadges() {
-  const [badgeState, setBadgeState] = useLocalStorage<BadgeState>('user-badges', {
+  const [badgeState, setBadgeState] = useLocalStorage<BadgeState>('badge-state', {
     earned: [],
     lastSeen: []
   });
-  const [newBadges, setNewBadges] = useState<string[]>([]);
-  const { toast } = useToast();
 
-  // Calculate new, unseen badges
-  useEffect(() => {
-    const unseenBadges = badgeState.earned.filter(
-      id => !badgeState.lastSeen.includes(id)
-    );
-    setNewBadges(unseenBadges);
-  }, [badgeState]);
+  // Get new badges (earned but not seen)
+  const newBadges = badgeState.earned.filter(
+    badge => !badgeState.lastSeen.includes(badge)
+  );
 
   // Mark badges as seen
-  const markBadgesAsSeen = () => {
-    setBadgeState({
-      ...badgeState,
-      lastSeen: [...badgeState.earned]
-    });
-    setNewBadges([]);
-  };
+  const markBadgesAsSeen = useCallback(() => {
+    setBadgeState(prev => ({
+      ...prev,
+      lastSeen: [...prev.earned]
+    }));
+  }, [setBadgeState]);
 
-  // Check a session for new badges
-  const checkSession = (session: PracticeSession, userData: { totalSessions: number; [key: string]: any }) => {
-    const newEarnedBadges = checkEarnedBadges(session, userData, badgeState.earned);
+  // Check for new badges after a session
+  const checkSession = useCallback((
+    session: PracticeSession,
+    userData: { totalSessions: number; [key: string]: any }
+  ) => {
+    // Get badge IDs earned from this session
+    const newlyEarnedBadges = checkEarnedBadges(session, userData);
     
-    if (newEarnedBadges.length > 0) {
-      // Update earned badges
-      const updatedEarned = [...badgeState.earned, ...newEarnedBadges];
-      setBadgeState({
-        ...badgeState,
-        earned: updatedEarned
-      });
-      
-      // Show toast notifications for new badges
-      newEarnedBadges.forEach(badgeId => {
-        const badge = badges.find(b => b.id === badgeId);
-        if (badge) {
-          toast({
-            title: `Badge Earned: ${badge.name}`,
-            description: `${badge.icon} You've unlocked a new achievement!`,
-            duration: 5000
-          });
-        }
-      });
-      
-      return newEarnedBadges;
+    // Only add badges not already earned
+    const badgesToAdd = newlyEarnedBadges.filter(
+      badge => !badgeState.earned.includes(badge)
+    );
+    
+    if (badgesToAdd.length > 0) {
+      // Update badge state with newly earned badges
+      setBadgeState(prev => ({
+        ...prev,
+        earned: [...prev.earned, ...badgesToAdd]
+      }));
     }
     
-    return [];
-  };
+    return badgesToAdd;
+  }, [badgeState.earned, setBadgeState]);
 
-  // Get badge details for the earned badges
-  const getEarnedBadgeDetails = (): Badge[] => {
-    return badgeState.earned.map(id => {
-      const badge = badges.find(b => b.id === id);
-      return badge || { id, name: "Unknown Badge", icon: "❓", check: () => false };
-    });
+  // Helper to get full badge details for earned badges
+  const getEarnedBadgeDetails = useCallback(() => {
+    return badges
+      .filter(badge => badgeState.earned.includes(badge.name))
+      .map(badge => ({
+        id: badge.id,
+        name: badge.name,
+        icon: badge.icon,
+        description: getBadgeDescription(badge.name)
+      }));
+  }, [badgeState.earned]);
+
+  // Check if there are any new badges to show
+  const hasNewBadges = newBadges.length > 0;
+
+  // For compatibility with existing components
+  const earnedBadges = badgeState.earned;
+  
+  // For compatibility with existing checkSessionForBadges references
+  const checkSessionForBadges = (
+    sessionDetails: any,
+    userData: any
+  ): string | null => {
+    const newBadges = checkSession(sessionDetails, userData);
+    return newBadges.length > 0 ? newBadges[0] : null;
   };
 
   return {
@@ -78,6 +84,26 @@ export function useBadges() {
     markBadgesAsSeen,
     checkSession,
     getEarnedBadgeDetails,
-    hasNewBadges: newBadges.length > 0
+    hasNewBadges,
+    // For compatibility with existing code
+    earnedBadges,
+    badges,
+    checkSessionForBadges
   };
+}
+
+// Helper function to get badge descriptions
+function getBadgeDescription(badgeName: string): string {
+  const descriptions: Record<string, string> = {
+    'First Step': 'Completed your first practice session!',
+    'Smooth Reader': 'Successfully used a script in your practice.',
+    'Free Spirit': 'Practiced without a script or prompt.',
+    'Bounce Back': 'Retried a session - showing real dedication!',
+    'Reflector': 'Added thoughtful self-reflection to your practice.',
+    'Regular': 'Completed 5 practice sessions.',
+    'Dedicated': 'Completed 10 practice sessions.',
+    'Master': 'Completed 25 practice sessions.',
+  };
+  
+  return descriptions[badgeName] || 'Achievement unlocked!';
 }

@@ -1,44 +1,55 @@
-export const exercisePrompts = {
+import { Prompt } from './types';
+
+export const exercisePrompts: Record<string, Prompt[]> = {
   shy_starter: [
     {
-      title: "Introduce Yourself",
-      prompt: "Say your name, where you're from, and one fun fact.",
+      id: 1,
+      category: 'casual',
+      text: 'Introduce yourself in 30 seconds, mentioning your name and one hobby you enjoy.'
     },
     {
-      title: "Describe What You See",
-      prompt: "Look around you and describe three things in the room.",
+      id: 2,
+      category: 'casual',
+      text: 'Describe your favorite place to relax, focusing on what makes it special to you.'
     },
     {
-      title: "My Favorite Thing",
-      prompt: "Talk for 30 seconds about something you love (a show, pet, food, etc.)",
-    },
+      id: 3,
+      category: 'casual',
+      text: 'Talk about your morning routine, highlighting one part you enjoy most.'
+    }
   ],
   growing_speaker: [
     {
-      title: "Tell a Tiny Story",
-      prompt: "Share a 1-minute story about something funny or embarrassing.",
+      id: 4,
+      category: 'intermediate',
+      text: 'Explain something you are passionate about to someone who knows nothing about it.'
     },
     {
-      title: "Teach Me Something",
-      prompt: "Pick one tip or hack you know well and explain it.",
+      id: 5,
+      category: 'intermediate',
+      text: 'Tell a short personal story about a time you overcame a challenge.'
     },
     {
-      title: "What I'd Tell My Younger Self",
-      prompt: "Reflect for 1–2 minutes as if giving advice to yourself from a few years ago.",
-    },
+      id: 6,
+      category: 'intermediate',
+      text: 'Give a 1-minute review of the last show, movie, or book you enjoyed.'
+    }
   ],
   confident_creator: [
     {
-      title: "Hot Take Time",
-      prompt: "Share an opinion or insight on something you care about (even if it's unpopular).",
+      id: 7,
+      category: 'advanced',
+      text: 'Deliver a persuasive 1-minute pitch about why a skill you have is valuable in the world.'
     },
     {
-      title: "This Is Who I Am",
-      prompt: "Talk about your personal mission, brand, or purpose.",
+      id: 8,
+      category: 'advanced',
+      text: 'Explain a complex topic in simple terms that anyone could understand.'
     },
     {
-      title: "Behind the Scenes",
-      prompt: "Take the viewer behind the curtain of your day or project—what most people don't see.",
-    },
-  ],
+      id: 9,
+      category: 'advanced',
+      text: 'Give an impromptu 1-minute speech on why public speaking skills matter.'
+    }
+  ]
 };
