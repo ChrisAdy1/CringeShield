@@ -49,15 +49,7 @@ const Prompts: React.FC = () => {
   return (
     <div className="min-h-screen p-4">
       <div className="max-w-md mx-auto">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/')}
-            className="h-8 w-8 mr-2"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+        <div className="mb-6 text-center">
           <h1 className="text-2xl font-bold">Practice Prompts</h1>
         </div>
         
@@ -96,10 +88,25 @@ const Prompts: React.FC = () => {
           </Card>
         ) : (
           <>
-            <div className="mb-2 text-muted-foreground">
-              {confidenceTier === 'shy_starter' && "Let's start with some easy prompts"}
-              {confidenceTier === 'growing_speaker' && "Ready for these intermediate challenges"}
-              {confidenceTier === 'confident_creator' && "Let's push your skills further"}
+            <div className="mb-4 text-center">
+              {confidenceTier === 'shy_starter' && (
+                <div>
+                  <h2 className="text-xl font-medium mb-1">Shy Starter</h2>
+                  <p className="text-muted-foreground">Prompts focused on building comfort and reducing fear</p>
+                </div>
+              )}
+              {confidenceTier === 'growing_speaker' && (
+                <div>
+                  <h2 className="text-xl font-medium mb-1">Growing Speaker</h2>
+                  <p className="text-muted-foreground">Build fluency and express your personality</p>
+                </div>
+              )}
+              {confidenceTier === 'confident_creator' && (
+                <div>
+                  <h2 className="text-xl font-medium mb-1">Confident Creator</h2>
+                  <p className="text-muted-foreground">Polish your performance and showcase authenticity</p>
+                </div>
+              )}
             </div>
             
             {/* Prompt Cards */}
@@ -111,12 +118,7 @@ const Prompts: React.FC = () => {
                   onClick={() => handleSelectPrompt(prompt)}
                 >
                   <CardContent className="p-4">
-                    <h3 className="font-medium mb-1">
-                      {prompt.category === 'shy_starter' && 'Shy Starter'}
-                      {prompt.category === 'growing_speaker' && 'Growing Speaker'}
-                      {prompt.category === 'confident_creator' && 'Confident Creator'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    <p className="text-sm mb-3">
                       {prompt.text}
                     </p>
                     <Button size="sm" className="w-full">
