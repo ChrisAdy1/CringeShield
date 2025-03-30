@@ -19,6 +19,11 @@ const Onboarding: React.FC = () => {
     setCompleted(true);
   };
 
+  // Open the quiz immediately when component mounts
+  useEffect(() => {
+    setIsQuizOpen(true);
+  }, []);
+
   // After completion animation finishes, navigate to prompts
   useEffect(() => {
     if (completed) {
@@ -30,13 +35,6 @@ const Onboarding: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [completed, navigate, markOnboardingComplete]);
-
-  // If user has already completed onboarding, redirect to prompts
-  useEffect(() => {
-    if (preferences.hasSeenOnboarding) {
-      navigate('/prompts');
-    }
-  }, [preferences.hasSeenOnboarding, navigate]);
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-gradient-to-b from-primary-50 to-background">
