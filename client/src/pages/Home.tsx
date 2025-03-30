@@ -22,9 +22,8 @@ const Home: React.FC = () => {
     ? new Date(sessions[sessions.length - 1].date).toLocaleDateString()
     : 'No sessions yet';
   
-  // Reset for testing
-  // Handle the first time user or returning user
-  const isFirstTime = true; // Set to true for testing
+  // Handle the first time user or returning user based on preferences
+  const isFirstTime = !preferences.hasSeenOnboarding || !preferences.hasCompletedAssessment;
   
   // Get badges
   const earnedBadgeDetails = getEarnedBadgeDetails();

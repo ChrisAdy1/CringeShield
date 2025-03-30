@@ -21,8 +21,22 @@ const Onboarding: React.FC = () => {
 
   // Open the quiz immediately when component mounts
   useEffect(() => {
-    setIsQuizOpen(true);
-  }, []);
+    // Check if user has already gone through onboarding
+    if (preferences.hasSeenOnboarding && preferences.confidenceTier) {
+      // Skip directly to prompts if they've seen onboarding and have a tier
+      navigate('/prompts');
+    } else {
+      setIsQuizOpen(true);
+    }
+  }, [preferences, navigate]);
+
+  // Handle skipping onboarding
+  const handleSkipOnboarding = () => {
+    markOnboardingComplete();
+    // Set a default confidence tier
+    saveConfidenceAssessment('growing_speaker');
+    navigate('/prompts');
+  };
 
   // After completion animation finishes, navigate to prompts
   useEffect(() => {
@@ -63,9 +77,19 @@ const Onboarding: React.FC = () => {
               <p className="mb-4">
                 Take a quick 5-question quiz to help us personalize your experience.
               </p>
-              <Button onClick={() => setIsQuizOpen(true)}>
-                Start Confidence Quiz
-              </Button>
+              <div className="flex flex-col space-y-3">
+                <Button onClick={() => setIsQuizOpen(true)}>
+                  Start Confidence Quiz
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSkipOnboarding} 
+                  className="text-muted-foreground"
+                >
+                  Skip Onboarding
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

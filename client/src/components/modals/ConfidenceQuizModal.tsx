@@ -106,13 +106,7 @@ const ConfidenceQuizModal: React.FC<ConfidenceQuizModalProps> = ({
   const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      if (isOpen === false && currentQuestion < quizQuestions.length - 1) {
-        // Prevent closing if quiz is not complete
-        return;
-      }
-      onOpenChange(isOpen);
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Confidence Assessment</DialogTitle>
@@ -160,7 +154,13 @@ const ConfidenceQuizModal: React.FC<ConfidenceQuizModalProps> = ({
           </RadioGroup>
         </div>
         
-        <DialogFooter className="flex justify-end">
+        <DialogFooter className="flex justify-between">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
           <Button 
             onClick={handleNext}
             disabled={selectedOption === null}

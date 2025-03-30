@@ -74,7 +74,7 @@ const PostSession: React.FC = () => {
         localStorage.setItem('practice-sessions', JSON.stringify(updatedSessions));
       }
       
-      navigate('/prompts');
+      navigate('/');
     }
   };
   
@@ -200,10 +200,10 @@ const PostSession: React.FC = () => {
           <Button 
             variant="outline" 
             className="flex-1 flex items-center justify-center"
-            onClick={() => navigate('/prompts')}
+            onClick={() => navigate('/')}
           >
             <Home className="mr-2 h-4 w-4" />
-            Prompts
+            Home
           </Button>
         </div>
       </div>
