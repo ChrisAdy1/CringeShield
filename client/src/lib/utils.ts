@@ -89,6 +89,12 @@ export const faceFilterOptions = [
 
 export const promptCategories = [
   { 
+    id: 'exercise', 
+    name: 'Confidence Exercises', 
+    description: 'Personalized for your level',
+    icon: 'dumbbell'
+  },
+  { 
     id: 'casual', 
     name: 'Casual Conversation', 
     description: 'Everyday talks and chats',

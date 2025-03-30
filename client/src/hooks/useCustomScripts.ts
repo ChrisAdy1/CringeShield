@@ -1,10 +1,26 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CustomScript } from '@/lib/types';
 import useLocalStorage from './useLocalStorage';
+import { defaultScripts } from '@/lib/defaultScripts';
+import { useEffect } from 'react';
 
 export function useCustomScripts() {
   const [scripts, setScripts] = useLocalStorage<CustomScript[]>('custom-scripts', []);
 
+  // Initialize with default scripts if scripts array is empty
+  useEffect(() => {
+    if (scripts.length === 0) {
+      const initialScripts = defaultScripts.map(script => ({
+        id: uuidv4(),
+        title: script.title,
+        text: script.text,
+        createdAt: new Date().toISOString()
+      }));
+      
+      setScripts(initialScripts);
+    }
+  }, []);
+  
   const addScript = (title: string, text: string): CustomScript => {
     const newScript: CustomScript = {
       id: uuidv4(),
