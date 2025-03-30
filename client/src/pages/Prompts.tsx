@@ -111,7 +111,11 @@ const Prompts: React.FC = () => {
                   onClick={() => handleSelectPrompt(prompt)}
                 >
                   <CardContent className="p-4">
-                    <h3 className="font-medium mb-1">{prompt.category} Practice</h3>
+                    <h3 className="font-medium mb-1">
+                      {prompt.category === 'shy_starter' && 'Shy Starter'}
+                      {prompt.category === 'growing_speaker' && 'Growing Speaker'}
+                      {prompt.category === 'confident_creator' && 'Confident Creator'}
+                    </h3>
                     <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                       {prompt.text}
                     </p>

@@ -44,7 +44,7 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ category, onPromptGen
         const exercisePrompt: Prompt = {
           id: -100 - randomIndex, // Use negative IDs for exercises to distinguish from database prompts
           category: 'exercise',
-          text: exercise.prompt
+          text: exercise.text
         };
         
         setCurrentPrompt(exercisePrompt);
