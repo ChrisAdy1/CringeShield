@@ -190,8 +190,8 @@ const Home: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {/* Show only first 7 prompts for non-registered users */}
-                {(user ? practicePrompts : practicePrompts.slice(0, 7)).map((prompt) => (
+                {/* Show only first 5 prompts for non-registered users */}
+                {(user ? practicePrompts : practicePrompts.slice(0, 5)).map((prompt) => (
                   <Card 
                     key={prompt.id} 
                     className="cursor-pointer hover:bg-gray-50 transition-colors" 
@@ -238,7 +238,8 @@ const Home: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {scriptPrompts.map((script) => {
+                {/* Show only first 5 scripted reads for non-registered users */}
+                {(user ? scriptPrompts : scriptPrompts.slice(0, 5)).map((script) => {
                   // Extract title and content from the script text format
                   const parts = script.text.split(' - ');
                   const title = parts[0]; 
@@ -283,7 +284,7 @@ const Home: React.FC = () => {
             )
           ) : (
             <p className="mb-2">
-              <span className="text-primary font-medium">Create an account</span> to unlock all practice prompts and track your progress.
+              <span className="text-primary font-medium">Create an account</span> to unlock all 15 practice prompts and track your progress.
             </p>
           )}
           <p>
