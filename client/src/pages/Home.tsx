@@ -89,14 +89,16 @@ const Home: React.FC = () => {
     // Check if this is from the scripts tab based on the active tab
     const isScript = activeTab === 'scripts';
     
-    // If this is a practice prompt (not a script) and user is not logged in,
-    // redirect to registration page
-    if (!isScript && !user) {
+    // If user is not logged in, redirect to registration page for any type of prompt
+    if (!user) {
       // Store the selected prompt in localStorage to use after registration
       localStorage.setItem('selected-prompt', JSON.stringify(prompt));
       
       // Store a message in localStorage to show on auth page
-      localStorage.setItem('auth-message', 'Please register to be able to practice this prompt');
+      const message = isScript 
+        ? 'Please register to access scripted reads' 
+        : 'Please register to be able to practice this prompt';
+      localStorage.setItem('auth-message', message);
       
       // Navigate to registration page
       navigate('/auth?mode=register');
