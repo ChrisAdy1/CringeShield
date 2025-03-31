@@ -35,58 +35,33 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
               <h1 className="text-xl font-semibold text-gray-900">CringeShield</h1>
             </div>
           </Link>
-          {!isMobile && (
-            <div className="flex space-x-6">
-              {navItems.map((item) => (
-                <Link 
-                  key={item.path} 
-                  href={item.path}
-                  className={cn(
-                    "text-sm font-medium flex items-center gap-1",
-                    currentPath === item.path
-                      ? "text-primary"
-                      : "text-gray-500 hover:text-gray-700"
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto max-w-5xl px-4 py-6 pb-20 md:pb-8">
-        {children}
-      </main>
-
-      {/* Mobile Bottom Navigation */}
-      {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10 pb-safe">
-          <div className="flex justify-around items-center">
+          <div className="flex space-x-6">
             {navItems.map((item) => (
               <Link 
                 key={item.path} 
                 href={item.path}
                 className={cn(
-                  "flex flex-col items-center justify-center pt-3 pb-2 px-2 w-full min-h-[60px] relative",
+                  "text-sm font-medium flex items-center gap-1",
+                  isMobile ? "p-2" : "", // Add padding on mobile for easier tapping
                   currentPath === item.path
                     ? "text-primary"
-                    : "text-gray-500"
+                    : "text-gray-500 hover:text-gray-700"
                 )}
               >
-                <item.icon className="w-6 h-6 mb-1" />
-                <span className="text-xs font-medium">{item.label}</span>
-                {currentPath === item.path && (
-                  <span className="absolute bottom-0 w-1/2 h-1 bg-primary rounded-t-full"></span>
+                <item.icon className={isMobile ? "w-6 h-6" : "w-4 h-4"} />
+                {!isMobile && (
+                  <span>{item.label}</span>
                 )}
               </Link>
             ))}
           </div>
-        </nav>
-      )}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 container mx-auto max-w-5xl px-4 py-6 pb-8">
+        {children}
+      </main>
 
       {/* Footer - only show on desktop */}
       {!isMobile && (
