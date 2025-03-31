@@ -270,7 +270,7 @@ const Recording: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       {/* Top bar */}
       <div className="p-3 flex items-center justify-between border-b">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/prompts')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="font-medium">
@@ -301,8 +301,8 @@ const Recording: React.FC = () => {
             <h3 className="text-lg font-medium mb-2">Camera Access Error</h3>
             <p className="text-center text-muted-foreground mb-4">{cameraError}</p>
             <div className="flex flex-col space-y-2">
-              <Button onClick={() => navigate('/prompts')}>
-                Go Back to Prompts
+              <Button onClick={() => navigate('/')}>
+                Go Back to Home
               </Button>
               <Button variant="outline" onClick={skipToPostSession}>
                 Skip to Feedback (Demo)
