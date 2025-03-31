@@ -57,9 +57,17 @@ const Home: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           
-          // Separate prompts by category
-          const practices = data.filter((prompt: Prompt) => prompt.category === 'practice');
-          const scripts = data.filter((prompt: Prompt) => prompt.category === 'scripts');
+          // For this MVP, use existing categories but group them:
+          // Group casual, interview, storytelling, presentation, introduction, social_media, random as practice prompts 
+          // Note: In a production app, we'd properly categorize these on the server
+          const practices = data.filter((prompt: Prompt) => 
+            ['casual', 'interview', 'storytelling', 'presentation', 
+             'introduction', 'social_media', 'random'].includes(prompt.category)
+          );
+          
+          // Use the first 10 prompts as "scripted reads" for the MVP
+          // In a real app, these would be proper scripted content
+          const scripts = [...data].slice(0, 10);
           
           setPracticePrompts(practices);
           setScriptPrompts(scripts);
@@ -78,9 +86,12 @@ const Home: React.FC = () => {
   
   // Start recording with the selected prompt or script
   const startRecording = (prompt: Prompt) => {
+    // Check if this is from the scripts tab based on the active tab
+    const isScript = activeTab === 'scripts';
+    
     // If this is a practice prompt (not a script) and user is not logged in,
     // redirect to registration page
-    if (prompt.category === 'practice' && !user) {
+    if (!isScript && !user) {
       // Store the selected prompt in localStorage to use after registration
       localStorage.setItem('selected-prompt', JSON.stringify(prompt));
       
@@ -95,8 +106,8 @@ const Home: React.FC = () => {
     // Store the selected prompt in localStorage to use in recording
     localStorage.setItem('selected-prompt', JSON.stringify(prompt));
     
-    // Navigate to recording page with appropriate parameters based on category
-    if (prompt.category === 'scripts') {
+    // Navigate to recording page with appropriate parameters
+    if (isScript) {
       // For script prompts, extract the title from the text (it's before the dash)
       const parts = prompt.text.split(' - ');
       const title = parts[0];
@@ -270,27 +281,7 @@ const Home: React.FC = () => {
           </TabsContent>
         </Tabs>
         
-        {/* App info section */}
-        <div className="text-center text-sm text-muted-foreground mt-8">
-          {user ? (
-            activeTab === "practice" ? (
-              <p className="mb-2">
-                Complete all 15 practice prompts to earn badges.
-              </p>
-            ) : (
-              <p className="mb-2">
-                Use scripted reads to practice with a teleprompter.
-              </p>
-            )
-          ) : (
-            <p className="mb-2">
-              <span className="text-primary font-medium">Create an account</span> to unlock all 15 practice prompts and track your progress.
-            </p>
-          )}
-          <p>
-            Your recordings stay on your device and are not uploaded.
-          </p>
-        </div>
+
       </div>
     </div>
   );
