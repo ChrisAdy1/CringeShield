@@ -181,7 +181,11 @@ export class MemStorage implements IStorage {
   
   async createPrompt(promptData: InsertPrompt): Promise<Prompt> {
     const id = this.promptId++;
-    const prompt: Prompt = { ...promptData, id };
+    const prompt: Prompt = { 
+      id, 
+      category: promptData.category,
+      text: promptData.text
+    };
     this.prompts.set(id, prompt);
     return prompt;
   }

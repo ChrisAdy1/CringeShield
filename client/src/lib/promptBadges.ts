@@ -1,4 +1,4 @@
-// 20 prompt badges with their corresponding emojis
+// 15 prompt badges with their corresponding emojis
 export const promptBadges = [
   {
     id: 1,
@@ -32,15 +32,15 @@ export const promptBadges = [
   },
   {
     id: 6,
-    title: "Camera Shy Confession",
-    icon: "🎭",
-    description: "Talked honestly about how you feel being on camera."
-  },
-  {
-    id: 7,
     title: "Teach Me a Trick",
     icon: "🛠️",
     description: "Shared a tip, shortcut, or life hack."
+  },
+  {
+    id: 7,
+    title: "Camera Shy Confession",
+    icon: "🎭",
+    description: "Talked honestly about how you feel being on camera."
   },
   {
     id: 8,
@@ -68,54 +68,24 @@ export const promptBadges = [
   },
   {
     id: 12,
-    title: "React to This Moment",
-    icon: "🔄",
-    description: "Talked about how you feel right now."
-  },
-  {
-    id: 13,
-    title: "Pet, Plant, or Playlist",
-    icon: "🌱",
-    description: "Told us about something that keeps you grounded."
-  },
-  {
-    id: 14,
     title: "What's on Your Mind?",
     icon: "💬", 
     description: "Free talked for a minute with no script."
   },
   {
-    id: 15,
-    title: "Your Daily Routine",
-    icon: "🕒",
-    description: "Walked through a part of your day."
-  },
-  {
-    id: 16,
+    id: 13,
     title: "A Quick Rant",
     icon: "😤",
     description: "Got something off your chest."
   },
   {
-    id: 17,
-    title: "Pretend You're on a Call",
-    icon: "📞",
-    description: "Spoke like you're talking to a friend."
-  },
-  {
-    id: 18,
-    title: "One Bold Opinion",
-    icon: "🔥",
-    description: "Shared a 'hot take' on something light."
-  },
-  {
-    id: 19,
+    id: 14,
     title: "Behind the Scenes",
     icon: "🎬",
     description: "Talked about something most people don't know about you."
   },
   {
-    id: 20,
+    id: 15,
     title: "Encourage Someone Like You",
     icon: "🤝",
     description: "Encouraged someone else afraid to speak on camera."

@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, LogIn, Loader2, CheckCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowRight, LogIn, Loader2, CheckCircle, Mic, BookOpen } from 'lucide-react';
 import { Prompt } from '@/lib/types';
 import { getBadgeByPromptId } from '@/lib/promptBadges';
 
 const Home: React.FC = () => {
   const [, navigate] = useLocation();
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [practicePrompts, setPracticePrompts] = useState<Prompt[]>([]);
+  const [scriptPrompts, setScriptPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [completedPrompts, setCompletedPrompts] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState("practice");
   
   // Fetch current user and completed prompts if logged in
   useEffect(() => {
@@ -53,7 +56,13 @@ const Home: React.FC = () => {
         const response = await fetch('/api/prompts');
         if (response.ok) {
           const data = await response.json();
-          setPrompts(data);
+          
+          // Separate prompts by category
+          const practices = data.filter((prompt: Prompt) => prompt.category === 'practice');
+          const scripts = data.filter((prompt: Prompt) => prompt.category === 'scripts');
+          
+          setPracticePrompts(practices);
+          setScriptPrompts(scripts);
         } else {
           console.error('Failed to fetch prompts');
         }
@@ -67,10 +76,11 @@ const Home: React.FC = () => {
     fetchPrompts();
   }, []);
   
-  // Start recording with the selected prompt
+  // Start recording with the selected prompt or script
   const startRecording = (prompt: Prompt) => {
-    // If user is not logged in, show toast message and redirect to registration page
-    if (!user) {
+    // If this is a practice prompt (not a script) and user is not logged in,
+    // redirect to registration page
+    if (prompt.category === 'practice' && !user) {
       // Store the selected prompt in localStorage to use after registration
       localStorage.setItem('selected-prompt', JSON.stringify(prompt));
       
@@ -84,8 +94,18 @@ const Home: React.FC = () => {
     
     // Store the selected prompt in localStorage to use in recording
     localStorage.setItem('selected-prompt', JSON.stringify(prompt));
-    // Navigate to recording page with prompt ID and text in the URL
-    navigate(`/recording?type=prompt&id=${prompt.id}&text=${encodeURIComponent(prompt.text)}`);
+    
+    // Navigate to recording page with appropriate parameters based on category
+    if (prompt.category === 'scripts') {
+      // For script prompts, extract the title from the text (it's before the dash)
+      const parts = prompt.text.split(' - ');
+      const title = parts[0];
+      const scriptText = parts.length > 1 ? parts.slice(1).join(' - ') : prompt.text;
+      
+      navigate(`/recording?type=script&id=${prompt.id}&title=${encodeURIComponent(title)}&text=${encodeURIComponent(scriptText)}`);
+    } else {
+      navigate(`/recording?type=prompt&id=${prompt.id}&text=${encodeURIComponent(prompt.text)}`);
+    }
   };
   
   return (
@@ -184,76 +204,139 @@ const Home: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Prompts list */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Practice Prompts</h2>
-            <div className="text-sm text-muted-foreground">
-              {user ? (
-                <div className="px-2 py-1 bg-primary/10 rounded-full text-primary">
-                  {completedPrompts.length}/20 completed
-                </div>
-              ) : (
-                <div className="text-xs italic">10/20 prompts available</div>
-              )}
-            </div>
-          </div>
+        {/* Practice Categories */}
+        <Tabs defaultValue="practice" className="mb-6" onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-2 w-full mb-4">
+            <TabsTrigger value="practice" className="flex items-center gap-2">
+              <Mic className="h-4 w-4" />
+              <span>Practice Prompts</span>
+            </TabsTrigger>
+            <TabsTrigger value="scripts" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              <span>Scripted Reads</span>
+            </TabsTrigger>
+          </TabsList>
           
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <TabsContent value="practice">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Free Talk Practice</h2>
+              <div className="text-sm text-muted-foreground">
+                {user ? (
+                  <div className="px-2 py-1 bg-primary/10 rounded-full text-primary">
+                    {completedPrompts.length}/15 completed
+                  </div>
+                ) : (
+                  <div className="text-xs italic">7/15 prompts available</div>
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Show only first 10 prompts for non-registered users */}
-              {(user ? prompts : prompts.slice(0, 10)).map((prompt) => (
-                <Card 
-                  key={prompt.id} 
-                  className="cursor-pointer hover:bg-gray-50 transition-colors" 
-                  onClick={() => startRecording(prompt)}
-                >
-                  <CardContent className="p-3 flex justify-between items-center">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        {(() => {
-                          // Get badge icon for this prompt
-                          const badge = getBadgeByPromptId(prompt.id);
-                          return user && completedPrompts.includes(prompt.id) && badge ? (
-                            <span className="text-lg">{badge.icon}</span>
-                          ) : null;
-                        })()}
-                        <p className="font-medium">{prompt.text.split(' - ')[0]}</p>
+            
+            {loading ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Show only first 7 prompts for non-registered users */}
+                {(user ? practicePrompts : practicePrompts.slice(0, 7)).map((prompt) => (
+                  <Card 
+                    key={prompt.id} 
+                    className="cursor-pointer hover:bg-gray-50 transition-colors" 
+                    onClick={() => startRecording(prompt)}
+                  >
+                    <CardContent className="p-3 flex justify-between items-center">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            // Get badge icon for this prompt
+                            const badge = getBadgeByPromptId(prompt.id);
+                            return user && completedPrompts.includes(prompt.id) && badge ? (
+                              <span className="text-lg">{badge.icon}</span>
+                            ) : null;
+                          })()}
+                          <p className="font-medium">{prompt.text.split(' - ')[0]}</p>
+                        </div>
+                        {prompt.text.includes(' - ') && (
+                          <p className="text-sm text-muted-foreground">{prompt.text.split(' - ')[1]}</p>
+                        )}
                       </div>
-                      {prompt.text.includes(' - ') && (
-                        <p className="text-sm text-muted-foreground">{prompt.text.split(' - ')[1]}</p>
+                      {user && completedPrompts.includes(prompt.id) ? (
+                        <div className="flex items-center">
+                          <span className="text-xs text-primary font-medium mr-2">Completed</span>
+                          <CheckCircle className="h-5 w-5 text-primary" />
+                        </div>
+                      ) : (
+                        <Button variant="ghost" size="icon">
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
                       )}
-                    </div>
-                    {user && completedPrompts.includes(prompt.id) ? (
-                      <div className="flex items-center">
-                        <span className="text-xs text-primary font-medium mr-2">Completed</span>
-                        <CheckCircle className="h-5 w-5 text-primary" />
-                      </div>
-                    ) : (
-                      <Button variant="ghost" size="icon">
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="scripts">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Teleprompter Scripts</h2>
+              <div className="text-sm text-muted-foreground">
+                <div className="text-xs italic">Practice with guided scripts</div>
+              </div>
             </div>
-          )}
-        </div>
+            
+            {loading ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {scriptPrompts.map((script) => {
+                  // Extract title and content from the script text format
+                  const parts = script.text.split(' - ');
+                  const title = parts[0]; 
+                  const content = parts.length > 1 ? parts.slice(1).join(' - ') : '';
+                  
+                  return (
+                    <Card 
+                      key={script.id} 
+                      className="cursor-pointer hover:bg-gray-50 transition-colors" 
+                      onClick={() => startRecording(script)}
+                    >
+                      <CardContent className="p-3 flex justify-between items-center">
+                        <div className="flex-1">
+                          <p className="font-medium">{title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {content.substring(0, 60)}...
+                          </p>
+                        </div>
+                        <Button variant="ghost" size="icon">
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
         
         {/* App info section */}
         <div className="text-center text-sm text-muted-foreground mt-8">
           {user ? (
-            <p className="mb-2">
-              Complete all 20 prompts to practice your speaking skills.
-            </p>
+            activeTab === "practice" ? (
+              <p className="mb-2">
+                Complete all 15 practice prompts to earn badges.
+              </p>
+            ) : (
+              <p className="mb-2">
+                Use scripted reads to practice with a teleprompter.
+              </p>
+            )
           ) : (
             <p className="mb-2">
-              <span className="text-primary font-medium">Create an account</span> to unlock all 20 prompts and track your progress.
+              <span className="text-primary font-medium">Create an account</span> to unlock all practice prompts and track your progress.
             </p>
           )}
           <p>

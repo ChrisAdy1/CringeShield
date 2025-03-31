@@ -329,39 +329,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// Initialize the database with some sample prompts
+// Initialize the database with prompts and scripts
 async function initializePrompts() {
-  const samplePrompts = [
-    { category: "practice", text: "Say Hello - Introduce yourself with your name, where you're from, and one fun fact." },
-    { category: "practice", text: "What's Around You? - Describe three things in the room you're in, and why they catch your eye." },
-    { category: "practice", text: "Today Was… - Talk about how your day has been so far—nothing is too small." },
-    { category: "practice", text: "Something You Love - Share something you really enjoy—could be a show, a hobby, or a snack." },
-    { category: "practice", text: "Explain It Like a Friend - Pick something you know well and explain it like you're talking to a friend." },
-    { category: "practice", text: "Camera Shy Confession - Talk honestly about how you feel being on camera. No filter." },
-    { category: "practice", text: "Teach Me a Trick - Share a tip, shortcut, or life hack that makes your life easier." },
-    { category: "practice", text: "Tell a Tiny Story - Recall a short, funny, or awkward moment from your life." },
-    { category: "practice", text: "What I'd Tell My Younger Self - Reflect on one lesson you'd give to yourself a few years ago." },
-    { category: "practice", text: "Describe a Place You Love - Talk about a place that makes you feel safe, inspired, or at peace." },
-    { category: "practice", text: "Talk Like a YouTuber - Pretend you're starting a channel. Give an energetic intro and tell us what it's about." },
-    { category: "practice", text: "React to This Moment - Look around or think about how you feel right now—and just talk about it." },
-    { category: "practice", text: "Pet, Plant, or Playlist - Tell us about something that keeps you grounded." },
-    { category: "practice", text: "What's on Your Mind? - Free talk for 60 seconds. No script. No pressure." },
-    { category: "practice", text: "Your Daily Routine - Walk through a part of your day as if explaining it to a curious stranger." },
-    { category: "practice", text: "A Quick Rant - Get something off your chest. Be real, be expressive." },
-    { category: "practice", text: "Pretend You're on a Call - Speak like you're talking to a friend, not a camera." },
-    { category: "practice", text: "One Bold Opinion - Share a 'hot take' or personal opinion on something light (e.g., cereal before milk)." },
-    { category: "practice", text: "Behind the Scenes - Talk about something in your life most people don't see or know about." },
-    { category: "practice", text: "Encourage Someone Like You - Imagine someone else afraid to speak on camera. What would you tell them?" }
+  // Practice prompts - free form speaking prompts with badges
+  const practicePrompts = [
+    { category: "practice", text: "Say Hello 🎉 - Introduce yourself with your name, where you're from, and one fun fact." },
+    { category: "practice", text: "What's Around You? 👀 - Describe three things in the room you're in, and why they catch your eye." },
+    { category: "practice", text: "Today Was... 🗓️ - Talk about how your day has been so far—nothing is too small." },
+    { category: "practice", text: "Something You Love 💖 - Share something you really enjoy—could be a show, a hobby, or a snack." },
+    { category: "practice", text: "Explain It Like a Friend 🧑‍🤝‍🧑 - Pick something you know well and explain it like you're talking to a friend." },
+    { category: "practice", text: "Teach Me a Trick 🛠️ - Share a tip, shortcut, or life hack that makes your life easier." },
+    { category: "practice", text: "Camera Shy Confession 🎭 - Talk honestly about how you feel being on camera. No filter." },
+    { category: "practice", text: "Tell a Tiny Story 📖 - Recall a short, funny, or awkward moment from your life." },
+    { category: "practice", text: "What I'd Tell My Younger Self 🧠 - Reflect on one lesson you'd give to yourself a few years ago." },
+    { category: "practice", text: "Describe a Place You Love 🏞️ - Talk about a place that makes you feel safe, inspired, or at peace." },
+    { category: "practice", text: "Talk Like a YouTuber 📹 - Pretend you're starting a channel. Give an energetic intro and tell us what it's about." },
+    { category: "practice", text: "What's on Your Mind? 💬 - Free talk for 60 seconds. No script. No pressure." },
+    { category: "practice", text: "A Quick Rant 😤 - Get something off your chest. Be real, be expressive." },
+    { category: "practice", text: "Behind the Scenes 🎬 - Talk about something in your life most people don't see or know about." },
+    { category: "practice", text: "Encourage Someone Like You 🤝 - Imagine someone else afraid to speak on camera. What would you tell them?" }
   ];
+  
+  // Scripted reads - for teleprompter practice (no badge rewards)
+  const scriptedReads = [
+    { 
+      category: "scripts", 
+      text: "Self-Intro Starter - Hi! I'm [Name], and I'm here to get more comfortable speaking on camera.\nI've always felt a little awkward doing this, but I know the only way to improve is to start.\nRight now, I'm just showing up—and that's already a win.\nThanks for being part of this journey with me, even if it's just me and this screen."
+    },
+    { 
+      category: "scripts", 
+      text: "Small Win Today - Today, something small but great happened: [insert small win].\nIt might not seem like a big deal to anyone else, but it made me smile.\nSometimes, those tiny victories are the ones that really keep us going.\nProgress doesn't have to be loud—it just has to be yours."
+    },
+    { 
+      category: "scripts", 
+      text: "A Favorite Thing - One thing I absolutely love is [topic].\nIt helps me recharge, brings me joy, and makes me feel more like myself.\nWhen I'm doing it, I feel focused and present.\nI think everyone needs something like that—something that reminds you that you're allowed to enjoy life."
+    },
+    { 
+      category: "scripts", 
+      text: "My Camera Goal - So, why am I doing this?\nBecause I want to feel more natural being seen and heard.\nNot because I want to be perfect on camera—but because I want to stop shrinking away from opportunities to express myself.\nI want to feel confident sharing what matters to me."
+    },
+    { 
+      category: "scripts", 
+      text: "A Note to Myself - Dear me: I'm proud of you for showing up.\nYou didn't need to be perfect today—you just needed to try.\nYour voice matters. Your words matter.\nAnd this recording is just one more step toward being fully yourself without fear."
+    },
+    { 
+      category: "scripts", 
+      text: "What I Was Afraid Of - I used to hate being on camera.\nThe sound of my voice made me cringe. I didn't know what to say.\nBut over time, I realized the fear wasn't about the camera—it was about judgment.\nAnd the truth is, most people are way too busy judging themselves to be judging me."
+    },
+    { 
+      category: "scripts", 
+      text: "Showing Up Unpolished - Here I am, unscripted, unfiltered, and a little unsure.\nAnd that's okay.\nConfidence doesn't mean I always know what I'm doing—it just means I'm willing to try.\nEvery time I press record, I'm rewriting the story I tell myself."
+    },
+    { 
+      category: "scripts", 
+      text: "If This Were a Mirror - If this camera were a mirror, I'd smile and try to remind myself that I'm allowed to take up space.\nI'm allowed to make mistakes.\nI'm allowed to be visible.\nThis app isn't about performance—it's about practice. And practice means progress."
+    },
+    { 
+      category: "scripts", 
+      text: "If You're Watching This... - If you're watching this later—or even just listening—I hope you know that you're not alone.\nIf speaking on camera feels hard for you too, that's okay.\nWe're all figuring this out.\nJust by recording this, I'm proving that fear doesn't get the final say."
+    },
+    { 
+      category: "scripts", 
+      text: "Why I'm Doing This - There's a reason I'm doing this.\nMaybe I want to make content, maybe I want to speak more clearly at work, or maybe I just want to stop avoiding FaceTime.\nWhatever the reason—it matters.\nBecause I matter.\nAnd the more I show up, the more I believe in that."
+    }
+  ];
+  
+  // Combine all prompts
+  const allPrompts = [...practicePrompts, ...scriptedReads];
   
   // Check if we already have prompts
   const existingCount = await storage.getPromptsCount();
   
   if (existingCount === 0) {
-    for (const prompt of samplePrompts) {
+    for (const prompt of allPrompts) {
       const validatedPrompt = insertPromptSchema.parse(prompt);
       await storage.createPrompt(validatedPrompt);
     }
-    console.log("Initialized database with sample prompts");
+    console.log("Initialized database with practice prompts and scripted reads");
   }
 }
