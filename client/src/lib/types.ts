@@ -43,6 +43,10 @@ export interface Prompt {
   category: string;
   text: string;
   teleprompterText?: string;
+  // Custom properties for scripted reads
+  title?: string;
+  content?: string;
+  fullText?: string;
 }
 
 export interface FaceFilterOption {

@@ -7,6 +7,92 @@ import { ArrowRight, LogIn, Loader2, CheckCircle, Mic, BookOpen } from 'lucide-r
 import { Prompt } from '@/lib/types';
 import { getBadgeByPromptId } from '@/lib/promptBadges';
 
+// Custom scripted reads from the attached file
+const customScriptedReads: Prompt[] = [
+  {
+    id: 101,
+    category: 'scripts',
+    text: "Self-Intro Starter - Hi! I'm [Name], and I'm here to get more comfortable speaking on camera.",
+    // Custom properties for our script formatting
+    title: "Self-Intro Starter",
+    content: "Hi! I'm [Name], and I'm here to get more comfortable speaking on camera.",
+    fullText: "Hi! I'm [Name], and I'm here to get more comfortable speaking on camera.\nI've always felt a little awkward doing this, but I know the only way to improve is to start.\nRight now, I'm just showing up—and that's already a win.\nThanks for being part of this journey with me, even if it's just me and this screen."
+  },
+  {
+    id: 102,
+    category: 'scripts',
+    text: "Small Win Today - Today, something small but great happened: [insert small win].",
+    // Custom properties
+    title: "Small Win Today",
+    content: "Today, something small but great happened: [insert small win].",
+    fullText: "Today, something small but great happened: [insert small win].\nIt might not seem like a big deal to anyone else, but it made me smile.\nSometimes, those tiny victories are the ones that really keep us going.\nProgress doesn't have to be loud—it just has to be yours."
+  },
+  {
+    id: 103,
+    category: 'scripts',
+    text: "A Favorite Thing - One thing I absolutely love is [topic].",
+    title: "A Favorite Thing",
+    content: "One thing I absolutely love is [topic].",
+    fullText: "One thing I absolutely love is [topic].\nIt helps me recharge, brings me joy, and makes me feel more like myself.\nWhen I'm doing it, I feel focused and present.\nI think everyone needs something like that—something that reminds you that you're allowed to enjoy life."
+  },
+  {
+    id: 104,
+    category: 'scripts',
+    text: "My Camera Goal - So, why am I doing this?",
+    title: "My Camera Goal",
+    content: "So, why am I doing this?",
+    fullText: "So, why am I doing this?\nBecause I want to feel more natural being seen and heard.\nNot because I want to be perfect on camera—but because I want to stop shrinking away from opportunities to express myself.\nI want to feel confident sharing what matters to me."
+  },
+  {
+    id: 105,
+    category: 'scripts',
+    text: "A Note to Myself - Dear me: I'm proud of you for showing up.",
+    title: "A Note to Myself",
+    content: "Dear me: I'm proud of you for showing up.",
+    fullText: "Dear me: I'm proud of you for showing up.\nYou didn't need to be perfect today—you just needed to try.\nYour voice matters. Your words matter.\nAnd this recording is just one more step toward being fully yourself without fear."
+  },
+  {
+    id: 106,
+    category: 'scripts',
+    text: "What I Was Afraid Of - I used to hate being on camera.",
+    title: "What I Was Afraid Of",
+    content: "I used to hate being on camera.",
+    fullText: "I used to hate being on camera.\nThe sound of my voice made me cringe. I didn't know what to say.\nBut over time, I realized the fear wasn't about the camera—it was about judgment.\nAnd the truth is, most people are way too busy judging themselves to be judging me."
+  },
+  {
+    id: 107,
+    category: 'scripts',
+    text: "Showing Up Unpolished - Here I am, unscripted, unfiltered, and a little unsure.",
+    title: "Showing Up Unpolished",
+    content: "Here I am, unscripted, unfiltered, and a little unsure.",
+    fullText: "Here I am, unscripted, unfiltered, and a little unsure.\nAnd that's okay.\nConfidence doesn't mean I always know what I'm doing—it just means I'm willing to try.\nEvery time I press record, I'm rewriting the story I tell myself."
+  },
+  {
+    id: 108,
+    category: 'scripts',
+    text: "If This Were a Mirror - If this camera were a mirror, I'd smile and try to remind myself that I'm allowed to take up space.",
+    title: "If This Were a Mirror",
+    content: "If this camera were a mirror, I'd smile and try to remind myself that I'm allowed to take up space.",
+    fullText: "If this camera were a mirror, I'd smile and try to remind myself that I'm allowed to take up space.\nI'm allowed to make mistakes.\nI'm allowed to be visible.\nThis app isn't about performance—it's about practice. And practice means progress."
+  },
+  {
+    id: 109,
+    category: 'scripts',
+    text: "If You're Watching This... - If you're watching this later—or even just listening—I hope you know that you're not alone.",
+    title: "If You're Watching This...",
+    content: "If you're watching this later—or even just listening—I hope you know that you're not alone.",
+    fullText: "If you're watching this later—or even just listening—I hope you know that you're not alone.\nIf speaking on camera feels hard for you too, that's okay.\nWe're all figuring this out.\nJust by recording this, I'm proving that fear doesn't get the final say."
+  },
+  {
+    id: 110,
+    category: 'scripts',
+    text: "Why I'm Doing This - There's a reason I'm doing this.",
+    title: "Why I'm Doing This",
+    content: "There's a reason I'm doing this.",
+    fullText: "There's a reason I'm doing this.\nMaybe I want to make content, maybe I want to speak more clearly at work, or maybe I just want to stop avoiding FaceTime.\nWhatever the reason—it matters.\nBecause I matter.\nAnd the more I show up, the more I believe in that."
+  },
+];
+
 const Home: React.FC = () => {
   const [, navigate] = useLocation();
   const [practicePrompts, setPracticePrompts] = useState<Prompt[]>([]);
@@ -57,18 +143,28 @@ const Home: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           
-          // Use 'practice' category prompts for the practice tab
+          // For practice prompts, use: casual, interview, storytelling, presentation, introduction
+          const practiceCategories = [
+            'casual', 'interview', 'storytelling', 'presentation', 'introduction'
+          ];
+          
+          // For scripted reads, use: social_media, random
+          const scriptCategories = ['social_media', 'random'];
+          
+          // Filter prompts by category
           const practices = data.filter((prompt: Prompt) => 
-            prompt.category === 'practice'
+            practiceCategories.includes(prompt.category)
           );
           
-          // Use 'scripts' category prompts for the scripted reads tab
           const scripts = data.filter((prompt: Prompt) => 
-            prompt.category === 'scripts'
+            scriptCategories.includes(prompt.category)
           );
           
-          setPracticePrompts(practices);
-          setScriptPrompts(scripts);
+          // Limit to 15 practice prompts
+          setPracticePrompts(practices.slice(0, 15));
+          
+          // Limit to 10 scripted reads
+          setScriptPrompts(scripts.slice(0, 10));
         } else {
           console.error('Failed to fetch prompts');
         }
@@ -83,7 +179,7 @@ const Home: React.FC = () => {
   }, []);
   
   // Start recording with the selected prompt or script
-  const startRecording = (prompt: Prompt) => {
+  const startRecording = (prompt: any) => {
     // Check if this is from the scripts tab based on the active tab
     const isScript = activeTab === 'scripts';
     
@@ -108,15 +204,19 @@ const Home: React.FC = () => {
     
     // Navigate to recording page with appropriate parameters
     if (isScript) {
-      // For script prompts, extract the title from the text (it's before the dash)
-      const parts = prompt.text.split(' - ');
-      const title = parts[0];
-      
-      // Get the script text with proper teleprompter formatting (replacing dash with newlines)
-      const scriptText = prompt.text.replace(' - ', '\n\n');
-      
-      navigate(`/recording?type=script&id=${prompt.id}&title=${encodeURIComponent(title)}&text=${encodeURIComponent(scriptText)}`);
+      // Check if this is one of our custom scripted reads
+      if (prompt.title && prompt.fullText) {
+        // This is a custom scripted read
+        navigate(`/recording?type=script&id=${prompt.id}&title=${encodeURIComponent(prompt.title)}&text=${encodeURIComponent(prompt.fullText)}`);
+      } else {
+        // This is a database script prompt
+        const parts = prompt.text.split(' - ');
+        const title = parts[0];
+        const scriptText = prompt.text.replace(' - ', '\n\n');
+        navigate(`/recording?type=script&id=${prompt.id}&title=${encodeURIComponent(title)}&text=${encodeURIComponent(scriptText)}`);
+      }
     } else {
+      // This is a practice prompt
       navigate(`/recording?type=prompt&id=${prompt.id}&text=${encodeURIComponent(prompt.text)}`);
     }
   };
@@ -252,16 +352,17 @@ const Home: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {/* Show only first 5 scripted reads for non-registered users */}
-                {(user ? scriptPrompts : scriptPrompts.slice(0, 5)).map((script) => {
-                  // The script text format is "Title - Content with newlines"
-                  // Example: "Self-Intro Starter - Hi! I'm [Name], and I'm..."
-                  const parts = script.text.split(' - ');
-                  const title = parts[0];
-                  const content = parts.length > 1 ? parts.slice(1).join(' - ') : '';
+                {/* Use our custom scripted reads instead of the database ones */}
+                {/* These are formatted exactly as provided by the user */}
+                {(user ? customScriptedReads : customScriptedReads.slice(0, 5)).map((script) => {
+                  // Extract title from the formatted script
+                  const title = script.title;
                   
-                  // The script already has newlines for teleprompter display
-                  // Store the formatted text in the script object
-                  (script as any).teleprompterText = script.text.replace(' - ', '\n\n');
+                  // Use the content for display
+                  const content = script.content || '';
+                  
+                  // Create a teleprompter-friendly format with the proper line breaks
+                  script.teleprompterText = `${title || ''}\n\n${script.fullText || ''}`;
                   
                   return (
                     <Card 
@@ -271,7 +372,7 @@ const Home: React.FC = () => {
                     >
                       <CardContent className="p-3 flex justify-between items-center">
                         <div className="flex-1">
-                          <p className="font-medium">{title}</p>
+                          <p className="font-medium">{title || 'Script'}</p>
                           <p className="text-sm text-muted-foreground">
                             {content.length > 60 ? `${content.substring(0, 60)}...` : content}
                           </p>
