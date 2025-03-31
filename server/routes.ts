@@ -171,8 +171,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email already registered" });
       }
       
+      // Remove confirmPassword before creating user
+      const { confirmPassword, ...userData } = validatedData;
+      
       // Create new user
-      const user = await storage.createUser(validatedData);
+      const user = await storage.createUser(userData);
       
       // Remove password from response
       const { passwordHash, ...userResponse } = user;

@@ -44,13 +44,10 @@ export function RegisterForm() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: FormData) => {
-      // Remove confirmPassword before sending to API
-      const { confirmPassword, ...registerData } = data;
-      
       return apiRequest({
         url: '/api/auth/register',
         method: 'POST',
-        body: JSON.stringify(registerData),
+        body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json',
         },
