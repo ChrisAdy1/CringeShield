@@ -9,8 +9,10 @@ import session from 'express-session';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import pgSession from 'connect-pg-simple';
+// ESM import for pg
 import pg from 'pg';
-const { Pool } = pg;
+// Use named import from the default export
+const Pool = pg.Pool;
 import { db } from './db';
 
 // Define extended Request interface with file property for TypeScript
@@ -107,6 +109,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Initialize with some prompts
   await initializePrompts();
+
+  // Get all prompts
+  app.get("/api/prompts", async (req, res) => {
+    try {
+      const prompts = await storage.getPrompts();
+      res.json(prompts);
+    } catch (error) {
+      console.error("Error getting prompts:", error);
+      res.status(500).json({ message: "Failed to get prompts" });
+    }
+  });
 
   // Get a prompt by category
   app.get("/api/prompts/generate", async (req, res) => {
@@ -316,40 +329,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // Initialize the database with some sample prompts
 async function initializePrompts() {
   const samplePrompts = [
-    { category: "casual", text: "Tell me about your favorite hobby and why you enjoy it." },
-    { category: "casual", text: "Describe your ideal weekend. What activities would you include?" },
-    { category: "casual", text: "If you could travel anywhere in the world, where would you go and why?" },
-    
-    { category: "interview", text: "Tell me about yourself and your background." },
-    { category: "interview", text: "What are your greatest strengths and how do they help you in your work?" },
-    { category: "interview", text: "Describe a challenging situation you faced and how you overcame it." },
-    
-    { category: "storytelling", text: "Share a memorable experience from your childhood." },
-    { category: "storytelling", text: "Tell a story about a time when you learned an important lesson." },
-    { category: "storytelling", text: "Describe an adventure or journey that changed your perspective." },
-    
-    { category: "presentation", text: "Introduce a product or service you're passionate about and explain why others should try it." },
-    { category: "presentation", text: "Give a short presentation about a topic you're knowledgeable about." },
-    { category: "presentation", text: "Explain a complex concept in simple terms as if teaching someone new to the subject." },
-    
-    { category: "introduction", text: "Introduce yourself to a new team at work, highlighting your skills and interests." },
-    { category: "introduction", text: "Imagine you're meeting new neighbors. How would you introduce yourself?" },
-    { category: "introduction", text: "Practice a 30-second elevator pitch about your professional background." },
-    
-    { category: "social_media", text: "Create a 30-second TikTok-style intro about something you're passionate about." },
-    { category: "social_media", text: "Record a YouTube-style welcome to your channel and explain what content viewers can expect." },
-    { category: "social_media", text: "Do a quick review of your favorite app or product as if for an Instagram story." },
-    { category: "social_media", text: "Create a short tutorial on how to do something you're good at, perfect for a social media reel." },
-    { category: "social_media", text: "Practice a trending challenge or dance explanation as if teaching your followers." },
-    { category: "social_media", text: "Share a day-in-the-life TikTok style video starting with 'POV: You're watching me...'" },
-    { category: "social_media", text: "Create an unboxing video introduction for a YouTube channel." },
-    { category: "social_media", text: "Record an Instagram-style product recommendation with your honest review." },
-    { category: "social_media", text: "Film a reaction video to an imaginary viral trend that's taking over social media." },
-    { category: "social_media", text: "Practice speaking directly to camera for a YouTube vlog introduction." },
-    
-    { category: "random", text: "If you could have any superpower, what would it be and how would you use it?" },
-    { category: "random", text: "Describe your dream home in detail." },
-    { category: "random", text: "What's something you believe that most people disagree with?" }
+    { category: "practice", text: "Say Hello - Introduce yourself with your name, where you're from, and one fun fact." },
+    { category: "practice", text: "What's Around You? - Describe three things in the room you're in, and why they catch your eye." },
+    { category: "practice", text: "Today Was… - Talk about how your day has been so far—nothing is too small." },
+    { category: "practice", text: "Something You Love - Share something you really enjoy—could be a show, a hobby, or a snack." },
+    { category: "practice", text: "Explain It Like a Friend - Pick something you know well and explain it like you're talking to a friend." },
+    { category: "practice", text: "Camera Shy Confession - Talk honestly about how you feel being on camera. No filter." },
+    { category: "practice", text: "Teach Me a Trick - Share a tip, shortcut, or life hack that makes your life easier." },
+    { category: "practice", text: "Tell a Tiny Story - Recall a short, funny, or awkward moment from your life." },
+    { category: "practice", text: "What I'd Tell My Younger Self - Reflect on one lesson you'd give to yourself a few years ago." },
+    { category: "practice", text: "Describe a Place You Love - Talk about a place that makes you feel safe, inspired, or at peace." },
+    { category: "practice", text: "Talk Like a YouTuber - Pretend you're starting a channel. Give an energetic intro and tell us what it's about." },
+    { category: "practice", text: "React to This Moment - Look around or think about how you feel right now—and just talk about it." },
+    { category: "practice", text: "Pet, Plant, or Playlist - Tell us about something that keeps you grounded." },
+    { category: "practice", text: "What's on Your Mind? - Free talk for 60 seconds. No script. No pressure." },
+    { category: "practice", text: "Your Daily Routine - Walk through a part of your day as if explaining it to a curious stranger." },
+    { category: "practice", text: "A Quick Rant - Get something off your chest. Be real, be expressive." },
+    { category: "practice", text: "Pretend You're on a Call - Speak like you're talking to a friend, not a camera." },
+    { category: "practice", text: "One Bold Opinion - Share a 'hot take' or personal opinion on something light (e.g., cereal before milk)." },
+    { category: "practice", text: "Behind the Scenes - Talk about something in your life most people don't see or know about." },
+    { category: "practice", text: "Encourage Someone Like You - Imagine someone else afraid to speak on camera. What would you tell them?" }
   ];
   
   // Check if we already have prompts

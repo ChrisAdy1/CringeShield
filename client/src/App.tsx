@@ -5,14 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import Layout from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
-import Onboarding from "@/pages/Onboarding";
-import Prompts from "@/pages/Prompts";
 import Recording from "@/pages/Recording";
 import PostSession from "@/pages/PostSession";
 import Badges from "@/pages/Badges";
 import Auth from "@/pages/Auth";
 import Account from "@/pages/Account";
-import Progress from "@/pages/Progress";
+import Settings from "@/pages/Settings";
 
 function Router() {
   const [location] = useLocation();
@@ -24,13 +22,11 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
-      <Route path="/onboarding" component={Onboarding} />
-      <Route path="/prompts" component={Prompts} />
       <Route path="/recording" component={Recording} />
       <Route path="/post-session" component={PostSession} />
       <Route path="/badges" component={Badges} />
       <Route path="/account" component={Account} />
-      <Route path="/progress" component={Progress} />
+      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

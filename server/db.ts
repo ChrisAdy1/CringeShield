@@ -1,6 +1,8 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
+// ESM import for pg
 import pg from 'pg';
-const { Pool } = pg;
+// Use named import from the default export
+const Pool = pg.Pool;
 import * as schema from '../shared/schema';
 
 // Initialize PostgreSQL connection

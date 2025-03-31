@@ -66,10 +66,7 @@ export interface CustomScript {
 }
 
 export interface UserPreferences {
-  hasSeenOnboarding: boolean;
   showTimer: boolean;
   enableFaceFilters: boolean;
   favoritePrompts: number[];
-  confidenceTier?: ConfidenceTier;
-  hasCompletedAssessment: boolean;
 }

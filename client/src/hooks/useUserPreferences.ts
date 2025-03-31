@@ -1,13 +1,11 @@
 import { useState, useCallback } from 'react';
 import useLocalStorage from './useLocalStorage';
-import { UserPreferences, ConfidenceTier } from '@/lib/types';
+import { UserPreferences } from '@/lib/types';
 
 const defaultPreferences: UserPreferences = {
-  hasSeenOnboarding: false,
   showTimer: true,
   enableFaceFilters: true,
   favoritePrompts: [],
-  hasCompletedAssessment: false,
 };
 
 export function useUserPreferences() {
@@ -28,10 +26,6 @@ export function useUserPreferences() {
   }, [setPreferences]);
 
   // Specific preference updates
-  const markOnboardingComplete = useCallback(() => {
-    updatePreference('hasSeenOnboarding', true);
-  }, [updatePreference]);
-
   const toggleTimer = useCallback(() => {
     updatePreference('showTimer', !preferences.showTimer);
   }, [preferences.showTimer, updatePreference]);
@@ -53,14 +47,6 @@ export function useUserPreferences() {
     );
   }, [preferences.favoritePrompts, updatePreference]);
 
-  const saveConfidenceAssessment = useCallback((tier: ConfidenceTier) => {
-    setPreferences(prev => ({
-      ...prev,
-      confidenceTier: tier,
-      hasCompletedAssessment: true
-    }));
-  }, [setPreferences]);
-
   const resetPreferences = useCallback(() => {
     setPreferences(defaultPreferences);
   }, [setPreferences]);
@@ -68,12 +54,10 @@ export function useUserPreferences() {
   return {
     preferences,
     updatePreference,
-    markOnboardingComplete,
     toggleTimer,
     toggleFaceFilters,
     addFavoritePrompt,
     removeFavoritePrompt,
-    saveConfidenceAssessment,
     resetPreferences
   };
 }
