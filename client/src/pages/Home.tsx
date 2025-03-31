@@ -69,6 +69,12 @@ const Home: React.FC = () => {
   
   // Start recording with the selected prompt
   const startRecording = (prompt: Prompt) => {
+    // If user is not logged in, redirect to registration page
+    if (!user) {
+      navigate('/auth?mode=register');
+      return;
+    }
+    
     // Store the selected prompt in localStorage to use in recording
     localStorage.setItem('selected-prompt', JSON.stringify(prompt));
     // Navigate to recording page with prompt ID and text in the URL
@@ -140,10 +146,10 @@ const Home: React.FC = () => {
             <div className="text-sm text-muted-foreground">
               {user ? (
                 <div className="px-2 py-1 bg-primary/10 rounded-full text-primary">
-                  {completedPrompts.length}/20 completed
+                  {completedPrompts.length}/{prompts.length} completed
                 </div>
               ) : (
-                <div className="text-xs italic">Login to track progress</div>
+                <div className="text-xs italic">10/{prompts.length} prompts available</div>
               )}
             </div>
           </div>
@@ -154,7 +160,8 @@ const Home: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {prompts.map((prompt) => (
+              {/* Show only first 10 prompts for non-registered users */}
+              {(user ? prompts : prompts.slice(0, 10)).map((prompt) => (
                 <Card 
                   key={prompt.id} 
                   className="cursor-pointer hover:bg-gray-50 transition-colors" 
@@ -195,9 +202,15 @@ const Home: React.FC = () => {
         
         {/* App info section */}
         <div className="text-center text-sm text-muted-foreground mt-8">
-          <p className="mb-2">
-            Complete all 20 prompts to practice your speaking skills.
-          </p>
+          {user ? (
+            <p className="mb-2">
+              Complete all 20 prompts to practice your speaking skills.
+            </p>
+          ) : (
+            <p className="mb-2">
+              <span className="text-primary font-medium">Create an account</span> to unlock all 20 prompts and track your progress.
+            </p>
+          )}
           <p>
             Your recordings stay on your device and are not uploaded.
           </p>
