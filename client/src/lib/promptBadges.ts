@@ -1,4 +1,5 @@
 // 15 prompt badges with their corresponding emojis
+// Plus script badges for the scripted reads
 export const promptBadges = [
   {
     id: 1,
@@ -89,6 +90,68 @@ export const promptBadges = [
     title: "Encourage Someone Like You",
     icon: "🤝",
     description: "Encouraged someone else afraid to speak on camera."
+  },
+  
+  // Script badges (IDs 101-110 to match script IDs)
+  {
+    id: 101,
+    title: "First Voice",
+    icon: "🎤",
+    description: "Completed the 'Self-Intro Starter' script."
+  },
+  {
+    id: 102,
+    title: "Mini Win",
+    icon: "☀️",
+    description: "Completed the 'Small Win Today' script."
+  },
+  {
+    id: 103,
+    title: "Heart Share",
+    icon: "💞",
+    description: "Completed the 'A Favorite Thing' script."
+  },
+  {
+    id: 104,
+    title: "On Purpose",
+    icon: "🎯",
+    description: "Completed the 'My Camera Goal' script."
+  },
+  {
+    id: 105,
+    title: "Self-Talker",
+    icon: "📝",
+    description: "Completed the 'A Note to Myself' script."
+  },
+  {
+    id: 106,
+    title: "Fearless Try",
+    icon: "🤪",
+    description: "Completed the 'What I Was Afraid Of' script."
+  },
+  {
+    id: 107,
+    title: "Unpolished Power",
+    icon: "🌸",
+    description: "Completed the 'Showing Up Unpolished' script."
+  },
+  {
+    id: 108,
+    title: "Mirror Moment",
+    icon: "💎",
+    description: "Completed the 'If This Were a Mirror' script."
+  },
+  {
+    id: 109,
+    title: "Not Alone",
+    icon: "👓",
+    description: "Completed the 'If You're Watching This...' script."
+  },
+  {
+    id: 110,
+    title: "My Why",
+    icon: "🔥",
+    description: "Completed the 'Why I'm Doing This' script."
   }
 ];
 

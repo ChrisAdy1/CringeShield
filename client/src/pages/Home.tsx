@@ -372,14 +372,30 @@ const Home: React.FC = () => {
                     >
                       <CardContent className="p-3 flex justify-between items-center">
                         <div className="flex-1">
-                          <p className="font-medium">{title || 'Script'}</p>
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              // Get badge icon for this script
+                              const badge = getBadgeByPromptId(script.id);
+                              return user && completedPrompts.includes(script.id) && badge ? (
+                                <span className="text-lg">{badge.icon}</span>
+                              ) : null;
+                            })()}
+                            <p className="font-medium">{title || 'Script'}</p>
+                          </div>
                           <p className="text-sm text-muted-foreground">
                             {content.length > 60 ? `${content.substring(0, 60)}...` : content}
                           </p>
                         </div>
-                        <Button variant="ghost" size="icon">
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
+                        {user && completedPrompts.includes(script.id) ? (
+                          <div className="flex items-center">
+                            <span className="text-xs text-primary font-medium mr-2">Completed</span>
+                            <CheckCircle className="h-5 w-5 text-primary" />
+                          </div>
+                        ) : (
+                          <Button variant="ghost" size="icon">
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        )}
                       </CardContent>
                     </Card>
                   );

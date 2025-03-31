@@ -67,11 +67,52 @@ export default function Badges() {
       ) : (
         <>
           <p className="text-center text-muted-foreground mb-6">
-            Earn badges by completing speaking prompts
+            Earn badges by completing speaking prompts and scripted reads
           </p>
           
+          {/* Practice Prompt Badges (IDs 1-15) */}
+          <h2 className="font-semibold text-lg mb-3">Practice Prompt Badges</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-            {promptBadges.map((badge) => {
+            {promptBadges.filter(badge => badge.id <= 15).map((badge) => {
+              const isCompleted = completedPromptIds.includes(badge.id);
+              
+              return (
+                <Card 
+                  key={badge.id}
+                  className={`hover:shadow-md transition-shadow ${isCompleted ? 'border-primary/20 bg-primary/5' : 'bg-gray-50'}`}
+                >
+                  <CardContent className="p-4 text-center">
+                    <div className="text-3xl mb-2">
+                      {isCompleted ? (
+                        badge.icon
+                      ) : (
+                        <span className="text-gray-300">?</span>
+                      )}
+                    </div>
+                    <h3 className="font-medium text-sm mb-1">
+                      {isCompleted ? badge.title : 'Locked Badge'}
+                    </h3>
+                    {isCompleted && (
+                      <p className="text-xs text-muted-foreground">
+                        {badge.description}
+                      </p>
+                    )}
+                    <Badge 
+                      variant={isCompleted ? "default" : "outline"} 
+                      className="mt-2"
+                    >
+                      {isCompleted ? 'Completed' : 'Incomplete'}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Scripted Read Badges (IDs 101-110) */}
+          <h2 className="font-semibold text-lg mb-3">Scripted Read Badges</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            {promptBadges.filter(badge => badge.id >= 101).map((badge) => {
               const isCompleted = completedPromptIds.includes(badge.id);
               
               return (
@@ -109,7 +150,7 @@ export default function Badges() {
           
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-3">
-              Completed {completedPromptIds.length} of 20 badges
+              Completed {completedPromptIds.length} of 25 badges
             </p>
             <Button 
               variant="outline" 
