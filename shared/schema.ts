@@ -15,7 +15,12 @@ export const insertUserSchema = createInsertSchema(users).omit({
   passwordHash: true,
   createdAt: true,
 }).extend({
-  password: z.string().min(8),
+  password: z.string()
+    .min(6, { message: 'Password must be at least 6 characters' })
+    .max(20, { message: 'Password must not exceed 20 characters' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' })
+    .regex(/[^a-zA-Z0-9]/, { message: 'Password must contain at least one symbol' }),
 });
 
 // Prompt completions table
@@ -81,7 +86,9 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = insertUserSchema.extend({
-  confirmPassword: z.string().min(8)
+  confirmPassword: z.string()
+    .min(6, { message: 'Password must be at least 6 characters' })
+    .max(20, { message: 'Password must not exceed 20 characters' })
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],

@@ -20,8 +20,13 @@ import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  confirmPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  password: z.string()
+    .min(6, { message: 'Password must be at least 6 characters' })
+    .max(20, { message: 'Password must not exceed 20 characters' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' })
+    .regex(/[^a-zA-Z0-9]/, { message: 'Password must contain at least one symbol' }),
+  confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -106,6 +111,9 @@ export function RegisterForm() {
                 <Input type="password" placeholder="••••••" {...field} />
               </FormControl>
               <FormMessage />
+              <p className="text-xs text-muted-foreground mt-1">
+                The password has to have 6 - 20 characters, a capital letter, a symbol and a number
+              </p>
             </FormItem>
           )}
         />
