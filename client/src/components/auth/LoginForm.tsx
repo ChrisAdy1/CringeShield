@@ -17,6 +17,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -28,6 +30,7 @@ type FormData = z.infer<typeof formSchema>;
 export function LoginForm() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+  const [loginError, setLoginError] = useState<string | null>(null);
   
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -49,6 +52,8 @@ export function LoginForm() {
       });
     },
     onSuccess: (data) => {
+      setLoginError(null);
+      
       toast({
         title: 'Logged in successfully',
         description: `Welcome back ${data.username || data.email || ''}!`,
@@ -62,15 +67,23 @@ export function LoginForm() {
     },
     onError: (error: any) => {
       console.error('Login error:', error);
-      toast({
-        title: 'Login failed',
-        description: error.message || 'Invalid email or password',
-        variant: 'destructive',
-      });
+      
+      // Set user-friendly error message based on the error
+      if (error.status === 401) {
+        // Check error message to provide a more specific message
+        if (error.message.includes("Invalid email or password")) {
+          setLoginError("Your email/password don't match.");
+        } else {
+          setLoginError("You don't have an account with this email address.");
+        }
+      } else {
+        setLoginError("An error occurred. Please try again later.");
+      }
     },
   });
 
   const onSubmit = (data: FormData) => {
+    setLoginError(null); // Clear previous errors
     mutate(data);
   };
 
@@ -104,6 +117,13 @@ export function LoginForm() {
             </FormItem>
           )}
         />
+        
+        {loginError && (
+          <Alert variant="destructive" className="mt-4">
+            <AlertCircle className="h-4 w-4 mr-2" />
+            <AlertDescription>{loginError}</AlertDescription>
+          </Alert>
+        )}
         
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? (

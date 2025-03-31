@@ -199,24 +199,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/auth/login", (req, res, next) => {
-    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string }) => {
-      if (err) {
-        return next(err);
+  app.post("/api/auth/login", async (req, res, next) => {
+    try {
+      // First validate the request body
+      const loginData = loginSchema.parse(req.body);
+      
+      // Check if the user exists first
+      const userExists = await storage.getUserByEmail(loginData.email);
+      if (!userExists) {
+        return res.status(401).json({ message: "Account not found" });
       }
-      if (!user) {
-        return res.status(401).json({ message: info.message || "Invalid login" });
-      }
-      req.login(user, (loginErr: Error) => {
-        if (loginErr) {
-          return next(loginErr);
+      
+      // Now try to authenticate the user
+      passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string }) => {
+        if (err) {
+          return next(err);
         }
-        
-        // Remove password from response
-        const { passwordHash, ...userResponse } = user;
-        return res.json(userResponse);
-      });
-    })(req, res, next);
+        if (!user) {
+          return res.status(401).json({ message: "Invalid email or password" });
+        }
+        req.login(user, (loginErr: Error) => {
+          if (loginErr) {
+            return next(loginErr);
+          }
+          
+          // Remove password from response
+          const { passwordHash, ...userResponse } = user;
+          return res.json(userResponse);
+        });
+      })(req, res, next);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid request data" });
+    }
   });
   
   app.post("/api/auth/logout", (req, res) => {
