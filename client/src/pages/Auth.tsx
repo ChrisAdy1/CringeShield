@@ -47,22 +47,22 @@ export default function Auth() {
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Create Account</TabsTrigger>
               </TabsList>
+          
+              <CardContent>
+                <TabsContent value="login">
+                  <div className="mt-2">
+                    <LoginForm />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="register">
+                  <div className="mt-2">
+                    <RegisterForm />
+                  </div>
+                </TabsContent>
+              </CardContent>
             </Tabs>
           </CardHeader>
-          
-          <CardContent>
-            <TabsContent value="login">
-              <div className="mt-2">
-                <LoginForm />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <div className="mt-2">
-                <RegisterForm />
-              </div>
-            </TabsContent>
-          </CardContent>
           
           <CardFooter className="flex justify-center border-t pt-6">
             <Button 
