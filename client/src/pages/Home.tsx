@@ -57,17 +57,11 @@ const Home: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           
-          // For this MVP, use existing categories but group them:
-          // Group casual, interview, storytelling, presentation, introduction, social_media, random as practice prompts 
-          // Note: In a production app, we'd properly categorize these on the server
-          const practices = data.filter((prompt: Prompt) => 
-            ['casual', 'interview', 'storytelling', 'presentation', 
-             'introduction', 'social_media', 'random'].includes(prompt.category)
-          );
+          // Group practice prompts (should have "practice" category)
+          const practices = data.filter((prompt: Prompt) => prompt.category === "practice");
           
-          // Use the first 10 prompts as "scripted reads" for the MVP
-          // In a real app, these would be proper scripted content
-          const scripts = [...data].slice(0, 10);
+          // Group script prompts (should have "scripts" category)
+          const scripts = data.filter((prompt: Prompt) => prompt.category === "scripts");
           
           setPracticePrompts(practices);
           setScriptPrompts(scripts);
@@ -113,6 +107,8 @@ const Home: React.FC = () => {
       // For script prompts, extract the title from the text (it's before the dash)
       const parts = prompt.text.split(' - ');
       const title = parts[0];
+      
+      // Get the script text, which may contain newlines to be preserved for teleprompter
       const scriptText = parts.length > 1 ? parts.slice(1).join(' - ') : prompt.text;
       
       navigate(`/recording?type=script&id=${prompt.id}&title=${encodeURIComponent(title)}&text=${encodeURIComponent(scriptText)}`);
@@ -254,9 +250,16 @@ const Home: React.FC = () => {
                 {/* Show only first 5 scripted reads for non-registered users */}
                 {(user ? scriptPrompts : scriptPrompts.slice(0, 5)).map((script) => {
                   // Extract title and content from the script text format
+                  // Format: "Title - Content with newlines"
                   const parts = script.text.split(' - ');
                   const title = parts[0]; 
-                  const content = parts.length > 1 ? parts.slice(1).join(' - ') : '';
+                  let content = '';
+                  
+                  if (parts.length > 1) {
+                    // Get first portion of content for preview
+                    // Replace newlines with spaces for the preview
+                    content = parts.slice(1).join(' - ').replace(/\n/g, ' ');
+                  }
                   
                   return (
                     <Card 
@@ -268,7 +271,7 @@ const Home: React.FC = () => {
                         <div className="flex-1">
                           <p className="font-medium">{title}</p>
                           <p className="text-sm text-muted-foreground">
-                            {content.substring(0, 60)}...
+                            {content.length > 60 ? `${content.substring(0, 60)}...` : content}
                           </p>
                         </div>
                         <Button variant="ghost" size="icon">
