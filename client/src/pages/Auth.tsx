@@ -64,14 +64,7 @@ export default function Auth() {
             </Tabs>
           </CardHeader>
           
-          <CardFooter className="flex justify-center border-t pt-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation('/onboarding')}
-            >
-              Continue without account
-            </Button>
-          </CardFooter>
+          {/* Footer removed as requested */}
         </Card>
       </div>
     </div>
