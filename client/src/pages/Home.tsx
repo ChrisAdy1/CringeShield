@@ -405,6 +405,46 @@ const Home: React.FC = () => {
           </TabsContent>
         </Tabs>
         
+        {/* Badge teaser section - only shown to non-authenticated users */}
+        {!user && (
+          <div className="mt-12 text-center">
+            <div className="h-px bg-border w-1/3 mx-auto mb-8"></div>
+            
+            <h3 className="text-lg font-medium mb-3">
+              You can track your progress and earn badges for each challenge.
+            </h3>
+            
+            {/* Sample badges display */}
+            <div className="flex justify-center gap-4 mb-4">
+              <div className="flex items-center justify-center h-12 w-12 bg-primary/10 rounded-full">
+                <span className="text-2xl">🎉</span>
+              </div>
+              <div className="flex items-center justify-center h-12 w-12 bg-primary/10 rounded-full">
+                <span className="text-2xl">🧠</span>
+              </div>
+              <div className="flex items-center justify-center h-12 w-12 bg-primary/10 rounded-full">
+                <span className="text-2xl">💬</span>
+              </div>
+              <div className="flex items-center justify-center h-12 w-12 bg-primary/10 rounded-full">
+                <span className="text-2xl">🔥</span>
+              </div>
+              <div className="flex items-center justify-center h-12 w-12 bg-primary/10 rounded-full">
+                <span className="text-2xl">📖</span>
+              </div>
+            </div>
+            
+            <p className="text-muted-foreground mb-4">
+              Create an account to start tracking your progress →
+            </p>
+            
+            <Button
+              onClick={() => navigate('/auth?mode=register')}
+              className="w-full"
+            >
+              Sign Up for Free
+            </Button>
+          </div>
+        )}
 
       </div>
     </div>
