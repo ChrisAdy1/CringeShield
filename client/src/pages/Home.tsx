@@ -1,29 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowRight, Medal, Mic, Clock, Search, BarChart, Filter } from 'lucide-react';
-import { useBadges } from '@/hooks/useBadges';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, LogIn, Loader2, CheckCircle } from 'lucide-react';
 import { Prompt } from '@/lib/types';
 
 const Home: React.FC = () => {
   const [, navigate] = useLocation();
-  const { getEarnedBadgeDetails } = useBadges();
-  const [showAllBadges, setShowAllBadges] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const [completedPrompts, setCompletedPrompts] = useState<number[]>([]);
   
-  // Get sessions from local storage
-  const sessions = JSON.parse(localStorage.getItem('practice-sessions') || '[]');
-  
-  // Calculate progress data (simplified for MVP)
-  const totalSessions = sessions.length;
-  const lastSessionDate = totalSessions > 0 
-    ? new Date(sessions[sessions.length - 1].date).toLocaleDateString()
-    : 'No sessions yet';
+  // Fetch current user and completed prompts if logged in
+  useEffect(() => {
+    const checkCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/auth/current-user');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          
+          // Fetch completed prompts for the user
+          try {
+            const completionsResponse = await fetch('/api/prompt-completions');
+            if (completionsResponse.ok) {
+              const completionsData = await completionsResponse.json();
+              // Extract just the prompt IDs from completions
+              const completedPromptIds = completionsData.map((completion: any) => completion.promptId);
+              setCompletedPrompts(completedPromptIds);
+            }
+          } catch (completionsError) {
+            console.error('Error fetching completed prompts:', completionsError);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking current user:', error);
+      } finally {
+        setUserLoading(false);
+      }
+    };
+    
+    checkCurrentUser();
+  }, []);
   
   // Fetch prompts when component mounts
   useEffect(() => {
@@ -46,34 +66,16 @@ const Home: React.FC = () => {
     fetchPrompts();
   }, []);
   
-  // Get badges
-  const earnedBadgeDetails = getEarnedBadgeDetails();
-  const displayBadges = showAllBadges 
-    ? earnedBadgeDetails 
-    : earnedBadgeDetails.slice(0, 3);
-  
-  // Filter prompts based on search
-  const filteredPrompts = prompts.filter(prompt => 
-    prompt.text.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  // Get a random prompt to practice
-  const getRandomPrompt = () => {
-    if (prompts.length === 0) return;
-    const randomIndex = Math.floor(Math.random() * prompts.length);
-    const randomPrompt = prompts[randomIndex];
-    startRecording(randomPrompt);
-  };
-  
   // Start recording with the selected prompt
   const startRecording = (prompt: Prompt) => {
     // Store the selected prompt in localStorage to use in recording
     localStorage.setItem('selected-prompt', JSON.stringify(prompt));
-    navigate('/recording');
+    // Navigate to recording page with prompt ID and text in the URL
+    navigate(`/recording?type=prompt&id=${prompt.id}&text=${encodeURIComponent(prompt.text)}`);
   };
   
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-4 pb-24">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold mb-1">CringeShield</h1>
@@ -82,163 +84,114 @@ const Home: React.FC = () => {
           </p>
         </div>
         
-        {/* Main call to action */}
+        {/* Account section */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
+            {userLoading ? (
+              <div className="flex justify-center py-2">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              </div>
+            ) : user ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium">{user.email}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Track your progress and earn badges
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/account')}
+                >
+                  My Account
+                </Button>
+              </div>
+            ) : (
               <div>
-                <h2 className="text-xl font-semibold">Ready to Practice?</h2>
-                <p className="text-sm text-muted-foreground">
-                  Choose a prompt or try a random one
-                </p>
+                <h3 className="font-medium mb-2">Create an account to track progress</h3>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="default" 
+                    className="flex-1"
+                    onClick={() => navigate('/auth?mode=register')}
+                  >
+                    Register
+                    <LogIn className="ml-2 h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => navigate('/auth')}
+                  >
+                    Login
+                  </Button>
+                </div>
               </div>
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mic className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            
-            <Button 
-              className="w-full mb-4"
-              onClick={getRandomPrompt}
-            >
-              Random Prompt
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search prompts..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+            )}
           </CardContent>
         </Card>
         
         {/* Prompts list */}
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Practice Prompts</h2>
-            {searchTerm && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setSearchTerm('')}
-              >
-                Clear
-              </Button>
-            )}
+            <div className="text-sm text-muted-foreground">
+              {user ? (
+                <div className="px-2 py-1 bg-primary/10 rounded-full text-primary">
+                  {completedPrompts.length}/20 completed
+                </div>
+              ) : (
+                <div className="text-xs italic">Login to track progress</div>
+              )}
+            </div>
           </div>
           
           {loading ? (
             <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <>
-              {filteredPrompts.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  <Filter className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                  <p>No prompts match your search</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredPrompts.map((prompt) => (
-                    <Card key={prompt.id} className="cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => startRecording(prompt)}>
-                      <CardContent className="p-3 flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">{prompt.text.split(' - ')[0]}</p>
-                          {prompt.text.includes(' - ') && (
-                            <p className="text-sm text-muted-foreground">{prompt.text.split(' - ')[1]}</p>
-                          )}
-                        </div>
-                        <Button variant="ghost" size="icon">
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </>
+            <div className="space-y-3">
+              {prompts.map((prompt) => (
+                <Card 
+                  key={prompt.id} 
+                  className="cursor-pointer hover:bg-gray-50 transition-colors" 
+                  onClick={() => startRecording(prompt)}
+                >
+                  <CardContent className="p-3 flex justify-between items-center">
+                    <div className="flex-1">
+                      <p className="font-medium">{prompt.text.split(' - ')[0]}</p>
+                      {prompt.text.includes(' - ') && (
+                        <p className="text-sm text-muted-foreground">{prompt.text.split(' - ')[1]}</p>
+                      )}
+                    </div>
+                    {user && completedPrompts.includes(prompt.id) ? (
+                      <div className="flex items-center">
+                        <span className="text-xs text-primary font-medium mr-2">Completed</span>
+                        <CheckCircle className="h-5 w-5 text-primary" />
+                      </div>
+                    ) : (
+                      <Button variant="ghost" size="icon">
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
         
-        {/* Progress summary */}
-        {totalSessions > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <BarChart className="h-5 w-5 mr-2" />
-                Your Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-muted-foreground text-xs mb-1 flex items-center">
-                    <Clock className="h-3 w-3 mr-1" />
-                    Sessions Completed
-                  </div>
-                  <div className="text-2xl font-semibold">{totalSessions}</div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-muted-foreground text-xs mb-1">Last Session</div>
-                  <div className="text-sm font-medium">{lastSessionDate}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* Badges section */}
-        {earnedBadgeDetails.length > 0 && (
-          <Card className="mb-4">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex items-center justify-between">
-                <div className="flex items-center">
-                  <Medal className="h-5 w-5 mr-2" />
-                  Your Achievements
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/badges')}
-                  className="text-xs h-8"
-                >
-                  View All
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-3 gap-2 mb-3">
-                {displayBadges.map((badge, index) => (
-                  <div 
-                    key={index} 
-                    className="flex flex-col items-center p-2 rounded-lg bg-gray-50"
-                  >
-                    <div className="text-2xl mb-1">{badge.icon}</div>
-                    <div className="text-xs text-center font-medium truncate w-full">
-                      {badge.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {!showAllBadges && earnedBadgeDetails.length > 3 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-xs w-full" 
-                  onClick={() => setShowAllBadges(true)}
-                >
-                  Show All ({earnedBadgeDetails.length})
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {/* App info section */}
+        <div className="text-center text-sm text-muted-foreground mt-8">
+          <p className="mb-2">
+            Complete all 20 prompts to become a confident speaker.
+          </p>
+          <p>
+            Your recordings stay on your device and are not uploaded.
+          </p>
+        </div>
       </div>
     </div>
   );

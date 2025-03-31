@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Play, Repeat, Home, Download } from 'lucide-react';
+import { Play, Repeat, Home, Download, CheckCircle, Loader2 } from 'lucide-react';
 import { useBadges } from '@/hooks/useBadges';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { SelfReflectionRating } from '@/lib/types';
@@ -17,10 +17,30 @@ const PostSession: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   const [note, setNote] = useState('');
   const [rating, setRating] = useState<SelfReflectionRating | null>(null);
+  const [isSavingCompletion, setIsSavingCompletion] = useState(false);
+  const [completionSaved, setCompletionSaved] = useState(false);
+  const [user, setUser] = useState<any>(null);
   
   const { badges, checkSessionForBadges } = useBadges();
   const { addReflection } = useSelfReflections();
   const [earnedBadge, setEarnedBadge] = useState<string | null>(null);
+  
+  // Fetch current user
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/auth/current-user');
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Error checking current user:', error);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
   
   // Load session data
   useEffect(() => {
@@ -51,6 +71,48 @@ const PostSession: React.FC = () => {
       }
     }
   }, [sessionId, navigate, checkSessionForBadges]);
+  
+  // Save prompt completion to database
+  const savePromptCompletion = async () => {
+    // Only attempt to save if user is logged in and prompt has an ID
+    if (user && session && session.promptId) {
+      // Don't save for free-talking mode (no prompt)
+      if (session.type !== 'prompt') {
+        return;
+      }
+      
+      try {
+        setIsSavingCompletion(true);
+        const response = await fetch('/api/prompt-completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            promptId: parseInt(session.promptId),
+            cameraOn: true // We could make this dynamic later
+          }),
+        });
+        
+        if (response.ok) {
+          setCompletionSaved(true);
+        } else {
+          console.error('Failed to save prompt completion');
+        }
+      } catch (error) {
+        console.error('Error saving prompt completion:', error);
+      } finally {
+        setIsSavingCompletion(false);
+      }
+    }
+  };
+  
+  // When session and user data are both loaded, save the completion
+  useEffect(() => {
+    if (session && user && session.type === 'prompt' && !completionSaved) {
+      savePromptCompletion();
+    }
+  }, [session, user]);
   
   // Handle saving reflection
   const handleSaveReflection = () => {
@@ -154,6 +216,34 @@ const PostSession: React.FC = () => {
               <p className="text-sm text-muted-foreground">
                 {getBadgeDescription(earnedBadge)}
               </p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Prompt completion status for logged-in users */}
+        {user && session && session.type === 'prompt' && session.promptId && (
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              {isSavingCompletion ? (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
+                  <span>Saving progress...</span>
+                </div>
+              ) : completionSaved ? (
+                <div className="flex items-center text-green-600">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  <div>
+                    <p className="font-medium">Progress saved!</p>
+                    <p className="text-sm text-muted-foreground">This prompt is now marked as completed</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <p className="text-sm">
+                    {user ? 'Saving your progress...' : 'Log in to track your progress'}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
