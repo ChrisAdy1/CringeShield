@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, LogIn, Loader2, CheckCircle } from 'lucide-react';
 import { Prompt } from '@/lib/types';
+import { getBadgeByPromptId } from '@/lib/promptBadges';
 
 const Home: React.FC = () => {
   const [, navigate] = useLocation();
@@ -161,7 +162,16 @@ const Home: React.FC = () => {
                 >
                   <CardContent className="p-3 flex justify-between items-center">
                     <div className="flex-1">
-                      <p className="font-medium">{prompt.text.split(' - ')[0]}</p>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          // Get badge icon for this prompt
+                          const badge = getBadgeByPromptId(prompt.id);
+                          return user && completedPrompts.includes(prompt.id) && badge ? (
+                            <span className="text-lg">{badge.icon}</span>
+                          ) : null;
+                        })()}
+                        <p className="font-medium">{prompt.text.split(' - ')[0]}</p>
+                      </div>
                       {prompt.text.includes(' - ') && (
                         <p className="text-sm text-muted-foreground">{prompt.text.split(' - ')[1]}</p>
                       )}

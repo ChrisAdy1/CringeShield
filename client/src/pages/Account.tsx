@@ -155,9 +155,18 @@ export default function Account() {
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">Total Prompts Completed</div>
                 <Badge variant="outline" className="ml-2">
-                  {completions?.length || 0}
+                  {completions?.length || 0} / 20
                 </Badge>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="w-full mt-2"
+                onClick={() => setLocation('/badges')}
+              >
+                <Award className="h-4 w-4 mr-2" />
+                View My Badges
+              </Button>
             </CardContent>
           </Card>
 

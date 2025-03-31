@@ -8,6 +8,7 @@ import { Play, Repeat, Home, Download, CheckCircle, Loader2 } from 'lucide-react
 import { useBadges } from '@/hooks/useBadges';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { SelfReflectionRating } from '@/lib/types';
+import { getBadgeByPromptId } from '@/lib/promptBadges';
 
 const PostSession: React.FC = () => {
   const [, navigate] = useLocation();
@@ -206,6 +207,32 @@ const PostSession: React.FC = () => {
         </div>
         
         {/* Badge earned - only show for logged in users */}
+        {user && session && session.type === 'prompt' && session.promptId && completionSaved && (
+          <Card className="mb-6 border-primary/30 bg-primary/5">
+            <CardContent className="p-4 text-center">
+              {(() => {
+                const badgeInfo = getBadgeByPromptId(parseInt(session.promptId));
+                return badgeInfo ? (
+                  <>
+                    <div className="mb-2 text-3xl">{badgeInfo.icon}</div>
+                    <h2 className="font-semibold text-lg mb-1">Badge Unlocked!</h2>
+                    <Badge 
+                      variant="outline"
+                      className="bg-primary/20 border-primary/30 mb-2"
+                    >
+                      {badgeInfo.title}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground">
+                      {badgeInfo.description}
+                    </p>
+                  </>
+                ) : null;
+              })()}
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Legacy achievement badge - only show for logged in users */}
         {user && earnedBadge && (
           <Card className="mb-6 border-primary/30 bg-primary/5">
             <CardContent className="p-4 text-center">

@@ -1,194 +1,115 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocation } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { 
+  Card, 
+  CardContent
+} from "@/components/ui/card";
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { ArrowLeft, Medal, Unlock, Lock } from 'lucide-react';
-import { useBadges } from '@/hooks/useBadges';
+import { ChevronLeft, Loader2 } from 'lucide-react';
+import { promptBadges } from '../lib/promptBadges';
 
-const Badges: React.FC = () => {
-  const [, navigate] = useLocation();
-  const { badges, earnedBadges } = useBadges();
-  const [selectedBadge, setSelectedBadge] = useState<any>(null);
-  
-  // Get all available badges
-  const allBadges = [
-    {
-      id: 'first_step',
-      name: 'First Step',
-      description: 'Completed your first practice session!',
-      icon: '🎯',
-    },
-    {
-      id: 'smooth_reader',
-      name: 'Smooth Reader',
-      description: 'Successfully used a script in your practice.',
-      icon: '📝',
-    },
-    {
-      id: 'free_spirit',
-      name: 'Free Spirit',
-      description: 'Practiced without a script or prompt.',
-      icon: '🦅',
-    },
-    {
-      id: 'bounce_back',
-      name: 'Bounce Back',
-      description: 'Retried a session - showing real dedication!',
-      icon: '🔄',
-    },
-    {
-      id: 'reflector',
-      name: 'Reflector',
-      description: 'Added thoughtful self-reflection to your practice.',
-      icon: '🤔',
-    },
-    {
-      id: 'regular',
-      name: 'Regular',
-      description: 'Completed 5 practice sessions.',
-      icon: '⭐',
-    },
-    {
-      id: 'dedicated',
-      name: 'Dedicated',
-      description: 'Completed 10 practice sessions.',
-      icon: '🌟',
-    },
-    {
-      id: 'master',
-      name: 'Master',
-      description: 'Completed 25 practice sessions.',
-      icon: '👑',
-    },
-  ];
-  
-  // Show badge detail dialog
-  const handleBadgeClick = (badge: any) => {
-    setSelectedBadge(badge);
-  };
-  
-  // Close dialog
-  const handleDialogClose = () => {
-    setSelectedBadge(null);
-  };
-  
+export default function Badges() {
+  const [_, navigate] = useLocation();
+
+  // Fetch current user
+  const { data: user, isLoading: isUserLoading } = useQuery<any>({
+    queryKey: ['/api/auth/current-user'],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Fetch prompt completions (badges earned)
+  const { data: completions, isLoading: isCompletionsLoading } = useQuery<any[]>({
+    queryKey: ['/api/prompt-completions'],
+    enabled: !!user,
+  });
+
+  const isLoading = isUserLoading || isCompletionsLoading;
+  const completedPromptIds = completions?.map(c => c.promptId) || [];
+
   return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/')}
-            className="h-8 w-8 mr-2"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">Your Achievements</h1>
-        </div>
-        
-        <div className="mb-4 text-muted-foreground">
-          <p>Track your progress and collect all the badges!</p>
-        </div>
-        
-        {/* Badge grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {allBadges.map((badge) => {
-            const isEarned = earnedBadges.includes(badge.name);
-            
-            return (
-              <Card 
-                key={badge.id}
-                className={`cursor-pointer transition-all hover:shadow ${
-                  isEarned ? 'border-primary/30' : 'opacity-70'
-                }`}
-                onClick={() => handleBadgeClick(badge)}
-              >
-                <CardContent className="p-4 flex flex-col items-center text-center">
-                  <div className="text-3xl mb-2">{badge.icon}</div>
-                  <h3 className="font-medium mb-1">{badge.name}</h3>
-                  {isEarned ? (
-                    <Badge 
-                      variant="outline" 
-                      className="text-xs bg-primary/10 border-primary/30"
-                    >
-                      <Unlock className="h-3 w-3 mr-1" />
-                      Earned
-                    </Badge>
-                  ) : (
-                    <Badge 
-                      variant="outline" 
-                      className="text-xs bg-gray-100 border-gray-200"
-                    >
-                      <Lock className="h-3 w-3 mr-1" />
-                      Locked
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-        
-        {/* Progress overview */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="font-medium">Achievement Progress</h2>
-              <Badge variant="outline" className="flex items-center">
-                <Medal className="h-3 w-3 mr-1" />
-                {earnedBadges.length}/{allBadges.length}
-              </Badge>
-            </div>
-            
-            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-primary transition-all"
-                style={{ 
-                  width: `${(earnedBadges.length / allBadges.length) * 100}%` 
-                }}
-              ></div>
-            </div>
-            
-            <p className="text-sm text-muted-foreground mt-3">
-              Keep practicing to unlock all achievements!
-            </p>
-          </CardContent>
-        </Card>
+    <div className="container max-w-xl mx-auto py-6 px-4">
+      <div className="flex items-center mb-6">
+        <Button 
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/account')}
+          className="mr-2"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-bold">My Badges</h1>
       </div>
       
-      {/* Badge detail dialog */}
-      {selectedBadge && (
-        <Dialog open={!!selectedBadge} onOpenChange={handleDialogClose}>
-          <DialogContent className="max-w-xs mx-auto">
-            <DialogHeader>
-              <div className="text-5xl text-center mb-2">{selectedBadge.icon}</div>
-              <DialogTitle className="text-center">{selectedBadge.name}</DialogTitle>
-            </DialogHeader>
-            
-            <DialogDescription className="text-center">
-              {selectedBadge.description}
-            </DialogDescription>
-            
-            <div className="text-center mt-2">
-              {earnedBadges.includes(selectedBadge.name) ? (
-                <Badge className="bg-primary/20 text-primary border-primary/30">
-                  <Unlock className="h-3 w-3 mr-1" />
-                  Unlocked
-                </Badge>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Complete the challenge to unlock this badge
-                </p>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-60">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      ) : !user ? (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="mb-4">Please log in to view your badges.</p>
+            <Button onClick={() => navigate('/auth')}>Login</Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <p className="text-center text-muted-foreground mb-6">
+            Earn badges by completing speaking prompts
+          </p>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+            {promptBadges.map((badge) => {
+              const isCompleted = completedPromptIds.includes(badge.id);
+              
+              return (
+                <Card 
+                  key={badge.id}
+                  className={`hover:shadow-md transition-shadow ${isCompleted ? 'border-primary/20 bg-primary/5' : 'bg-gray-50'}`}
+                >
+                  <CardContent className="p-4 text-center">
+                    <div className="text-3xl mb-2">
+                      {isCompleted ? (
+                        badge.icon
+                      ) : (
+                        <span className="text-gray-300">?</span>
+                      )}
+                    </div>
+                    <h3 className="font-medium text-sm mb-1">
+                      {isCompleted ? badge.title : 'Locked Badge'}
+                    </h3>
+                    {isCompleted && (
+                      <p className="text-xs text-muted-foreground">
+                        {badge.description}
+                      </p>
+                    )}
+                    <Badge 
+                      variant={isCompleted ? "default" : "outline"} 
+                      className="mt-2"
+                    >
+                      {isCompleted ? 'Completed' : 'Incomplete'}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-3">
+              Completed {completedPromptIds.length} of 20 badges
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/')} 
+              className="w-full"
+            >
+              Practice More Prompts
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );
-};
-
-export default Badges;
+}
