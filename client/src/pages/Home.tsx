@@ -153,10 +153,10 @@ const Home: React.FC = () => {
             <div className="text-sm text-muted-foreground">
               {user ? (
                 <div className="px-2 py-1 bg-primary/10 rounded-full text-primary">
-                  {completedPrompts.length}/{prompts.length} completed
+                  {completedPrompts.length}/20 completed
                 </div>
               ) : (
-                <div className="text-xs italic">10/{prompts.length} prompts available</div>
+                <div className="text-xs italic">10/20 prompts available</div>
               )}
             </div>
           </div>
