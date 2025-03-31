@@ -96,7 +96,7 @@ const Home: React.FC = () => {
                 <div>
                   <h3 className="font-medium">{user.email}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Track your progress and earn badges
+                    Track your progress on completed prompts
                   </p>
                 </div>
                 <Button 
@@ -186,7 +186,7 @@ const Home: React.FC = () => {
         {/* App info section */}
         <div className="text-center text-sm text-muted-foreground mt-8">
           <p className="mb-2">
-            Complete all 20 prompts to become a confident speaker.
+            Complete all 20 prompts to practice your speaking skills.
           </p>
           <p>
             Your recordings stay on your device and are not uploaded.

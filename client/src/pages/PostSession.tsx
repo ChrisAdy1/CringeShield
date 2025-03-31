@@ -21,9 +21,10 @@ const PostSession: React.FC = () => {
   const [completionSaved, setCompletionSaved] = useState(false);
   const [user, setUser] = useState<any>(null);
   
-  const { badges, checkSessionForBadges } = useBadges();
   const { addReflection } = useSelfReflections();
   const [earnedBadge, setEarnedBadge] = useState<string | null>(null);
+  // Only use badges if user is logged in
+  const { checkSessionForBadges } = useBadges();
   
   // Fetch current user
   useEffect(() => {
@@ -51,26 +52,29 @@ const PostSession: React.FC = () => {
       if (foundSession) {
         setSession(foundSession);
         
-        // Check if this session earned any badges
-        const userData = {
-          totalSessions: sessions.length,
-        };
-        
-        const sessionDetails = {
-          scriptUsed: foundSession.type === 'script',
-          mode: foundSession.type,
-        };
-        
-        // Check for any newly earned badges
-        const newBadge = checkSessionForBadges(sessionDetails, userData);
-        if (newBadge) {
-          setEarnedBadge(newBadge);
+        // Only check for badges if user is logged in
+        if (user) {
+          // Check if this session earned any badges
+          const userData = {
+            totalSessions: sessions.length,
+          };
+          
+          const sessionDetails = {
+            scriptUsed: foundSession.type === 'script',
+            mode: foundSession.type,
+          };
+          
+          // Check for any newly earned badges
+          const newBadge = checkSessionForBadges(sessionDetails, userData);
+          if (newBadge) {
+            setEarnedBadge(newBadge);
+          }
         }
       } else {
         navigate('/'); // Session not found, go back home
       }
     }
-  }, [sessionId, navigate, checkSessionForBadges]);
+  }, [sessionId, navigate, checkSessionForBadges, user]);
   
   // Save prompt completion to database
   const savePromptCompletion = async () => {
@@ -201,8 +205,8 @@ const PostSession: React.FC = () => {
           </p>
         </div>
         
-        {/* Badge earned */}
-        {earnedBadge && (
+        {/* Badge earned - only show for logged in users */}
+        {user && earnedBadge && (
           <Card className="mb-6 border-primary/30 bg-primary/5">
             <CardContent className="p-4 text-center">
               <div className="mb-2 text-xl">🏆</div>
