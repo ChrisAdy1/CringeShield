@@ -42,6 +42,7 @@ export interface Prompt {
   id: number;
   category: string;
   text: string;
+  teleprompterText?: string;
 }
 
 export interface FaceFilterOption {

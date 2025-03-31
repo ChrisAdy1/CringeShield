@@ -57,11 +57,20 @@ const Home: React.FC = () => {
         if (response.ok) {
           const data = await response.json();
           
-          // Group practice prompts (should have "practice" category)
-          const practices = data.filter((prompt: Prompt) => prompt.category === "practice");
+          // For this MVP, use existing categories but group them:
+          // Group casual, interview, storytelling, presentation, introduction as practice prompts 
+          const practiceCategories = ['casual', 'interview', 'storytelling', 'presentation', 'introduction'];
           
-          // Group script prompts (should have "scripts" category)
-          const scripts = data.filter((prompt: Prompt) => prompt.category === "scripts");
+          // Use social_media as scripted reads for teleprompter-style content
+          const scriptCategories = ['social_media', 'random'];
+          
+          const practices = data.filter((prompt: Prompt) => 
+            practiceCategories.includes(prompt.category)
+          );
+          
+          const scripts = data.filter((prompt: Prompt) => 
+            scriptCategories.includes(prompt.category)
+          );
           
           setPracticePrompts(practices);
           setScriptPrompts(scripts);
@@ -104,12 +113,12 @@ const Home: React.FC = () => {
     
     // Navigate to recording page with appropriate parameters
     if (isScript) {
-      // For script prompts, extract the title from the text (it's before the dash)
-      const parts = prompt.text.split(' - ');
-      const title = parts[0];
+      // For script prompts, extract the title from the text
+      const title = prompt.text.substring(0, Math.min(30, prompt.text.length));
       
-      // Get the script text, which may contain newlines to be preserved for teleprompter
-      const scriptText = parts.length > 1 ? parts.slice(1).join(' - ') : prompt.text;
+      // Get the script text with proper teleprompter formatting
+      // This was created and stored in the script object during rendering
+      const scriptText = (prompt as any).teleprompterText || prompt.text;
       
       navigate(`/recording?type=script&id=${prompt.id}&title=${encodeURIComponent(title)}&text=${encodeURIComponent(scriptText)}`);
     } else {
@@ -249,17 +258,49 @@ const Home: React.FC = () => {
               <div className="space-y-3">
                 {/* Show only first 5 scripted reads for non-registered users */}
                 {(user ? scriptPrompts : scriptPrompts.slice(0, 5)).map((script) => {
-                  // Extract title and content from the script text format
-                  // Format: "Title - Content with newlines"
-                  const parts = script.text.split(' - ');
-                  const title = parts[0]; 
-                  let content = '';
+                  // For social media prompts, create a title from the first part of the prompt
+                  // and treat the rest as content
+                  let title = '';
+                  let content = script.text;
                   
-                  if (parts.length > 1) {
-                    // Get first portion of content for preview
-                    // Replace newlines with spaces for the preview
-                    content = parts.slice(1).join(' - ').replace(/\n/g, ' ');
+                  // Try to extract a title - usually the first sentence
+                  const firstPeriodIndex = script.text.indexOf('.');
+                  if (firstPeriodIndex > 0) {
+                    title = script.text.substring(0, firstPeriodIndex + 1);
+                    content = script.text.substring(firstPeriodIndex + 1).trim();
+                  } else {
+                    // If no period found, use the first 30 chars as title
+                    title = script.text.substring(0, Math.min(30, script.text.length));
+                    if (script.text.length > 30) {
+                      content = script.text.substring(30);
+                    } else {
+                      content = '';
+                    }
                   }
+                  
+                  // For teleprompter display, format content with line breaks
+                  // Split the content into approximately 40-character chunks for teleprompter
+                  let teleprompterText = '';
+                  if (content) {
+                    const words = content.split(' ');
+                    let line = '';
+                    
+                    for (const word of words) {
+                      if ((line + ' ' + word).length > 40) {
+                        teleprompterText += line + '\n';
+                        line = word;
+                      } else {
+                        line = line ? line + ' ' + word : word;
+                      }
+                    }
+                    
+                    if (line) {
+                      teleprompterText += line;
+                    }
+                  }
+                  
+                  // Store teleprompter-formatted text in script object for later use
+                  (script as any).teleprompterText = title + '\n\n' + teleprompterText;
                   
                   return (
                     <Card 
