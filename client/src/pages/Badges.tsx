@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -18,6 +18,17 @@ export default function Badges() {
     queryKey: ['/api/auth/current-user'],
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  // Redirect to auth page if not authenticated
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      // Store a message in localStorage to show on auth page
+      localStorage.setItem('auth-message', 'Please register to view badges');
+      
+      // Navigate to registration page
+      navigate('/auth?mode=register');
+    }
+  }, [user, isUserLoading, navigate]);
 
   // Fetch prompt completions (badges earned)
   const { data: completions, isLoading: isCompletionsLoading } = useQuery<any[]>({

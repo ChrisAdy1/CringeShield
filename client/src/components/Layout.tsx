@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import { SmilePlus, Home, Video, BarChart2, Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQuery } from "@tanstack/react-query";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,9 +12,16 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
   const isMobile = useIsMobile();
   
+  // Fetch current user
+  const { data: user } = useQuery({
+    queryKey: ['/api/auth/current-user'],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+  
+  // Only show Badges link if user is logged in
   const navItems = [
     { path: "/", label: "Home", icon: Home },
-    { path: "/badges", label: "Badges", icon: SmilePlus },
+    ...(user ? [{ path: "/badges", label: "Badges", icon: SmilePlus }] : []),
   ];
 
   return (
