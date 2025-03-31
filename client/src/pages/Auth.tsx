@@ -95,7 +95,15 @@ export default function Auth() {
             </Tabs>
           </CardHeader>
           
-          {/* Footer removed as requested */}
+          <CardFooter className="flex justify-center border-t pt-6">
+            <Button 
+              variant="ghost" 
+              onClick={() => setLocation('/')}
+              className="text-muted-foreground"
+            >
+              ← Return to Home
+            </Button>
+          </CardFooter>
         </Card>
       </div>
     </div>
