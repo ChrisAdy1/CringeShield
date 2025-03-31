@@ -69,8 +69,15 @@ const Home: React.FC = () => {
   
   // Start recording with the selected prompt
   const startRecording = (prompt: Prompt) => {
-    // If user is not logged in, redirect to registration page
+    // If user is not logged in, show toast message and redirect to registration page
     if (!user) {
+      // Store the selected prompt in localStorage to use after registration
+      localStorage.setItem('selected-prompt', JSON.stringify(prompt));
+      
+      // Store a message in localStorage to show on auth page
+      localStorage.setItem('auth-message', 'Please register to be able to practice this prompt');
+      
+      // Navigate to registration page
       navigate('/auth?mode=register');
       return;
     }

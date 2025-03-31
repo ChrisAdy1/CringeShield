@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { LoginForm } from '../components/auth/LoginForm';
@@ -7,10 +7,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
 
 export default function Auth() {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('login');
+  const [message, setMessage] = useState<string | null>(null);
+  
+  // Check if there's a message in localStorage from prompt redirection
+  useEffect(() => {
+    const authMessage = localStorage.getItem('auth-message');
+    if (authMessage) {
+      setMessage(authMessage);
+      // Set active tab to register if redirected from prompt
+      setActiveTab('register');
+      // Clear the message after reading it
+      localStorage.removeItem('auth-message');
+    }
+    
+    // Check URL parameter for mode
+    const searchParams = new URLSearchParams(window.location.search);
+    const mode = searchParams.get('mode');
+    if (mode === 'register') {
+      setActiveTab('register');
+    }
+  }, []);
   
   // Check if user is already logged in
   const { data: user, isLoading } = useQuery({
@@ -39,6 +61,15 @@ export default function Auth() {
           <h1 className="text-3xl font-bold">CringeShield</h1>
           <p className="text-muted-foreground mt-2">Overcome camera anxiety and speak confidently</p>
         </div>
+
+        {message && (
+          <Alert className="mb-4 border-primary/20 bg-primary/10 text-primary">
+            <InfoIcon className="h-4 w-4" />
+            <AlertDescription>
+              {message}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card>
           <CardHeader>
