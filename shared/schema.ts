@@ -1,17 +1,35 @@
-import { pgTable, text, serial, integer, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, json, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // User model
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  passwordHash: true,
+  createdAt: true,
+}).extend({
+  password: z.string().min(8),
+});
+
+// Prompt completions table
+export const promptCompletions = pgTable("prompt_completions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  promptId: integer("prompt_id"),
+  cameraOn: boolean("camera_on").default(true),
+  completedAt: timestamp("completed_at").defaultNow(),
+});
+
+export const insertPromptCompletionSchema = createInsertSchema(promptCompletions).omit({
+  id: true,
+  completedAt: true,
 });
 
 // Session model for storing practice sessions
@@ -47,8 +65,24 @@ export const insertPromptSchema = createInsertSchema(prompts).omit({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+export type InsertPromptCompletion = z.infer<typeof insertPromptCompletionSchema>;
+export type PromptCompletion = typeof promptCompletions.$inferSelect;
+
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type Session = typeof sessions.$inferSelect;
 
 export type InsertPrompt = z.infer<typeof insertPromptSchema>;
 export type Prompt = typeof prompts.$inferSelect;
+
+// Auth schemas
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
+export const registerSchema = insertUserSchema.extend({
+  confirmPassword: z.string().min(8)
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});

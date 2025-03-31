@@ -1,10 +1,29 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPromptSchema } from "@shared/schema";
+import { insertPromptSchema, loginSchema, registerSchema } from "@shared/schema";
 import { analyzeVideo } from "./ai";
 import { z } from "zod";
 import multer from "multer";
+import session from 'express-session';
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import pgSession from 'connect-pg-simple';
+import pg from 'pg';
+const { Pool } = pg;
+import { db } from './db';
+
+// Define extended Request interface with file property for TypeScript
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      email: string;
+      passwordHash: string;
+      createdAt: Date;
+    }
+  }
+}
 
 // Configure multer for file uploads (stored in memory)
 const upload = multer({ 
@@ -14,7 +33,78 @@ const upload = multer({
   }
 });
 
+// Configure session store and passport
+const setupAuth = (app: Express) => {
+  // Create PostgreSQL session store
+  const PgStore = pgSession(session);
+  const sessionPool = new Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+
+  // Configure express-session
+  app.use(session({
+    store: new PgStore({
+      pool: sessionPool,
+      tableName: 'session', // Will be auto-created
+      createTableIfMissing: true
+    }),
+    secret: process.env.SESSION_SECRET || 'cringeShieldSecret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    }
+  }));
+
+  // Initialize passport and session
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Configure passport local strategy
+  passport.use(new LocalStrategy(
+    { usernameField: 'email' },
+    async (email, password, done) => {
+      try {
+        const user = await storage.validatePassword(email, password);
+        if (!user) {
+          return done(null, false, { message: 'Invalid email or password' });
+        }
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  ));
+
+  // Serialize user to session
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  // Deserialize user from session
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      done(null, user);
+    } catch (error) {
+      done(error);
+    }
+  });
+};
+
+// Middleware to check if user is authenticated
+const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: 'Unauthorized' });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize authentication
+  setupAuth(app);
+  
   // Initialize with some prompts
   await initializePrompts();
 
@@ -57,10 +147,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Save practice session
-  app.post("/api/sessions", async (req, res) => {
+  // Authentication routes
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const validatedData = registerSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+      
+      // Create new user
+      const user = await storage.createUser(validatedData);
+      
+      // Remove password from response
+      const { passwordHash, ...userResponse } = user;
+      
+      // Log in the user
+      req.login(user, (loginErr: Error) => {
+        if (loginErr) {
+          return res.status(500).json({ message: "Failed to log in" });
+        }
+        return res.status(201).json(userResponse);
+      });
+    } catch (error: any) {
+      console.error("Error registering user:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ 
+          message: "Invalid input", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to register user" });
+    }
+  });
+  
+  app.post("/api/auth/login", (req, res, next) => {
+    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: { message: string }) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ message: info.message || "Invalid login" });
+      }
+      req.login(user, (loginErr: Error) => {
+        if (loginErr) {
+          return next(loginErr);
+        }
+        
+        // Remove password from response
+        const { passwordHash, ...userResponse } = user;
+        return res.json(userResponse);
+      });
+    })(req, res, next);
+  });
+  
+  app.post("/api/auth/logout", (req, res) => {
+    req.logout(() => {
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+  
+  app.get("/api/auth/current-user", (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    // Remove password from response
+    const { passwordHash, ...user } = req.user as Express.User;
+    res.json(user);
+  });
+  
+  // Delete account route
+  app.delete("/api/auth/account", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      
+      // Delete user account
+      await storage.deleteUser(userId);
+      
+      // Logout
+      req.logout(() => {
+        res.json({ message: "Account deleted successfully" });
+      });
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+  
+  // Save practice session - requires authentication
+  app.post("/api/sessions", isAuthenticated, async (req, res) => {
     try {
       const session = req.body;
+      const userId = (req.user as Express.User).id;
       
       // Validate the session data
       const validatedSession = z.object({
@@ -74,11 +254,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         aiNotes: z.any().optional()
       }).parse(session);
       
-      const savedSession = await storage.createSession(validatedSession);
+      // Convert string date to Date object
+      const parsedSession = {
+        ...validatedSession,
+        date: new Date(validatedSession.date)
+      };
+      
+      const savedSession = await storage.createSession(parsedSession, userId);
       res.status(201).json(savedSession);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving session:", error);
       res.status(500).json({ message: "Failed to save session" });
+    }
+  });
+  
+  // Get user sessions
+  app.get("/api/sessions", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const sessions = await storage.getSessionsByUser(userId);
+      res.json(sessions);
+    } catch (error: any) {
+      console.error("Error getting sessions:", error);
+      res.status(500).json({ message: "Failed to get sessions" });
+    }
+  });
+  
+  // Get user prompt completions
+  app.get("/api/prompt-completions", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const completions = await storage.getPromptCompletions(userId);
+      res.json(completions);
+    } catch (error: any) {
+      console.error("Error getting prompt completions:", error);
+      res.status(500).json({ message: "Failed to get prompt completions" });
+    }
+  });
+  
+  // Save prompt completion
+  app.post("/api/prompt-completions", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const completion = {
+        ...req.body,
+        userId
+      };
+      
+      const savedCompletion = await storage.createPromptCompletion(completion);
+      res.status(201).json(savedCompletion);
+    } catch (error: any) {
+      console.error("Error saving prompt completion:", error);
+      res.status(500).json({ message: "Failed to save prompt completion" });
     }
   });
 

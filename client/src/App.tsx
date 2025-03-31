@@ -1,6 +1,7 @@
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
 import Layout from "@/components/Layout";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
@@ -9,29 +10,44 @@ import Prompts from "@/pages/Prompts";
 import Recording from "@/pages/Recording";
 import PostSession from "@/pages/PostSession";
 import Badges from "@/pages/Badges";
+import Auth from "@/pages/Auth";
+import Account from "@/pages/Account";
+import Progress from "@/pages/Progress";
 
 function Router() {
   const [location] = useLocation();
   
-  return (
-    <Layout currentPath={location}>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/onboarding" component={Onboarding} />
-        <Route path="/prompts" component={Prompts} />
-        <Route path="/recording" component={Recording} />
-        <Route path="/post-session" component={PostSession} />
-        <Route path="/badges" component={Badges} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+  // Determine if the current route should have the Layout
+  const shouldHaveLayout = !['/auth'].includes(location);
+  
+  const content = (
+    <Switch>
+      <Route path="/" component={Home} />
+      <Route path="/auth" component={Auth} />
+      <Route path="/onboarding" component={Onboarding} />
+      <Route path="/prompts" component={Prompts} />
+      <Route path="/recording" component={Recording} />
+      <Route path="/post-session" component={PostSession} />
+      <Route path="/badges" component={Badges} />
+      <Route path="/account" component={Account} />
+      <Route path="/progress" component={Progress} />
+      <Route component={NotFound} />
+    </Switch>
   );
+  
+  // Conditionally wrap with layout
+  if (shouldHaveLayout) {
+    return <Layout currentPath={location}>{content}</Layout>;
+  }
+  
+  return content;
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router />
+      <Toaster />
     </QueryClientProvider>
   );
 }
