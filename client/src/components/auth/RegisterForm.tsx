@@ -112,7 +112,7 @@ export function RegisterForm() {
               </FormControl>
               <FormMessage />
               <p className="text-xs text-muted-foreground mt-1">
-                The password has to have 6 - 20 characters, a capital letter, a symbol and a number
+                The password has to have 6 - 20 characters, a capital letter, a symbol and a number.
               </p>
             </FormItem>
           )}

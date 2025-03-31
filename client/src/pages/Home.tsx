@@ -91,11 +91,23 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen p-4 pb-24">
       <div className="max-w-md mx-auto">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold mb-1">CringeShield</h1>
-          <p className="text-muted-foreground">
-            Practice your speaking skills without the cringe
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="text-center flex-1">
+            <h1 className="text-3xl font-bold mb-1">CringeShield</h1>
+            <p className="text-muted-foreground">
+              Practice your speaking skills without the cringe
+            </p>
+          </div>
+          {user && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/account')}
+              className="whitespace-nowrap"
+            >
+              My Account
+            </Button>
+          )}
         </div>
         
         {/* Account section */}
@@ -106,20 +118,11 @@ const Home: React.FC = () => {
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
             ) : user ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium">{user.email}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Track your progress on completed prompts
-                  </p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/account')}
-                >
-                  My Account
-                </Button>
+              <div>
+                <h3 className="font-medium">{user.email}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Track your progress on completed prompts
+                </p>
               </div>
             ) : (
               <div>
