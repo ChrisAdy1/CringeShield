@@ -65,20 +65,28 @@ export function LoginForm() {
       // Redirect to home
       setLocation('/');
     },
-    onError: (error: any) => {
+    onError: async (error: any) => {
       console.error('Login error:', error);
       
-      // Set user-friendly error message based on the error
+      let errorMessage = "An error occurred. Please try again later.";
+      
+      // Error should now have data directly from our improved throwIfResNotOk function
       if (error.status === 401) {
-        // Check error message to provide a more specific message
-        if (error.message.includes("Invalid email or password")) {
-          setLoginError("Your email/password don't match.");
+        if (error.message === "Account not found") {
+          errorMessage = "You don't have an account with this email address.";
+        } else if (error.message === "Invalid email or password") {
+          errorMessage = "Your email/password don't match.";
         } else {
-          setLoginError("You don't have an account with this email address.");
+          // Generic authentication error
+          errorMessage = "Invalid login credentials.";
         }
-      } else {
-        setLoginError("An error occurred. Please try again later.");
+      } else if (error.data && error.data.message) {
+        errorMessage = error.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      setLoginError(errorMessage);
     },
   });
 
