@@ -90,24 +90,59 @@ const Home: React.FC = () => {
   
   return (
     <div className="min-h-screen p-4 pb-24">
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div className="text-center flex-1">
-            <h1 className="text-3xl font-bold mb-1">CringeShield</h1>
-            <p className="text-muted-foreground">
-              Practice your speaking skills without the cringe
-            </p>
+      {/* Top navigation bar */}
+      <div className="flex items-center justify-between max-w-md mx-auto mb-4">
+        <div className="flex items-center">
+          <div className="text-primary mr-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" stroke="currentColor" strokeWidth="2"/>
+              <path d="M8 14C8.5 15.5 10 17 12 17C14 17 15.5 15.5 16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="9" cy="9" r="1" fill="currentColor"/>
+              <circle cx="15" cy="9" r="1" fill="currentColor"/>
+            </svg>
           </div>
+          <span className="font-bold">CringeShield</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/')}
+            className="text-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Home
+          </Button>
           {user && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/account')}
-              className="whitespace-nowrap"
-            >
-              My Account
-            </Button>
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/badges')}
+                className="text-sm"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                Badges
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/account')}
+                className="text-sm"
+              >
+                My Account
+              </Button>
+            </>
           )}
+        </div>
+      </div>
+      
+      <div className="max-w-md mx-auto">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold mb-1">CringeShield</h1>
+          <p className="text-muted-foreground">
+            Practice your speaking skills without the cringe
+          </p>
         </div>
         
         {/* Account section */}
