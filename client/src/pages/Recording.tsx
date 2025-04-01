@@ -31,10 +31,10 @@ const Recording: React.FC = () => {
   const weeklyPrompt = promptParam ? getPromptById(promptParam) : null;
   
   // Get challenge progress
-  const { completeChallenge, isDayCompleted, isCompleting } = useChallengeProgress();
+  const { completeDayMutation, completedDays, isDayCompleted } = useChallengeProgress();
   const { completePrompt, isPromptCompleted } = useWeeklyChallenge();
   
-  const isCurrentChallengeCompleted = challengeDay ? isDayCompleted(challengeDay) : false;
+  const isCurrentChallengeCompleted = challengeDay ? completedDays.some((day) => day.dayNumber === challengeDay) : false;
   const isCurrentPromptCompleted = promptParam ? isPromptCompleted(promptParam) : false;
   
   // Get parameters from URL
@@ -252,7 +252,7 @@ const Recording: React.FC = () => {
       if (recordingBlob && recordingBlob.size > 0) {
         // If this is a challenge, mark it as completed since they've actually recorded something
         if (challenge && !isCurrentChallengeCompleted) {
-          completeChallenge(challenge.day);
+          completeDayMutation.mutate(challenge.day);
         }
         
         // If this is a weekly challenge prompt, mark it as completed

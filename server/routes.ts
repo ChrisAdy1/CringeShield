@@ -587,6 +587,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Challenge Badges routes
+  
+  // Get all challenge badges for the user
+  app.get("/api/challenge-badges", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const badges = await storage.getChallengeBadges(userId);
+      res.json(badges);
+    } catch (error) {
+      console.error('Error fetching challenge badges:', error);
+      res.status(500).json({ message: "Failed to fetch challenge badges" });
+    }
+  });
+  
+  // Check if user has earned a specific challenge badge
+  app.get("/api/challenge-badges/check/:milestone", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const milestone = parseInt(req.params.milestone, 10);
+      
+      if (isNaN(milestone) || ![7, 15, 30].includes(milestone)) {
+        return res.status(400).json({ message: "Invalid milestone. Must be 7, 15, or 30." });
+      }
+      
+      const hasBadge = await storage.hasChallengeBadge(userId, milestone);
+      res.json({ hasBadge });
+    } catch (error) {
+      console.error('Error checking challenge badge:', error);
+      res.status(500).json({ message: "Failed to check challenge badge" });
+    }
+  });
+  
+  // Award a challenge badge for completing a milestone
+  app.post("/api/challenge-badges/award", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { milestone } = req.body;
+      
+      // Validate milestone
+      const schema = z.object({
+        milestone: z.number().int().refine(val => [7, 15, 30].includes(val), {
+          message: "Milestone must be 7, 15, or 30"
+        })
+      });
+      
+      const parsed = schema.safeParse({ milestone });
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid milestone format", 
+          details: parsed.error.errors 
+        });
+      }
+      
+      // Check if badge already exists
+      const hasBadge = await storage.hasChallengeBadge(userId, milestone);
+      if (hasBadge) {
+        return res.status(409).json({ message: "Badge already awarded" });
+      }
+      
+      // Award the badge
+      const badge = await storage.awardChallengeBadge(userId, milestone);
+      res.status(201).json(badge);
+    } catch (error) {
+      console.error('Error awarding challenge badge:', error);
+      res.status(500).json({ message: "Failed to award challenge badge" });
+    }
+  });
+  
+  // Combined endpoint to check progress and award badge if milestone reached
+  app.post("/api/challenge-badges/check-and-award", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { milestone } = req.body;
+      
+      // Validate milestone
+      const schema = z.object({
+        milestone: z.number().int().refine(val => [7, 15, 30].includes(val), {
+          message: "Milestone must be 7, 15, or 30"
+        })
+      });
+      
+      const parsed = schema.safeParse({ milestone });
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid milestone format", 
+          details: parsed.error.errors 
+        });
+      }
+      
+      // First check if badge already exists
+      const hasBadge = await storage.hasChallengeBadge(userId, milestone);
+      if (hasBadge) {
+        const badge = await storage.getChallengeBadge(userId, milestone);
+        return res.status(200).json(badge);
+      }
+      
+      // Get all completed challenge days
+      const progress = await storage.getChallengeProgress(userId);
+      const completedDays = progress.length;
+      
+      // Check if milestone is reached
+      if (completedDays < milestone) {
+        return res.status(400).json({ 
+          message: `Not enough days completed. Need ${milestone} days, but only have ${completedDays}.`,
+          completed: completedDays,
+          required: milestone
+        });
+      }
+      
+      // Milestone reached, award the badge
+      const badge = await storage.awardChallengeBadge(userId, milestone);
+      res.status(201).json(badge);
+    } catch (error) {
+      console.error('Error checking and awarding challenge badge:', error);
+      res.status(500).json({ message: "Failed to check and award badge" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }

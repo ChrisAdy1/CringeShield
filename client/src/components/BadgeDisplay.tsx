@@ -1,13 +1,16 @@
 import React from 'react';
 import { useWeeklyBadges } from '@/hooks/useWeeklyBadges';
-import { Award } from 'lucide-react';
+import { useChallengeBadges, BadgeMilestone } from '@/hooks/useChallengeBadges';
+import { Award, Medal, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge as UIBadge } from '@/components/ui/badge';
-import { WeeklyBadge } from '@shared/schema';
+import { WeeklyBadge, ChallengeBadge } from '@shared/schema';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface BadgeDisplayProps {
   compact?: boolean;
+  defaultTab?: 'weekly' | 'challenge';
 }
 
 const getTierColor = (tier: string) => {
@@ -30,8 +33,26 @@ const formatTierName = (tier: string) => {
     .join(' ');
 };
 
-const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ compact = false }) => {
-  const { badges, isLoading, totalBadges } = useWeeklyBadges();
+const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ 
+  compact = false, 
+  defaultTab = 'weekly' 
+}) => {
+  const { 
+    badges: weeklyBadges, 
+    isLoading: isWeeklyLoading, 
+    totalBadges: totalWeeklyBadges 
+  } = useWeeklyBadges();
+  
+  const { 
+    badges: challengeBadges, 
+    isLoading: isChallengeLoading, 
+    getBadgeInfo 
+  } = useChallengeBadges();
+  
+  const isLoading = isWeeklyLoading || isChallengeLoading;
+  const hasWeeklyBadges = weeklyBadges.length > 0;
+  const hasChallengeBadges = challengeBadges.length > 0;
+  const hasBadges = hasWeeklyBadges || hasChallengeBadges;
   
   if (isLoading) {
     return (
@@ -41,15 +62,115 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ compact = false }) => {
     );
   }
   
-  if (badges.length === 0) {
+  if (!hasBadges) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-4">
         <Award className="h-8 w-8 text-muted mb-2" />
-        <p className="text-sm text-muted-foreground">No badges earned yet. Complete weekly challenges to earn badges!</p>
+        <p className="text-sm text-muted-foreground">No badges earned yet. Complete challenges to earn badges!</p>
       </div>
     );
   }
   
+  // For compact view, we'll show a mix of both badge types
+  if (compact) {
+    // Sort weekly badges by tier and week number
+    const sortedWeeklyBadges = [...weeklyBadges].sort((a, b) => {
+      // First sort by tier priority
+      const tierPriority = { shy_starter: 0, growing_speaker: 1, confident_creator: 2 };
+      const tierDiff = tierPriority[a.tier as keyof typeof tierPriority] - tierPriority[b.tier as keyof typeof tierPriority];
+      
+      if (tierDiff !== 0) return tierDiff;
+      
+      // Then sort by week number
+      return a.weekNumber - b.weekNumber;
+    });
+    
+    // Get total badges
+    const totalBadges = totalWeeklyBadges + challengeBadges.length;
+    
+    // Take a mix of recent badges from both types (prioritize challenge badges)
+    const recentBadges = [];
+    let remainingSlots = 3;
+    
+    // Add challenge badges first (they're more significant achievements)
+    for (let i = 0; i < challengeBadges.length && remainingSlots > 0; i++) {
+      recentBadges.push({ type: 'challenge', badge: challengeBadges[i] });
+      remainingSlots--;
+    }
+    
+    // Fill remaining slots with weekly badges
+    for (let i = 0; i < sortedWeeklyBadges.length && remainingSlots > 0; i++) {
+      recentBadges.push({ type: 'weekly', badge: sortedWeeklyBadges[i] });
+      remainingSlots--;
+    }
+    
+    return (
+      <div>
+        <div className="flex flex-wrap gap-3">
+          {recentBadges.map((item, index) => 
+            item.type === 'weekly' ? (
+              <WeeklyBadgeItem 
+                key={`weekly-${index}`} 
+                badge={item.badge as WeeklyBadge} 
+                compact={true} 
+              />
+            ) : (
+              <ChallengeBadgeItem
+                key={`challenge-${index}`}
+                badge={item.badge as ChallengeBadge}
+                compact={true}
+                getBadgeInfo={getBadgeInfo}
+              />
+            )
+          )}
+          
+          {totalBadges > 3 && (
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border border-gray-200">
+              <span className="text-xs font-medium text-gray-600">+{totalBadges - 3}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  
+  // Full view uses tabs for different badge types
+  return (
+    <Tabs defaultValue={hasWeeklyBadges ? defaultTab : 'challenge'} className="space-y-4">
+      <TabsList className="grid grid-cols-2">
+        <TabsTrigger value="weekly" disabled={!hasWeeklyBadges}>
+          Weekly Badges
+        </TabsTrigger>
+        <TabsTrigger value="challenge" disabled={!hasChallengeBadges}>
+          Challenge Badges
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="weekly" className="space-y-4">
+        {hasWeeklyBadges ? (
+          <WeeklyBadgesDisplay badges={weeklyBadges} />
+        ) : (
+          <div className="text-center py-6">
+            <p className="text-sm text-muted-foreground">Complete weekly challenges to earn badges!</p>
+          </div>
+        )}
+      </TabsContent>
+      
+      <TabsContent value="challenge" className="space-y-4">
+        {hasChallengeBadges ? (
+          <ChallengeBadgesDisplay badges={challengeBadges} getBadgeInfo={getBadgeInfo} />
+        ) : (
+          <div className="text-center py-6">
+            <p className="text-sm text-muted-foreground">Complete challenge milestones to earn badges!</p>
+          </div>
+        )}
+      </TabsContent>
+    </Tabs>
+  );
+};
+
+// Weekly badges section
+const WeeklyBadgesDisplay: React.FC<{ badges: WeeklyBadge[] }> = ({ badges }) => {
   // Sort badges by tier and week number
   const sortedBadges = [...badges].sort((a, b) => {
     // First sort by tier priority
@@ -62,28 +183,7 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ compact = false }) => {
     return a.weekNumber - b.weekNumber;
   });
   
-  if (compact) {
-    // Compact view shows recent badges
-    const recentBadges = sortedBadges.slice(0, 3);
-    
-    return (
-      <div>
-        <div className="flex flex-wrap gap-3">
-          {recentBadges.map((badge) => (
-            <BadgeItem key={`${badge.tier}-${badge.weekNumber}`} badge={badge} compact={true} />
-          ))}
-          
-          {totalBadges > 3 && (
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 border border-gray-200">
-              <span className="text-xs font-medium text-gray-600">+{totalBadges - 3}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-  
-  // Full view groups badges by tier
+  // Group badges by tier
   const badgesByTier: Record<string, WeeklyBadge[]> = {};
   
   sortedBadges.forEach(badge => {
@@ -103,7 +203,11 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ compact = false }) => {
           
           <div className="flex flex-wrap gap-4">
             {tierBadges.map((badge) => (
-              <BadgeItem key={`${badge.tier}-${badge.weekNumber}`} badge={badge} compact={false} />
+              <WeeklyBadgeItem 
+                key={`${badge.tier}-${badge.weekNumber}`} 
+                badge={badge} 
+                compact={false} 
+              />
             ))}
           </div>
         </div>
@@ -112,12 +216,13 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ compact = false }) => {
   );
 };
 
-interface BadgeItemProps {
+// Weekly badge item
+interface WeeklyBadgeItemProps {
   badge: WeeklyBadge;
   compact: boolean;
 }
 
-const BadgeItem: React.FC<BadgeItemProps> = ({ badge, compact }) => {
+const WeeklyBadgeItem: React.FC<WeeklyBadgeItemProps> = ({ badge, compact }) => {
   const formattedDate = new Date(badge.earnedAt).toLocaleDateString();
   
   return (
@@ -143,6 +248,87 @@ const BadgeItem: React.FC<BadgeItemProps> = ({ badge, compact }) => {
           <div className="text-sm">
             <p className="font-medium">{formatTierName(badge.tier)}: Week {badge.weekNumber}</p>
             <p className="text-xs text-muted-foreground">Earned on {formattedDate}</p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+// Challenge badges section
+const ChallengeBadgesDisplay: React.FC<{ 
+  badges: ChallengeBadge[],
+  getBadgeInfo: (milestone: BadgeMilestone) => { name: string; description: string; emoji: string; }
+}> = ({ badges, getBadgeInfo }) => {
+  // Sort badges by milestone
+  const sortedBadges = [...badges].sort((a, b) => a.milestone - b.milestone);
+  
+  return (
+    <div className="space-y-6">
+      <UIBadge variant="outline" className="font-normal px-3 py-1 bg-amber-100 text-amber-600 border-amber-200">
+        Challenge Milestones
+      </UIBadge>
+      
+      <div className="flex flex-wrap gap-4">
+        {sortedBadges.map((badge) => (
+          <ChallengeBadgeItem 
+            key={`milestone-${badge.milestone}`} 
+            badge={badge} 
+            compact={false}
+            getBadgeInfo={getBadgeInfo}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Challenge badge item
+interface ChallengeBadgeItemProps {
+  badge: ChallengeBadge;
+  compact: boolean;
+  getBadgeInfo: (milestone: BadgeMilestone) => { name: string; description: string; emoji: string; };
+}
+
+const ChallengeBadgeItem: React.FC<ChallengeBadgeItemProps> = ({ 
+  badge, 
+  compact,
+  getBadgeInfo
+}) => {
+  const formattedDate = new Date(badge.earnedAt).toLocaleDateString();
+  const badgeInfo = getBadgeInfo(badge.milestone as BadgeMilestone);
+  
+  // Use different icons based on milestone
+  const renderIcon = () => {
+    if (badge.milestone === 30) return <Trophy className={cn("text-current", compact ? "h-6 w-6" : "h-8 w-8")} />;
+    if (badge.milestone === 15) return <Medal className={cn("text-current", compact ? "h-6 w-6" : "h-8 w-8")} />;
+    return <Award className={cn("text-current", compact ? "h-6 w-6" : "h-8 w-8")} />;
+  };
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div 
+            className={cn(
+              "flex items-center justify-center rounded-full border",
+              "bg-amber-100 text-amber-600 border-amber-200",
+              compact ? "w-12 h-12" : "w-16 h-16"
+            )}
+          >
+            <div className="flex flex-col items-center justify-center">
+              {renderIcon()}
+              {!compact && (
+                <span className="text-xs font-medium mt-1">{badge.milestone} Days</span>
+              )}
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="text-sm">
+            <p className="font-medium">{badgeInfo.name} {badgeInfo.emoji}</p>
+            <p className="text-xs">{badgeInfo.description}</p>
+            <p className="text-xs text-muted-foreground mt-1">Earned on {formattedDate}</p>
           </div>
         </TooltipContent>
       </Tooltip>

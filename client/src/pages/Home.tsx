@@ -32,13 +32,16 @@ interface ProgressDashboardProps {
 
 const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
   // Use hooks to get progress data
-  const { progress, progressPercentage: challengePercentage } = useChallengeProgress();
+  const { completedDays, progressPercentage: challengePercentage } = useChallengeProgress();
   const { weeklyChallenge } = useWeeklyChallenge();
   const { reflections, getAverageRating } = useSelfReflections();
   const { totalBadges, countBadgesByTier } = useWeeklyBadges();
   
+  // Track reference to completedDays to avoid errors
+  const progress = completedDays;
+  
   // Calculate statistics
-  const totalPracticeSessions = progress.length + (reflections?.length || 0);
+  const totalPracticeSessions = completedDays.length + (reflections?.length || 0);
   const averageConfidence = getAverageRating(30);
   const formattedConfidence = averageConfidence ? averageConfidence.toFixed(1) : '0.0';
   
@@ -104,7 +107,7 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
                 <Progress value={challengePercentage} className="h-2" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {progress.length} of 30 days completed
+                {completedDays.length} of 30 days completed
               </p>
             </div>
             

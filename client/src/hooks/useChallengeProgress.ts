@@ -1,69 +1,62 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
-import { useAuth } from "./useAuth";
-import { useToast } from "@/hooks/use-toast";
-
-export interface ChallengeProgress {
-  id: number;
-  userId: number;
-  dayNumber: number;
-  completedAt: string;
-}
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { ChallengeProgress } from '@shared/schema';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 export function useChallengeProgress() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  
-  // Get all challenge progress for the current user
-  const { data: progress = [], isLoading } = useQuery<ChallengeProgress[], Error>({
-    queryKey: ["/api/challenge-progress"],
-    enabled: !!user, // Only run query if user is logged in
+  // Get all completed challenge days
+  const { 
+    data: completedDays = [],
+    isLoading,
+    error,
+    refetch 
+  } = useQuery<ChallengeProgress[]>({
+    queryKey: ['/api/challenge-progress'],
   });
-  
+
   // Check if a specific day is completed
-  const isDayCompleted = (dayNumber: number): boolean => {
-    return progress.some(p => p.dayNumber === dayNumber);
+  const isDayCompleted = async (dayNumber: number): Promise<boolean> => {
+    try {
+      const response = await fetch(`/api/challenge-progress/${dayNumber}`);
+      const data = await response.json();
+      return data.isCompleted;
+    } catch (error) {
+      console.error("Error checking day completion:", error);
+      return false;
+    }
   };
-  
-  // Calculate overall progress percentage
-  const progressPercentage = progress.length > 0 ? Math.round((progress.length / 30) * 100) : 0;
-  
+
   // Complete a challenge day
-  const completeChallengeMutation = useMutation({
+  const completeDayMutation = useMutation({
     mutationFn: async (dayNumber: number) => {
-      const response = await apiRequest({
-        url: "/api/challenge-progress",
-        method: "POST",
-        body: JSON.stringify({ dayNumber }),
+      const body = JSON.stringify({ dayNumber });
+      const response = await apiRequest('/api/challenge-progress', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json"
-        }
+          'Content-Type': 'application/json'
+        },
+        body
       });
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/challenge-progress"] });
-      toast({
-        title: "Challenge day completed!",
-        description: "Great job on completing this challenge.",
-        variant: "default",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error completing challenge",
-        description: error.message,
-        variant: "destructive",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenge-progress'] });
     },
   });
-  
+
+  // Calculate completed days count and percentage
+  const completedCount = completedDays.length;
+  const totalDays = 30; // There are 30 days in the challenge
+  const progressPercentage = Math.round((completedCount / totalDays) * 100);
+
   return {
-    progress,
+    completedDays,
     isLoading,
+    error,
     isDayCompleted,
+    completeDayMutation,
+    completedCount,
+    totalDays,
     progressPercentage,
-    completeChallenge: completeChallengeMutation.mutate,
-    isCompleting: completeChallengeMutation.isPending,
+    refetch
   };
 }

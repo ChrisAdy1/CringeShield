@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -165,20 +166,10 @@ export const challengeDays = [
   }
 ];
 
-const ChallengePage: React.FC = () => {
+const Challenge: React.FC = () => {
   const [location, setLocation] = useLocation();
-  const { 
-    completedDays, 
-    isLoading, 
-    completeDayMutation 
-  } = useChallengeProgress();
-  
-  const { 
-    badges, 
-    checkAndAwardBadgeMutation, 
-    getBadgeInfo 
-  } = useChallengeBadges();
-  
+  const { completedDays, isLoading, completeDayMutation } = useChallengeProgress();
+  const { badges, checkAndAwardBadgeMutation, getBadgeInfo } = useChallengeBadges();
   const [showBadgeModal, setShowBadgeModal] = useState(false);
   const [currentBadge, setCurrentBadge] = useState<ChallengeBadge | null>(null);
 
@@ -243,11 +234,11 @@ const ChallengePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container max-w-4xl pb-8">
+      <Layout currentPath="/challenge">
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </div>
+      </Layout>
     );
   }
 
@@ -288,94 +279,96 @@ const ChallengePage: React.FC = () => {
   };
 
   return (
-    <div className="container max-w-4xl pb-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">30-Day Challenge</h1>
-        <p className="text-muted-foreground">
-          Build your speaking confidence one day at a time. Complete all 30 days to master your camera presence.
-        </p>
-      </div>
-      
-      {/* Progress section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Your Progress</CardTitle>
-          <CardDescription>
-            You've completed {completedCount} out of {totalDays} days
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Progress value={progressPercentage} className="h-2" />
-            
-            <div className="flex justify-between items-center mt-6">
-              {milestones.map(milestone => (
-                <div key={milestone} className="flex flex-col items-center">
-                  {renderBadgeIcon(milestone)}
-                </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Challenge days */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {challengeDays.map((challenge) => (
-          <Card 
-            key={challenge.day} 
-            className={`overflow-hidden ${
-              isDayCompleted(challenge.day) 
-                ? 'border-green-200 bg-green-50' 
-                : ''
-            }`}
-          >
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg font-semibold">
-                  Day {challenge.day}
-                </CardTitle>
-                {isDayCompleted(challenge.day) && (
-                  <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
-                    Completed
-                  </Badge>
-                )}
+    <Layout currentPath="/challenge">
+      <div className="container max-w-4xl pb-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight">30-Day Challenge</h1>
+          <p className="text-muted-foreground">
+            Build your speaking confidence one day at a time. Complete all 30 days to master your camera presence.
+          </p>
+        </div>
+        
+        {/* Progress section */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Your Progress</CardTitle>
+            <CardDescription>
+              You've completed {completedCount} out of {totalDays} days
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Progress value={progressPercentage} className="h-2" />
+              
+              <div className="flex justify-between items-center mt-6">
+                {milestones.map(milestone => (
+                  <div key={milestone} className="flex flex-col items-center">
+                    {renderBadgeIcon(milestone)}
+                  </div>
+                ))}
               </div>
-              <CardDescription className="font-medium text-base">
-                {challenge.title}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm pb-3">
-              <p>{challenge.description}</p>
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2 pt-0">
-              {isDayCompleted(challenge.day) ? (
-                <Button variant="outline" className="gap-1" disabled>
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                  Completed
-                </Button>
-              ) : (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="gap-1"
-                    onClick={() => completeDay(challenge.day)}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-1" />
-                    Mark Complete
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Challenge days */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {challengeDays.map((challenge) => (
+            <Card 
+              key={challenge.day} 
+              className={`overflow-hidden ${
+                isDayCompleted(challenge.day) 
+                  ? 'border-green-200 bg-green-50' 
+                  : ''
+              }`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg font-semibold">
+                    Day {challenge.day}
+                  </CardTitle>
+                  {isDayCompleted(challenge.day) && (
+                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                      Completed
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription className="font-medium text-base">
+                  {challenge.title}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm pb-3">
+                <p>{challenge.description}</p>
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2 pt-0">
+                {isDayCompleted(challenge.day) ? (
+                  <Button variant="outline" className="gap-1" disabled>
+                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                    Completed
                   </Button>
-                  <Button 
-                    variant="default" 
-                    className="gap-1"
-                    onClick={() => startRecording(challenge.day)}
-                  >
-                    Practice Now
-                  </Button>
-                </>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="gap-1"
+                      onClick={() => completeDay(challenge.day)}
+                    >
+                      <PlusCircle className="h-4 w-4 mr-1" />
+                      Mark Complete
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      className="gap-1"
+                      onClick={() => startRecording(challenge.day)}
+                    >
+                      Practice Now
+                    </Button>
+                  </>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
       
       {/* Badge award modal */}
@@ -387,8 +380,8 @@ const ChallengePage: React.FC = () => {
           onClose={() => setShowBadgeModal(false)}
         />
       )}
-    </div>
+    </Layout>
   );
 };
 
-export default ChallengePage;
+export default Challenge;

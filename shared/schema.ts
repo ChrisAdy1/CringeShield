@@ -128,6 +128,22 @@ export const insertWeeklyBadgeSchema = createInsertSchema(weeklyBadges).omit({
 export type InsertWeeklyBadge = z.infer<typeof insertWeeklyBadgeSchema>;
 export type WeeklyBadge = typeof weeklyBadges.$inferSelect;
 
+// Challenge milestone badges
+export const challengeBadges = pgTable("challenge_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  milestone: integer("milestone").notNull(), // 7, 15, or 30 days
+  earnedAt: timestamp("earned_at").notNull().defaultNow(),
+});
+
+export const insertChallengeBadgeSchema = createInsertSchema(challengeBadges).omit({
+  id: true,
+  earnedAt: true,
+});
+
+export type InsertChallengeBadge = z.infer<typeof insertChallengeBadgeSchema>;
+export type ChallengeBadge = typeof challengeBadges.$inferSelect;
+
 // Auth schemas
 export const loginSchema = z.object({
   email: z.string().email(),

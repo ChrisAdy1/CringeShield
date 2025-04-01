@@ -247,6 +247,7 @@ const WeeklyChallenge = () => {
       {newBadge && (
         <BadgeModal
           badge={newBadge}
+          badgeType="weekly"
           isOpen={!!newBadge}
           onClose={() => setNewBadge(null)}
         />

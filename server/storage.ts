@@ -6,6 +6,7 @@ import {
   challengeProgress,
   weeklyProgress,
   weeklyBadges,
+  challengeBadges,
   type User, 
   type InsertUser, 
   type Session,
@@ -20,6 +21,8 @@ import {
   type InsertWeeklyProgress,
   type WeeklyBadge,
   type InsertWeeklyBadge,
+  type ChallengeBadge,
+  type InsertChallengeBadge,
   type WeeklyChallengeTier
 } from "@shared/schema";
 import { db } from "./db";
@@ -71,6 +74,12 @@ export interface IStorage {
   getWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge | undefined>;
   awardWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge>;
   hasWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<boolean>;
+  
+  // Challenge Badge methods
+  getChallengeBadges(userId: number): Promise<ChallengeBadge[]>;
+  getChallengeBadge(userId: number, milestone: number): Promise<ChallengeBadge | undefined>;
+  awardChallengeBadge(userId: number, milestone: number): Promise<ChallengeBadge>;
+  hasChallengeBadge(userId: number, milestone: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -81,6 +90,7 @@ export class MemStorage implements IStorage {
   private challengeProgress: Map<number, ChallengeProgress>;
   private weeklyProgressMap: Map<number, WeeklyProgress>;
   private weeklyBadges: Map<number, WeeklyBadge>;
+  private challengeBadges: Map<number, ChallengeBadge>;
   private userId: number;
   private sessionId: number;
   private promptId: number;
@@ -88,6 +98,7 @@ export class MemStorage implements IStorage {
   private challengeProgressId: number;
   private weeklyProgressId: number;
   private weeklyBadgeId: number;
+  private challengeBadgeId: number;
 
   constructor() {
     this.users = new Map();
@@ -97,6 +108,7 @@ export class MemStorage implements IStorage {
     this.challengeProgress = new Map();
     this.weeklyProgressMap = new Map();
     this.weeklyBadges = new Map();
+    this.challengeBadges = new Map();
     this.userId = 1;
     this.sessionId = 1;
     this.promptId = 1;
@@ -104,6 +116,7 @@ export class MemStorage implements IStorage {
     this.challengeProgressId = 1;
     this.weeklyProgressId = 1;
     this.weeklyBadgeId = 1;
+    this.challengeBadgeId = 1;
   }
 
   // User methods
@@ -404,6 +417,45 @@ export class MemStorage implements IStorage {
   
   async hasWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<boolean> {
     const badge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    return !!badge;
+  }
+  
+  // Challenge Badge methods
+  async getChallengeBadges(userId: number): Promise<ChallengeBadge[]> {
+    return Array.from(this.challengeBadges.values())
+      .filter(badge => badge.userId === userId);
+  }
+  
+  async getChallengeBadge(userId: number, milestone: number): Promise<ChallengeBadge | undefined> {
+    return Array.from(this.challengeBadges.values())
+      .find(badge => 
+        badge.userId === userId && 
+        badge.milestone === milestone
+      );
+  }
+  
+  async awardChallengeBadge(userId: number, milestone: number): Promise<ChallengeBadge> {
+    // Check if badge already exists
+    const existingBadge = await this.getChallengeBadge(userId, milestone);
+    if (existingBadge) {
+      return existingBadge;
+    }
+    
+    // Create new badge
+    const id = this.challengeBadgeId++;
+    const badge: ChallengeBadge = {
+      id,
+      userId,
+      milestone,
+      earnedAt: new Date()
+    };
+    
+    this.challengeBadges.set(id, badge);
+    return badge;
+  }
+  
+  async hasChallengeBadge(userId: number, milestone: number): Promise<boolean> {
+    const badge = await this.getChallengeBadge(userId, milestone);
     return !!badge;
   }
 }
@@ -740,6 +792,50 @@ export class DatabaseStorage implements IStorage {
   
   async hasWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<boolean> {
     const badge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    return !!badge;
+  }
+  
+  // Challenge Badge methods
+  async getChallengeBadges(userId: number): Promise<ChallengeBadge[]> {
+    return db
+      .select()
+      .from(challengeBadges)
+      .where(eq(challengeBadges.userId, userId));
+  }
+  
+  async getChallengeBadge(userId: number, milestone: number): Promise<ChallengeBadge | undefined> {
+    const [badge] = await db
+      .select()
+      .from(challengeBadges)
+      .where(and(
+        eq(challengeBadges.userId, userId),
+        eq(challengeBadges.milestone, milestone)
+      ));
+      
+    return badge;
+  }
+  
+  async awardChallengeBadge(userId: number, milestone: number): Promise<ChallengeBadge> {
+    // Check if badge already exists
+    const existingBadge = await this.getChallengeBadge(userId, milestone);
+    if (existingBadge) {
+      return existingBadge;
+    }
+    
+    // Create new badge
+    const [badge] = await db
+      .insert(challengeBadges)
+      .values({
+        userId,
+        milestone
+      })
+      .returning();
+      
+    return badge;
+  }
+  
+  async hasChallengeBadge(userId: number, milestone: number): Promise<boolean> {
+    const badge = await this.getChallengeBadge(userId, milestone);
     return !!badge;
   }
 }
