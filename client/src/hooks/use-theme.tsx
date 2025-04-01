@@ -55,14 +55,46 @@ export const moodPalettes: Record<MoodTheme, { light: string, dark: string, name
 // Create the theme context
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-// Helper function to debounce function calls
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
+// Function to convert hex color to RGB values
+function hexToRgb(hex: string): string {
+  // Remove the # symbol if present
+  hex = hex.replace(/^#/, '');
   
-  return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
+  // Parse the hex values
+  const bigint = parseInt(hex, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  
+  // Return space-separated RGB values as required by CSS custom properties
+  return `${r} ${g} ${b}`;
+}
+
+// Function to apply CSS variables to the document root
+function applyThemeToDOM(primaryColor: string, colorMode: ColorMode) {
+  const root = document.documentElement;
+  // Convert hex color to RGB values for CSS variables
+  const rgbValues = hexToRgb(primaryColor);
+  root.style.setProperty('--theme-primary', rgbValues);
+  
+  // Set color mode class on the html element
+  if (colorMode === 'dark') {
+    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('light');
+  } else if (colorMode === 'light') {
+    document.documentElement.classList.add('light');
+    document.documentElement.classList.remove('dark');
+  } else {
+    // Handle system preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }
 }
 
 // Provider component
@@ -70,88 +102,94 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mood, setMoodState] = useState<MoodTheme>('focused');
   const [colorMode, setColorModeState] = useState<ColorMode>('light');
   const [isUpdating, setIsUpdating] = useState(false);
-  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Debounced theme update function to prevent rapid server requests
-  const debouncedUpdateTheme = useCallback(
-    debounce(async (mood: MoodTheme, primaryColor: string, colorMode: ColorMode) => {
-      setIsUpdating(true);
-      try {
-        const response = await fetch('/api/theme', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            variant: 'professional',
-            primary: primaryColor,
-            appearance: colorMode === 'system' ? 'system' : colorMode,
-            radius: 0.75,
-          }),
-        });
-        
-        if (!response.ok) {
-          console.error('Failed to update theme');
-        }
-      } catch (error) {
-        console.error('Error updating theme:', error);
-      } finally {
-        setIsUpdating(false);
-      }
-    }, 1000),
-    []
-  );
+  
+  // Function to save themes to the server (without requiring immediate refresh)
+  const saveThemeToServer = useCallback(async (primaryColor: string, colorAppearance: ColorMode) => {
+    try {
+      await fetch('/api/theme', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          variant: 'professional',
+          primary: primaryColor,
+          appearance: colorAppearance === 'system' ? 'system' : colorAppearance,
+          radius: 0.75,
+        }),
+      });
+    } catch (error) {
+      console.error('Error saving theme to server:', error);
+    }
+  }, []);
 
   // Apply theme function
   const applyTheme = useCallback((newMood: MoodTheme, newColorMode: ColorMode) => {
+    setIsUpdating(true);
+    
     // Get the primary color based on mood and color mode
-    const primaryColor = newColorMode === 'dark' 
+    const effectiveColorMode = newColorMode === 'system' 
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      : newColorMode;
+      
+    const primaryColor = effectiveColorMode === 'dark' 
       ? moodPalettes[newMood].dark 
       : moodPalettes[newMood].light;
 
-    // Update theme via debounced function to prevent constant refreshes
-    debouncedUpdateTheme(newMood, primaryColor, newColorMode);
-  }, [debouncedUpdateTheme]);
+    // Apply theme directly to DOM
+    applyThemeToDOM(primaryColor, newColorMode);
+    
+    // Save theme to server (background process)
+    saveThemeToServer(primaryColor, newColorMode);
+    
+    // Use a short timeout just for UI feedback
+    setTimeout(() => {
+      setIsUpdating(false);
+    }, 300);
+  }, [saveThemeToServer]);
 
-  // Set mood and save to localStorage (don't apply theme immediately)
+  // Set mood and save to localStorage 
   const setMood = useCallback((newMood: MoodTheme) => {
     setMoodState(newMood);
     localStorage.setItem('cringe-shield-mood', newMood);
     applyTheme(newMood, colorMode);
   }, [colorMode, applyTheme]);
 
-  // Set color mode and save to localStorage (don't apply theme immediately)
+  // Set color mode and save to localStorage
   const setColorMode = useCallback((newMode: ColorMode) => {
     setColorModeState(newMode);
     localStorage.setItem('cringe-shield-color-mode', newMode);
     applyTheme(mood, newMode);
   }, [mood, applyTheme]);
 
+  // Listen for system color theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const handleChange = () => {
+      if (colorMode === 'system') {
+        applyTheme(mood, 'system');
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [colorMode, mood, applyTheme]);
+
   // Load theme from localStorage on mount
   useEffect(() => {
     const savedMood = localStorage.getItem('cringe-shield-mood') as MoodTheme;
     const savedColorMode = localStorage.getItem('cringe-shield-color-mode') as ColorMode;
     
-    if (savedMood) {
-      setMoodState(savedMood);
-    }
+    const moodToUse = savedMood || 'focused';
+    const colorModeToUse = savedColorMode || 'light';
     
-    if (savedColorMode) {
-      setColorModeState(savedColorMode);
-    }
+    setMoodState(moodToUse);
+    setColorModeState(colorModeToUse);
     
-    // Apply the loaded or default theme (only on initial mount)
-    if (savedMood || savedColorMode) {
-      applyTheme(savedMood || mood, savedColorMode || colorMode);
-    }
-    
-    // Clean up any pending timeouts
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
+    // Apply the theme directly
+    applyTheme(moodToUse, colorModeToUse);
+  }, [applyTheme]);
 
   return (
     <ThemeContext.Provider value={{ 

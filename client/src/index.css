@@ -9,6 +9,18 @@
     --warning-peach: 255 214 165; /* #FFD6A5 */
     --text-dark-gray: 68 68 68; /* #444444 */
     --light-gray: 224 224 224; /* #E0E0E0 */
+    
+    /* Default theme color - will be overridden by CSS variables */
+    --theme-primary: 154 125 255; /* Default is focused #9A7DFF */
+    
+    /* Use our theme primary instead of shadcn's defaults */
+    --primary: var(--theme-primary);
+    --primary-foreground: 255 255 255;
+  }
+
+  .dark {
+    --primary: var(--theme-primary);
+    --primary-foreground: 255 255 255;
   }
 
   * {
@@ -22,6 +34,14 @@
     padding-right: env(safe-area-inset-right);
     padding-left: env(safe-area-inset-left);
     color: rgb(var(--text-dark-gray));
+  }
+  
+  .light {
+    color-scheme: light;
+  }
+  
+  .dark {
+    color-scheme: dark;
   }
 }
 
