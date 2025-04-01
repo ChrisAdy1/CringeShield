@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { SmilePlus, Home, Video, Award, Settings } from "lucide-react";
+import { SmilePlus, Home, Video, Award, Calendar, Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -19,7 +19,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
   const navItems = [
     { path: "/", label: "Home", icon: Home },
     { path: "/recording", label: "Practice", icon: Video },
-    { path: "/challenge", label: "Challenge", icon: Award },
+    { path: "/challenge", label: "30-Day", icon: Award },
+    { path: "/weekly-challenge", label: "Weekly", icon: Calendar },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
 

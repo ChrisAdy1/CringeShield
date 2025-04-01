@@ -336,6 +336,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Weekly Challenge routes
+  
+  // Get user's weekly challenge progress
+  app.get("/api/weekly-challenge", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const progress = await storage.getWeeklyProgress(userId);
+      
+      if (!progress) {
+        return res.json({ status: 'not_started' });
+      }
+      
+      res.json({
+        status: 'in_progress',
+        progress
+      });
+    } catch (error: any) {
+      console.error("Error getting weekly challenge progress:", error);
+      res.status(500).json({ message: "Failed to get weekly challenge progress" });
+    }
+  });
+  
+  // Start a weekly challenge
+  app.post("/api/weekly-challenge", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { tier } = req.body;
+      
+      // Validate the tier
+      const validTier = z.enum(['shy_starter', 'growing_speaker', 'confident_creator'])
+        .parse(tier);
+      
+      const progress = await storage.createWeeklyProgress(userId, validTier);
+      res.status(201).json(progress);
+    } catch (error: any) {
+      console.error("Error starting weekly challenge:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid tier. Must be one of: shy_starter, growing_speaker, confident_creator",
+          details: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to start weekly challenge" });
+    }
+  });
+  
+  // Mark a weekly challenge prompt as completed
+  app.post("/api/weekly-challenge/complete", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { promptId } = req.body;
+      
+      // Validate promptId
+      const validPromptId = z.string().parse(promptId);
+      
+      const progress = await storage.markWeeklyPromptComplete(userId, validPromptId);
+      res.json(progress);
+    } catch (error: any) {
+      console.error("Error completing weekly challenge prompt:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid prompt ID",
+          details: error.errors 
+        });
+      }
+      if (error.message === "User has not started a weekly challenge") {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to complete weekly challenge prompt" });
+    }
+  });
+  
+  // Check if a specific prompt is completed
+  app.get("/api/weekly-challenge/prompt/:promptId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const promptId = req.params.promptId;
+      
+      const isCompleted = await storage.isWeeklyPromptCompleted(userId, promptId);
+      res.json({ isCompleted });
+    } catch (error: any) {
+      console.error("Error checking weekly prompt completion:", error);
+      res.status(500).json({ message: "Failed to check weekly prompt completion" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }

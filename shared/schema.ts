@@ -92,6 +92,25 @@ export const insertChallengeProgressSchema = createInsertSchema(challengeProgres
 export type InsertChallengeProgress = z.infer<typeof insertChallengeProgressSchema>;
 export type ChallengeProgress = typeof challengeProgress.$inferSelect;
 
+// Weekly Challenge System
+export const weeklyChallengeTiers = ['shy_starter', 'growing_speaker', 'confident_creator'] as const;
+export type WeeklyChallengeTier = typeof weeklyChallengeTiers[number];
+
+export const weeklyProgress = pgTable("weekly_challenge_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  selectedTier: text("selected_tier").notNull(),
+  startDate: timestamp("start_date").notNull().defaultNow(),
+  completedPrompts: text("completed_prompts").array().default([]),
+});
+
+export const insertWeeklyProgressSchema = createInsertSchema(weeklyProgress).omit({
+  id: true,
+});
+
+export type InsertWeeklyProgress = z.infer<typeof insertWeeklyProgressSchema>;
+export type WeeklyProgress = typeof weeklyProgress.$inferSelect;
+
 // Auth schemas
 export const loginSchema = z.object({
   email: z.string().email(),

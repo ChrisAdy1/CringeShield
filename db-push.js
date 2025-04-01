@@ -22,9 +22,22 @@ async function main() {
       )
     `);
     
-    console.log('Table created successfully!');
+    console.log('Creating weekly_challenge_progress table...');
+    
+    // Create the weekly_challenge_progress table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS weekly_challenge_progress (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        selected_tier TEXT NOT NULL,
+        start_date TIMESTAMP NOT NULL DEFAULT NOW(),
+        completed_prompts TEXT[] DEFAULT '{}'
+      )
+    `);
+    
+    console.log('Tables created successfully!');
   } catch (error) {
-    console.error('Error creating table:', error);
+    console.error('Error creating tables:', error);
   } finally {
     await pool.end();
     console.log('Database connection closed');

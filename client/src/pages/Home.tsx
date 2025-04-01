@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { LogIn, Loader2, Camera, Video } from 'lucide-react';
+import { LogIn, Loader2, Camera, Video, Calendar, Trophy } from 'lucide-react';
 
 const Home: React.FC = () => {
   const [, navigate] = useLocation();
@@ -90,28 +90,52 @@ const Home: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Main practice card */}
-        <Card className="mb-6 overflow-hidden">
-          <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-8 text-center">
-            <div className="mb-6 flex justify-center">
-              <div className="rounded-full bg-white p-4 shadow-md">
-                <Camera className="h-12 w-12 text-primary" />
+        {/* Main practice cards */}
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          {/* Free talk card */}
+          <Card className="overflow-hidden">
+            <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-6 text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="rounded-full bg-white p-3 shadow-md">
+                  <Camera className="h-10 w-10 text-primary" />
+                </div>
               </div>
+              <h2 className="text-lg font-bold mb-2">Free Talk Practice</h2>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Record yourself speaking freely without any specific prompts. Perfect for practicing your natural speaking style.
+              </p>
+              <Button 
+                className="w-full"
+                onClick={startRecording}
+              >
+                <Video className="mr-2 h-4 w-4" />
+                Start Recording
+              </Button>
             </div>
-            <h2 className="text-xl font-bold mb-2">Free Talk Practice</h2>
-            <p className="text-muted-foreground mb-6">
-              Record yourself speaking freely without any specific prompts. Perfect for practicing your natural speaking style.
-            </p>
-            <Button 
-              size="lg" 
-              className="w-full"
-              onClick={startRecording}
-            >
-              <Video className="mr-2 h-5 w-5" />
-              Start Recording
-            </Button>
-          </div>
-        </Card>
+          </Card>
+          
+          {/* Weekly Challenge card */}
+          <Card className="overflow-hidden">
+            <div className="bg-gradient-to-b from-purple-100 to-purple-50 dark:from-purple-900/20 dark:to-purple-800/10 p-6 text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="rounded-full bg-white p-3 shadow-md">
+                  <Calendar className="h-10 w-10 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-lg font-bold mb-2">Weekly Challenge</h2>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Structured 15-week speaking program with weekly prompts tailored to your comfort level. Track your progress and build skills systematically.
+              </p>
+              <Button 
+                className="w-full"
+                onClick={() => navigate('/weekly-challenge')}
+              >
+                <Trophy className="mr-2 h-4 w-4" />
+                Join Challenge
+              </Button>
+            </div>
+          </Card>
+        </div>
         
         {/* How it works section */}
         <div className="space-y-6 mt-10">

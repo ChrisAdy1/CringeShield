@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Circle, Square, FastForward, CheckCircle } from 'lucide-react';
 import { challengeDays } from '@/lib/challengeDays';
 import { useChallengeProgress } from '@/hooks/useChallengeProgress';
+import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
+import { getPromptById } from '@/lib/weeklyPrompts';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define BlobEvent type if not available
@@ -18,18 +20,25 @@ const Recording: React.FC = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const challengeParam = queryParams.get('challenge');
   const challengeDay = challengeParam ? parseInt(challengeParam, 10) : null;
+  const promptParam = queryParams.get('prompt');
   
   // Get challenge information
   const challenge = challengeDay 
     ? challengeDays.find(c => c.day === challengeDay) 
     : null;
   
+  // Get weekly challenge prompt information
+  const weeklyPrompt = promptParam ? getPromptById(promptParam) : null;
+  
   // Get challenge progress
   const { completeChallenge, isDayCompleted, isCompleting } = useChallengeProgress();
+  const { completePrompt, isPromptCompleted } = useWeeklyChallenge();
+  
   const isCurrentChallengeCompleted = challengeDay ? isDayCompleted(challengeDay) : false;
+  const isCurrentPromptCompleted = promptParam ? isPromptCompleted(promptParam) : false;
   
   // Get parameters from URL
-  const recordingType = challenge ? 'challenge' : 'free';
+  const recordingType = challenge ? 'challenge' : weeklyPrompt ? 'weekly' : 'free';
   
   // Camera ref
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -206,6 +215,9 @@ const Recording: React.FC = () => {
         hasRecording: boolean;
         challengeDay?: number;
         challengeTitle?: string;
+        weeklyPromptId?: string;
+        weeklyPromptText?: string;
+        weeklyPromptTier?: string;
       } = {
         id: sessionId,
         date: new Date().toISOString(),
@@ -222,6 +234,13 @@ const Recording: React.FC = () => {
         sessionData.challengeTitle = challenge.title;
       }
       
+      // Add weekly challenge prompt info if applicable
+      if (weeklyPrompt) {
+        sessionData.weeklyPromptId = weeklyPrompt.id;
+        sessionData.weeklyPromptText = weeklyPrompt.text;
+        sessionData.weeklyPromptTier = weeklyPrompt.tier;
+      }
+      
       // Store in local storage
       const sessions = JSON.parse(localStorage.getItem('practice-sessions') || '[]');
       sessions.push(sessionData);
@@ -230,6 +249,11 @@ const Recording: React.FC = () => {
       // If this is a challenge, mark it as completed since they've actually recorded something
       if (challenge && !isCurrentChallengeCompleted) {
         completeChallenge(challenge.day);
+      }
+      
+      // If this is a weekly challenge prompt, mark it as completed
+      if (weeklyPrompt && promptParam && !isCurrentPromptCompleted) {
+        completePrompt.mutate(promptParam);
       }
       
       // Navigate to post-session screen
@@ -249,7 +273,7 @@ const Recording: React.FC = () => {
     // Generate an ID for the session
     const sessionId = Date.now();
     
-    // Create a simple mock session for demo with challenge support
+    // Create a simple mock session for demo with challenge/weekly challenge support
     const sessionData: {
       id: number;
       date: string;
@@ -260,6 +284,9 @@ const Recording: React.FC = () => {
       hasRecording: boolean;
       challengeDay?: number;
       challengeTitle?: string;
+      weeklyPromptId?: string;
+      weeklyPromptText?: string;
+      weeklyPromptTier?: string;
     } = {
       id: sessionId,
       date: new Date().toISOString(),
@@ -277,6 +304,16 @@ const Recording: React.FC = () => {
       
       // We don't complete the challenge for skipped sessions
       // Only mark challenges complete when actual recordings are made
+    }
+    
+    // Add weekly challenge prompt info if applicable
+    if (weeklyPrompt) {
+      sessionData.weeklyPromptId = weeklyPrompt.id;
+      sessionData.weeklyPromptText = weeklyPrompt.text;
+      sessionData.weeklyPromptTier = weeklyPrompt.tier;
+      
+      // We don't complete the weekly challenge for skipped sessions
+      // Only mark prompts complete when actual recordings are made
     }
     
     // Store in local storage
@@ -396,7 +433,7 @@ const Recording: React.FC = () => {
           </Button>
         </div>
         
-        {/* Challenge info or free mode info */}
+        {/* Challenge/prompt info or free mode info */}
         <div className="mt-4 text-sm">
           {challenge ? (
             <div className="mb-3">
@@ -417,6 +454,30 @@ const Recording: React.FC = () => {
                   <span className="font-medium">Note:</span> This challenge will be automatically marked as complete once you finish recording.
                 </div>
               )}
+            </div>
+          ) : weeklyPrompt ? (
+            <div className="mb-3">
+              <Alert variant="default" className="bg-primary/10 border-primary/20">
+                <AlertTitle className="text-sm font-semibold flex items-center">
+                  Weekly Challenge: Week {weeklyPrompt.week}, Prompt {weeklyPrompt.order}
+                  {isCurrentPromptCompleted && 
+                    <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
+                  }
+                </AlertTitle>
+                <AlertDescription className="text-xs mt-1">
+                  {weeklyPrompt.text}
+                </AlertDescription>
+              </Alert>
+              
+              {!isCurrentPromptCompleted && (
+                <div className="text-xs mt-2 text-primary/80 bg-primary/5 p-2 rounded">
+                  <span className="font-medium">Note:</span> This prompt will be marked as complete when you finish recording.
+                </div>
+              )}
+              
+              <div className="text-xs mt-2 text-muted-foreground bg-muted/30 p-2 rounded">
+                <Link href="/weekly-challenge" className="text-primary underline">Return to Weekly Challenge Dashboard</Link> after recording to continue your progress.
+              </div>
             </div>
           ) : (
             <div className="text-center mb-2 text-muted-foreground">Free talking mode</div>

@@ -4,6 +4,7 @@ import {
   prompts,
   promptCompletions,
   challengeProgress,
+  weeklyProgress,
   type User, 
   type InsertUser, 
   type Session,
@@ -13,7 +14,10 @@ import {
   type PromptCompletion,
   type InsertPromptCompletion,
   type ChallengeProgress,
-  type InsertChallengeProgress
+  type InsertChallengeProgress,
+  type WeeklyProgress,
+  type InsertWeeklyProgress,
+  type WeeklyChallengeTier
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -52,6 +56,12 @@ export interface IStorage {
   getChallengeProgress(userId: number): Promise<ChallengeProgress[]>;
   completeChallengeDay(userId: number, dayNumber: number): Promise<ChallengeProgress>;
   isDayChallengeCompleted(userId: number, dayNumber: number): Promise<boolean>;
+  
+  // Weekly Challenge methods
+  getWeeklyProgress(userId: number): Promise<WeeklyProgress | undefined>;
+  createWeeklyProgress(userId: number, tier: WeeklyChallengeTier): Promise<WeeklyProgress>;
+  markWeeklyPromptComplete(userId: number, promptId: string): Promise<WeeklyProgress>;
+  isWeeklyPromptCompleted(userId: number, promptId: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -60,11 +70,13 @@ export class MemStorage implements IStorage {
   private prompts: Map<number, Prompt>;
   private promptCompletions: Map<number, PromptCompletion>;
   private challengeProgress: Map<number, ChallengeProgress>;
+  private weeklyProgressMap: Map<number, WeeklyProgress>;
   private userId: number;
   private sessionId: number;
   private promptId: number;
   private promptCompletionId: number;
   private challengeProgressId: number;
+  private weeklyProgressId: number;
 
   constructor() {
     this.users = new Map();
@@ -72,11 +84,13 @@ export class MemStorage implements IStorage {
     this.prompts = new Map();
     this.promptCompletions = new Map();
     this.challengeProgress = new Map();
+    this.weeklyProgressMap = new Map();
     this.userId = 1;
     this.sessionId = 1;
     this.promptId = 1;
     this.promptCompletionId = 1;
     this.challengeProgressId = 1;
+    this.weeklyProgressId = 1;
   }
 
   // User methods
@@ -278,6 +292,65 @@ export class MemStorage implements IStorage {
   async isDayChallengeCompleted(userId: number, dayNumber: number): Promise<boolean> {
     return Array.from(this.challengeProgress.values())
       .some(progress => progress.userId === userId && progress.dayNumber === dayNumber);
+  }
+  
+  // Weekly Challenge methods
+  async getWeeklyProgress(userId: number): Promise<WeeklyProgress | undefined> {
+    return Array.from(this.weeklyProgressMap.values())
+      .find(progress => progress.userId === userId);
+  }
+  
+  async createWeeklyProgress(userId: number, tier: WeeklyChallengeTier): Promise<WeeklyProgress> {
+    // Check if user already has a progress entry
+    const existing = await this.getWeeklyProgress(userId);
+    if (existing) {
+      return existing;
+    }
+    
+    const id = this.weeklyProgressId++;
+    const progress: WeeklyProgress = {
+      id,
+      userId,
+      selectedTier: tier,
+      startDate: new Date(),
+      completedPrompts: []
+    };
+    
+    this.weeklyProgressMap.set(id, progress);
+    return progress;
+  }
+  
+  async markWeeklyPromptComplete(userId: number, promptId: string): Promise<WeeklyProgress> {
+    const progress = await this.getWeeklyProgress(userId);
+    if (!progress) {
+      throw new Error("User has not started a weekly challenge");
+    }
+    
+    const completedPrompts = progress.completedPrompts || [];
+    
+    // Skip if already completed
+    if (completedPrompts.includes(promptId)) {
+      return progress;
+    }
+    
+    // Add to completed prompts
+    const updatedProgress: WeeklyProgress = {
+      ...progress,
+      completedPrompts: [...completedPrompts, promptId]
+    };
+    
+    this.weeklyProgressMap.set(progress.id, updatedProgress);
+    return updatedProgress;
+  }
+  
+  async isWeeklyPromptCompleted(userId: number, promptId: string): Promise<boolean> {
+    const progress = await this.getWeeklyProgress(userId);
+    if (!progress) {
+      return false;
+    }
+    
+    const completedPrompts = progress.completedPrompts || [];
+    return completedPrompts.includes(promptId);
   }
 }
 
@@ -500,6 +573,74 @@ export class DatabaseStorage implements IStorage {
       ));
       
     return result.length > 0;
+  }
+  
+  // Weekly Challenge methods
+  async getWeeklyProgress(userId: number): Promise<WeeklyProgress | undefined> {
+    const [progress] = await db
+      .select()
+      .from(weeklyProgress)
+      .where(eq(weeklyProgress.userId, userId));
+      
+    return progress;
+  }
+  
+  async createWeeklyProgress(userId: number, tier: WeeklyChallengeTier): Promise<WeeklyProgress> {
+    // Check if user already has a progress entry
+    const existing = await this.getWeeklyProgress(userId);
+    if (existing) {
+      return existing;
+    }
+    
+    // Create new progress
+    const [progress] = await db
+      .insert(weeklyProgress)
+      .values({
+        userId,
+        selectedTier: tier,
+        completedPrompts: []
+      })
+      .returning();
+      
+    return progress;
+  }
+  
+  async markWeeklyPromptComplete(userId: number, promptId: string): Promise<WeeklyProgress> {
+    const progress = await this.getWeeklyProgress(userId);
+    if (!progress) {
+      throw new Error("User has not started a weekly challenge");
+    }
+    
+    const completedPrompts = progress.completedPrompts || [];
+    
+    // Skip if already completed
+    if (completedPrompts.includes(promptId)) {
+      return progress;
+    }
+    
+    // Add to completed prompts
+    const updatedCompletedPrompts = [...completedPrompts, promptId];
+    
+    // Update in database
+    const [updatedProgress] = await db
+      .update(weeklyProgress)
+      .set({
+        completedPrompts: updatedCompletedPrompts
+      })
+      .where(eq(weeklyProgress.id, progress.id))
+      .returning();
+      
+    return updatedProgress;
+  }
+  
+  async isWeeklyPromptCompleted(userId: number, promptId: string): Promise<boolean> {
+    const progress = await this.getWeeklyProgress(userId);
+    if (!progress) {
+      return false;
+    }
+    
+    const completedPrompts = progress.completedPrompts || [];
+    return completedPrompts.includes(promptId);
   }
 }
 
