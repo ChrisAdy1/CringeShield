@@ -3,17 +3,20 @@ import { useTheme, MoodTheme, moodPalettes, ColorMode } from '@/hooks/use-theme'
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, Loader2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import confetti from 'canvas-confetti';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const ThemeSelector: React.FC = () => {
-  const { mood, colorMode, setMood, setColorMode } = useTheme();
+  const { mood, colorMode, setMood, setColorMode, isUpdating } = useTheme();
   const { toast } = useToast();
 
   // Handle mood selection with animation
   const handleMoodChange = (selectedMood: MoodTheme) => {
+    if (isUpdating || selectedMood === mood) return;
+    
     setMood(selectedMood);
     triggerConfetti(moodPalettes[selectedMood].light);
     
@@ -26,6 +29,7 @@ const ThemeSelector: React.FC = () => {
 
   // Handle color mode change
   const handleColorModeChange = (value: string) => {
+    if (isUpdating || value === colorMode) return;
     setColorMode(value as ColorMode);
   };
 
@@ -47,20 +51,51 @@ const ThemeSelector: React.FC = () => {
           Choose a theme that matches your current mood and practice goals.
         </p>
 
+        {isUpdating && (
+          <Alert className="mb-4">
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <AlertDescription>
+              Updating theme, please wait...
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Color Mode Selector */}
         <div className="mb-6">
           <h3 className="text-sm font-medium mb-2">Color Mode</h3>
-          <Tabs defaultValue={colorMode} onValueChange={handleColorModeChange} className="w-full">
+          <Tabs 
+            value={colorMode} 
+            onValueChange={isUpdating ? () => {} : handleColorModeChange} 
+            className="w-full"
+          >
             <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="light" className="flex items-center justify-center">
+              <TabsTrigger 
+                value="light" 
+                className={cn(
+                  "flex items-center justify-center",
+                  isUpdating && "opacity-50 pointer-events-none"
+                )}
+              >
                 <Sun className="h-4 w-4 mr-2" />
                 Light
               </TabsTrigger>
-              <TabsTrigger value="dark" className="flex items-center justify-center">
+              <TabsTrigger 
+                value="dark" 
+                className={cn(
+                  "flex items-center justify-center",
+                  isUpdating && "opacity-50 pointer-events-none"
+                )}
+              >
                 <Moon className="h-4 w-4 mr-2" />
                 Dark
               </TabsTrigger>
-              <TabsTrigger value="system" className="flex items-center justify-center">
+              <TabsTrigger 
+                value="system" 
+                className={cn(
+                  "flex items-center justify-center",
+                  isUpdating && "opacity-50 pointer-events-none"
+                )}
+              >
                 <Monitor className="h-4 w-4 mr-2" />
                 System
               </TabsTrigger>
@@ -78,10 +113,11 @@ const ThemeSelector: React.FC = () => {
               <Card 
                 key={themeKey} 
                 className={cn(
-                  "cursor-pointer transition-all", 
-                  isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-md"
+                  "transition-all", 
+                  isSelected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-md",
+                  isUpdating ? "opacity-50" : "cursor-pointer"
                 )}
-                onClick={() => handleMoodChange(themeKey)}
+                onClick={() => !isUpdating && handleMoodChange(themeKey)}
               >
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
@@ -113,12 +149,21 @@ const ThemeSelector: React.FC = () => {
                   <Button 
                     variant={isSelected ? "default" : "outline"} 
                     className="w-full"
+                    disabled={isUpdating}
                     onClick={(e) => {
+                      if (isUpdating) return;
                       e.stopPropagation();
                       handleMoodChange(themeKey);
                     }}
                   >
-                    {isSelected ? "Selected" : "Select Theme"}
+                    {isSelected ? (
+                      isUpdating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Applying...
+                        </>
+                      ) : "Selected"
+                    ) : "Select Theme"}
                   </Button>
                 </CardFooter>
               </Card>

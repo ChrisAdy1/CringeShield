@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 
 // Theme type definitions
 export type MoodTheme = 'calm' | 'energetic' | 'focused' | 'creative' | 'professional';
@@ -10,6 +10,7 @@ interface ThemeContextType {
   setMood: (mood: MoodTheme) => void;
   setColorMode: (mode: ColorMode) => void;
   applyTheme: (mood: MoodTheme, colorMode: ColorMode) => void;
+  isUpdating: boolean;
 }
 
 // Theme color palettes based on mood
@@ -54,61 +55,77 @@ export const moodPalettes: Record<MoodTheme, { light: string, dark: string, name
 // Create the theme context
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Helper function to debounce function calls
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
 // Provider component
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mood, setMoodState] = useState<MoodTheme>('focused');
   const [colorMode, setColorModeState] = useState<ColorMode>('light');
+  const [isUpdating, setIsUpdating] = useState(false);
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounced theme update function to prevent rapid server requests
+  const debouncedUpdateTheme = useCallback(
+    debounce(async (mood: MoodTheme, primaryColor: string, colorMode: ColorMode) => {
+      setIsUpdating(true);
+      try {
+        const response = await fetch('/api/theme', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            variant: 'professional',
+            primary: primaryColor,
+            appearance: colorMode === 'system' ? 'system' : colorMode,
+            radius: 0.75,
+          }),
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to update theme');
+        }
+      } catch (error) {
+        console.error('Error updating theme:', error);
+      } finally {
+        setIsUpdating(false);
+      }
+    }, 1000),
+    []
+  );
 
   // Apply theme function
-  const applyTheme = (mood: MoodTheme, colorMode: ColorMode) => {
+  const applyTheme = useCallback((newMood: MoodTheme, newColorMode: ColorMode) => {
     // Get the primary color based on mood and color mode
-    const primaryColor = colorMode === 'dark' 
-      ? moodPalettes[mood].dark 
-      : moodPalettes[mood].light;
+    const primaryColor = newColorMode === 'dark' 
+      ? moodPalettes[newMood].dark 
+      : moodPalettes[newMood].light;
 
-    // Update theme.json via an API call
-    updateThemeFile(mood, primaryColor, colorMode);
-  };
+    // Update theme via debounced function to prevent constant refreshes
+    debouncedUpdateTheme(newMood, primaryColor, newColorMode);
+  }, [debouncedUpdateTheme]);
 
-  // Set mood and apply theme
-  const setMood = (newMood: MoodTheme) => {
+  // Set mood and save to localStorage (don't apply theme immediately)
+  const setMood = useCallback((newMood: MoodTheme) => {
     setMoodState(newMood);
-    applyTheme(newMood, colorMode);
-    // Save to localStorage
     localStorage.setItem('cringe-shield-mood', newMood);
-  };
+    applyTheme(newMood, colorMode);
+  }, [colorMode, applyTheme]);
 
-  // Set color mode and apply theme
-  const setColorMode = (newMode: ColorMode) => {
+  // Set color mode and save to localStorage (don't apply theme immediately)
+  const setColorMode = useCallback((newMode: ColorMode) => {
     setColorModeState(newMode);
-    applyTheme(mood, newMode);
-    // Save to localStorage
     localStorage.setItem('cringe-shield-color-mode', newMode);
-  };
-
-  // API function to update theme.json
-  const updateThemeFile = async (mood: MoodTheme, primaryColor: string, colorMode: ColorMode) => {
-    try {
-      const response = await fetch('/api/theme', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          variant: 'professional', // Keep using professional variant
-          primary: primaryColor,
-          appearance: colorMode === 'system' ? 'system' : colorMode,
-          radius: 0.75, // Keep default radius
-        }),
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to update theme');
-      }
-    } catch (error) {
-      console.error('Error updating theme:', error);
-    }
-  };
+    applyTheme(mood, newMode);
+  }, [mood, applyTheme]);
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -123,12 +140,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setColorModeState(savedColorMode);
     }
     
-    // Apply the loaded or default theme
-    applyTheme(savedMood || mood, savedColorMode || colorMode);
+    // Apply the loaded or default theme (only on initial mount)
+    if (savedMood || savedColorMode) {
+      applyTheme(savedMood || mood, savedColorMode || colorMode);
+    }
+    
+    // Clean up any pending timeouts
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
+    };
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ mood, colorMode, setMood, setColorMode, applyTheme }}>
+    <ThemeContext.Provider value={{ 
+      mood, 
+      colorMode, 
+      setMood, 
+      setColorMode, 
+      applyTheme,
+      isUpdating
+    }}>
       {children}
     </ThemeContext.Provider>
   );

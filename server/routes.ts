@@ -709,8 +709,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Theme API endpoint - Update theme.json file (no authentication required)
+  let lastThemeUpdate = Date.now();
+  let isUpdatingTheme = false;
+  
   app.post("/api/theme", async (req, res) => {
     try {
+      // Prevent simultaneous theme updates
+      const now = Date.now();
+      if (isUpdatingTheme || now - lastThemeUpdate < 500) {
+        return res.status(200).json({ message: "Theme update already in progress" });
+      }
+      
+      isUpdatingTheme = true;
+      lastThemeUpdate = now;
+      
       // fs and path are imported at the top of the file
       
       // Validate the theme data
@@ -729,9 +741,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Write the new theme data to the file
       fs.writeFileSync(themePath, JSON.stringify(themeData, null, 2));
       
+      // Add a small delay to reduce constant refreshes
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      isUpdatingTheme = false;
       res.status(200).json({ message: "Theme updated successfully" });
     } catch (error: any) {
       console.error("Error updating theme:", error);
+      isUpdatingTheme = false;
       if (error.name === "ZodError") {
         return res.status(400).json({ 
           message: "Invalid theme data", 
