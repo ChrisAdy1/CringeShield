@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { useChallengeProgress } from '@/hooks/useChallengeProgress';
 import { useChallengeBadges, BadgeMilestone } from '@/hooks/useChallengeBadges';
-import { Award, Medal, Trophy, Loader2, PlusCircle, CheckCircle2 } from 'lucide-react';
+import { Award, Medal, Trophy, Loader2, PlusCircle, CheckCircle2, PlayCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 import BadgeModal from '@/components/BadgeModal';
@@ -347,23 +347,14 @@ const Challenge: React.FC = () => {
                     Completed
                   </Button>
                 ) : (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="gap-1"
-                      onClick={() => completeDay(challenge.day)}
-                    >
-                      <PlusCircle className="h-4 w-4 mr-1" />
-                      Mark Complete
-                    </Button>
-                    <Button 
-                      variant="default" 
-                      className="gap-1"
-                      onClick={() => startRecording(challenge.day)}
-                    >
-                      Practice Now
-                    </Button>
-                  </>
+                  <Button 
+                    variant="default" 
+                    className="gap-1 w-full"
+                    onClick={() => startRecording(challenge.day)}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-1" />
+                    Practice Now
+                  </Button>
                 )}
               </CardFooter>
             </Card>
