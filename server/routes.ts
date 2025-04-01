@@ -407,6 +407,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to complete weekly challenge prompt" });
     }
   });
+
+  // Weekly Badge routes
+  
+  // Get all weekly badges for the user
+  app.get("/api/weekly-badges", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const badges = await storage.getWeeklyBadges(userId);
+      res.json(badges);
+    } catch (error) {
+      console.error('Error fetching weekly badges:', error);
+      res.status(500).json({ message: "Failed to fetch weekly badges" });
+    }
+  });
+  
+  // Check if user has earned a specific weekly badge
+  app.get("/api/weekly-badges/check/:tier/:week", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { tier, week } = req.params;
+      const weekNumber = parseInt(week, 10);
+      
+      if (isNaN(weekNumber)) {
+        return res.status(400).json({ message: "Invalid week number" });
+      }
+      
+      const hasBadge = await storage.hasWeeklyBadge(userId, tier, weekNumber);
+      res.json({ hasBadge });
+    } catch (error) {
+      console.error('Error checking weekly badge:', error);
+      res.status(500).json({ message: "Failed to check weekly badge" });
+    }
+  });
+  
+  // Award a new weekly badge to the user
+  app.post("/api/weekly-badges/award", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { tier, weekNumber } = req.body;
+      
+      // Validate input
+      const schema = z.object({
+        tier: z.string(),
+        weekNumber: z.number().int().positive()
+      });
+      
+      const parsed = schema.safeParse({ tier, weekNumber });
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data format", 
+          details: parsed.error.errors 
+        });
+      }
+      
+      // Award the badge
+      const badge = await storage.awardWeeklyBadge(userId, tier, weekNumber);
+      res.status(201).json(badge);
+    } catch (error) {
+      console.error('Error awarding weekly badge:', error);
+      res.status(500).json({ message: "Failed to award weekly badge" });
+    }
+  });
+  
+  // Direct endpoint for weekly badges (used by useWeeklyBadges hook)
+  app.post("/api/weekly-badges", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { tier, weekNumber } = req.body;
+      
+      // Validate input
+      const schema = z.object({
+        tier: z.string(),
+        weekNumber: z.number().int().positive()
+      });
+      
+      const parsed = schema.safeParse({ tier, weekNumber });
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data format", 
+          details: parsed.error.errors 
+        });
+      }
+      
+      // Check if badge already exists
+      const hasBadge = await storage.hasWeeklyBadge(userId, tier, weekNumber);
+      if (hasBadge) {
+        return res.status(409).json({ message: "Badge already awarded" });
+      }
+      
+      // Award the badge
+      const badge = await storage.awardWeeklyBadge(userId, tier, weekNumber);
+      res.status(201).json(badge);
+    } catch (error) {
+      console.error('Error awarding weekly badge:', error);
+      res.status(500).json({ message: "Failed to award weekly badge" });
+    }
+  });
   
   // Check if a specific prompt is completed
   app.get("/api/weekly-challenge/prompt/:promptId", isAuthenticated, async (req, res) => {

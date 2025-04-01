@@ -111,6 +111,23 @@ export const insertWeeklyProgressSchema = createInsertSchema(weeklyProgress).omi
 export type InsertWeeklyProgress = z.infer<typeof insertWeeklyProgressSchema>;
 export type WeeklyProgress = typeof weeklyProgress.$inferSelect;
 
+// Weekly badges for tracking completion rewards
+export const weeklyBadges = pgTable("weekly_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  tier: text("tier").notNull(),
+  weekNumber: integer("week_number").notNull(),
+  earnedAt: timestamp("earned_at").notNull().defaultNow(),
+});
+
+export const insertWeeklyBadgeSchema = createInsertSchema(weeklyBadges).omit({
+  id: true,
+  earnedAt: true,
+});
+
+export type InsertWeeklyBadge = z.infer<typeof insertWeeklyBadgeSchema>;
+export type WeeklyBadge = typeof weeklyBadges.$inferSelect;
+
 // Auth schemas
 export const loginSchema = z.object({
   email: z.string().email(),

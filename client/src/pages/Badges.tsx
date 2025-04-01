@@ -1,167 +1,111 @@
-import React, { useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { 
-  Card, 
-  CardContent
-} from "@/components/ui/card";
-import { Badge } from '@/components/ui/badge';
+import React from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useWeeklyBadges } from '@/hooks/useWeeklyBadges';
+import { Redirect } from 'wouter';
+import { Award, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, Loader2 } from 'lucide-react';
-import { promptBadges } from '../lib/promptBadges';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import BadgeDisplay from '@/components/BadgeDisplay';
+import { Link } from 'wouter';
 
-export default function Badges() {
-  const [_, navigate] = useLocation();
-
-  // Fetch current user
-  const { data: user, isLoading: isUserLoading } = useQuery<any>({
-    queryKey: ['/api/auth/current-user'],
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-
-  // Redirect to auth page if not authenticated
-  useEffect(() => {
-    if (!isUserLoading && !user) {
-      // Store a message in localStorage to show on auth page
-      localStorage.setItem('auth-message', 'Please register to view badges');
-      
-      // Navigate to registration page
-      navigate('/auth?mode=register');
-    }
-  }, [user, isUserLoading, navigate]);
-
-  // Fetch prompt completions (badges earned)
-  const { data: completions, isLoading: isCompletionsLoading } = useQuery<any[]>({
-    queryKey: ['/api/prompt-completions'],
-    enabled: !!user,
-  });
-
-  const isLoading = isUserLoading || isCompletionsLoading;
-  const completedPromptIds = completions?.map(c => c.promptId) || [];
-
+const Badges: React.FC = () => {
+  const { user } = useAuth();
+  const { badges, isLoading, totalBadges } = useWeeklyBadges();
+  
+  // If user is not logged in, redirect to login
+  if (!user && !isLoading) {
+    return <Redirect to="/auth" />;
+  }
+  
   return (
-    <div className="container max-w-xl mx-auto py-6 px-4">
-      <div className="flex items-center mb-6">
-        <Button 
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate('/account')}
-          className="mr-2"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold">My Badges</h1>
+    <div className="container mx-auto px-4 py-6 max-w-3xl">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <Award className="h-6 w-6 text-primary" />
+          My Badges
+        </h1>
+        <Link to="/">
+          <Button variant="ghost" size="sm" className="gap-1">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Button>
+        </Link>
       </div>
       
       {isLoading ? (
-        <div className="flex justify-center items-center h-60">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <div className="flex justify-center py-12">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
-      ) : !user ? (
+      ) : badges.length === 0 ? (
         <Card>
-          <CardContent className="p-6 text-center">
-            <p className="mb-4">Please log in to view your badges.</p>
-            <Button onClick={() => navigate('/auth')}>Login</Button>
+          <CardContent className="p-6 flex flex-col items-center justify-center text-center">
+            <Award className="h-16 w-16 text-muted mb-4" />
+            <h3 className="text-xl font-medium mb-2">No Badges Yet</h3>
+            <p className="text-muted-foreground max-w-md">
+              Complete weekly challenges to earn badges! Each completed week earns you a badge for that tier.
+            </p>
+            <Link to="/weekly-challenge" className="mt-6">
+              <Button>Start a Weekly Challenge</Button>
+            </Link>
           </CardContent>
         </Card>
       ) : (
-        <>
-          <p className="text-center text-muted-foreground mb-6">
-            Earn badges by completing speaking prompts and scripted reads
-          </p>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Badge Collection</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BadgeDisplay compact={false} />
+            </CardContent>
+          </Card>
           
-          {/* Practice Prompt Badges (IDs 1-15) */}
-          <h2 className="font-semibold text-lg mb-3">Practice Prompt Badges</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-            {promptBadges.filter(badge => badge.id <= 15).map((badge) => {
-              const isCompleted = completedPromptIds.includes(badge.id);
-              
-              return (
-                <Card 
-                  key={badge.id}
-                  className={`hover:shadow-md transition-shadow ${isCompleted ? 'border-primary/20 bg-primary/5' : 'bg-gray-50'}`}
-                >
-                  <CardContent className="p-4 text-center">
-                    <div className="text-3xl mb-2">
-                      {isCompleted ? (
-                        badge.icon
-                      ) : (
-                        <span className="text-gray-300">?</span>
-                      )}
-                    </div>
-                    <h3 className="font-medium text-sm mb-1">
-                      {isCompleted ? badge.title : 'Locked Badge'}
-                    </h3>
-                    {isCompleted && (
-                      <p className="text-xs text-muted-foreground">
-                        {badge.description}
-                      </p>
-                    )}
-                    <Badge 
-                      variant={isCompleted ? "default" : "outline"} 
-                      className="mt-2"
-                    >
-                      {isCompleted ? 'Completed' : 'Incomplete'}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          {/* Scripted Read Badges (IDs 101-110) */}
-          <h2 className="font-semibold text-lg mb-3">Scripted Read Badges</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-            {promptBadges.filter(badge => badge.id >= 101).map((badge) => {
-              const isCompleted = completedPromptIds.includes(badge.id);
-              
-              return (
-                <Card 
-                  key={badge.id}
-                  className={`hover:shadow-md transition-shadow ${isCompleted ? 'border-primary/20 bg-primary/5' : 'bg-gray-50'}`}
-                >
-                  <CardContent className="p-4 text-center">
-                    <div className="text-3xl mb-2">
-                      {isCompleted ? (
-                        badge.icon
-                      ) : (
-                        <span className="text-gray-300">?</span>
-                      )}
-                    </div>
-                    <h3 className="font-medium text-sm mb-1">
-                      {isCompleted ? badge.title : 'Locked Badge'}
-                    </h3>
-                    {isCompleted && (
-                      <p className="text-xs text-muted-foreground">
-                        {badge.description}
-                      </p>
-                    )}
-                    <Badge 
-                      variant={isCompleted ? "default" : "outline"} 
-                      className="mt-2"
-                    >
-                      {isCompleted ? 'Completed' : 'Incomplete'}
-                    </Badge>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-          
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-3">
-              Completed {completedPromptIds.length} of 25 badges
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/')} 
-              className="w-full"
-            >
-              Practice More Prompts
-            </Button>
-          </div>
-        </>
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">What Badges Mean</h3>
+              <div className="space-y-4">
+                <div className="flex gap-3">
+                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <Award className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Shy Starter Badges</h4>
+                    <p className="text-sm text-muted-foreground">
+                      For completing weekly challenges in the beginner tier, focusing on basic comfort on camera.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Award className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Growing Speaker Badges</h4>
+                    <p className="text-sm text-muted-foreground">
+                      For completing intermediate-level weekly challenges that develop your speaking skills.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <Award className="h-6 w-6 text-green-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Confident Creator Badges</h4>
+                    <p className="text-sm text-muted-foreground">
+                      For completing advanced weekly challenges that push your speaking to professional levels.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
-}
+};
+
+export default Badges;

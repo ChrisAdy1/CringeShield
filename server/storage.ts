@@ -5,6 +5,7 @@ import {
   promptCompletions,
   challengeProgress,
   weeklyProgress,
+  weeklyBadges,
   type User, 
   type InsertUser, 
   type Session,
@@ -17,6 +18,8 @@ import {
   type InsertChallengeProgress,
   type WeeklyProgress,
   type InsertWeeklyProgress,
+  type WeeklyBadge,
+  type InsertWeeklyBadge,
   type WeeklyChallengeTier
 } from "@shared/schema";
 import { db } from "./db";
@@ -62,6 +65,12 @@ export interface IStorage {
   createWeeklyProgress(userId: number, tier: WeeklyChallengeTier): Promise<WeeklyProgress>;
   markWeeklyPromptComplete(userId: number, promptId: string): Promise<WeeklyProgress>;
   isWeeklyPromptCompleted(userId: number, promptId: string): Promise<boolean>;
+  
+  // Weekly Badge methods
+  getWeeklyBadges(userId: number): Promise<WeeklyBadge[]>;
+  getWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge | undefined>;
+  awardWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge>;
+  hasWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -71,12 +80,14 @@ export class MemStorage implements IStorage {
   private promptCompletions: Map<number, PromptCompletion>;
   private challengeProgress: Map<number, ChallengeProgress>;
   private weeklyProgressMap: Map<number, WeeklyProgress>;
+  private weeklyBadges: Map<number, WeeklyBadge>;
   private userId: number;
   private sessionId: number;
   private promptId: number;
   private promptCompletionId: number;
   private challengeProgressId: number;
   private weeklyProgressId: number;
+  private weeklyBadgeId: number;
 
   constructor() {
     this.users = new Map();
@@ -85,12 +96,14 @@ export class MemStorage implements IStorage {
     this.promptCompletions = new Map();
     this.challengeProgress = new Map();
     this.weeklyProgressMap = new Map();
+    this.weeklyBadges = new Map();
     this.userId = 1;
     this.sessionId = 1;
     this.promptId = 1;
     this.promptCompletionId = 1;
     this.challengeProgressId = 1;
     this.weeklyProgressId = 1;
+    this.weeklyBadgeId = 1;
   }
 
   // User methods
@@ -351,6 +364,47 @@ export class MemStorage implements IStorage {
     
     const completedPrompts = progress.completedPrompts || [];
     return completedPrompts.includes(promptId);
+  }
+  
+  // Weekly Badge methods
+  async getWeeklyBadges(userId: number): Promise<WeeklyBadge[]> {
+    return Array.from(this.weeklyBadges.values())
+      .filter(badge => badge.userId === userId);
+  }
+  
+  async getWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge | undefined> {
+    return Array.from(this.weeklyBadges.values())
+      .find(badge => 
+        badge.userId === userId && 
+        badge.tier === tier && 
+        badge.weekNumber === weekNumber
+      );
+  }
+  
+  async awardWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge> {
+    // Check if badge already exists
+    const existingBadge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    if (existingBadge) {
+      return existingBadge;
+    }
+    
+    // Create new badge
+    const id = this.weeklyBadgeId++;
+    const badge: WeeklyBadge = {
+      id,
+      userId,
+      tier,
+      weekNumber,
+      earnedAt: new Date()
+    };
+    
+    this.weeklyBadges.set(id, badge);
+    return badge;
+  }
+  
+  async hasWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<boolean> {
+    const badge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    return !!badge;
   }
 }
 
@@ -642,7 +696,52 @@ export class DatabaseStorage implements IStorage {
     const completedPrompts = progress.completedPrompts || [];
     return completedPrompts.includes(promptId);
   }
+  
+  // Weekly Badge methods
+  async getWeeklyBadges(userId: number): Promise<WeeklyBadge[]> {
+    return db
+      .select()
+      .from(weeklyBadges)
+      .where(eq(weeklyBadges.userId, userId));
+  }
+  
+  async getWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge | undefined> {
+    const [badge] = await db
+      .select()
+      .from(weeklyBadges)
+      .where(and(
+        eq(weeklyBadges.userId, userId),
+        eq(weeklyBadges.tier, tier),
+        eq(weeklyBadges.weekNumber, weekNumber)
+      ));
+      
+    return badge;
+  }
+  
+  async awardWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge> {
+    // Check if badge already exists
+    const existingBadge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    if (existingBadge) {
+      return existingBadge;
+    }
+    
+    // Create new badge
+    const [badge] = await db
+      .insert(weeklyBadges)
+      .values({
+        userId,
+        tier,
+        weekNumber
+      })
+      .returning();
+      
+    return badge;
+  }
+  
+  async hasWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<boolean> {
+    const badge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    return !!badge;
+  }
 }
 
-// Switch to database storage instead of memory storage
 export const storage = new DatabaseStorage();

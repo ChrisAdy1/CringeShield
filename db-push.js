@@ -34,6 +34,19 @@ async function main() {
         completed_prompts TEXT[] DEFAULT '{}'
       )
     `);
+
+    console.log('Creating weekly_badges table...');
+    
+    // Create the weekly_badges table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS weekly_badges (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        tier TEXT NOT NULL,
+        week_number INTEGER NOT NULL,
+        earned_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
     
     console.log('Tables created successfully!');
   } catch (error) {

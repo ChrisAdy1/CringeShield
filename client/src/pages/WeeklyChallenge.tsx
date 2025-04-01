@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
+import { useWeeklyBadges } from '@/hooks/useWeeklyBadges';
+import { queryClient } from '../lib/queryClient';
 import { WeeklyPrompt } from '@/lib/weeklyPrompts';
 import { Redirect, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -9,8 +11,9 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { getProgressPercentage, isWeekUnlocked } from '@/lib/weeklyPrompts';
-import { Loader2, LockIcon, CheckIcon, ArrowRightIcon } from 'lucide-react';
-import type { WeeklyChallengeTier } from '@shared/schema';
+import { Loader2, LockIcon, CheckIcon, ArrowRightIcon, Award } from 'lucide-react';
+import type { WeeklyChallengeTier, WeeklyBadge } from '@shared/schema';
+import BadgeModal from '@/components/BadgeModal';
 
 const WeeklyChallenge = () => {
   const { user } = useAuth();
@@ -19,9 +22,15 @@ const WeeklyChallenge = () => {
     isLoading, 
     isPromptCompleted, 
     getCurrentWeek,
-    getWeeklyPrompts 
+    getWeeklyPrompts,
+    completePrompt 
   } = useWeeklyChallenge();
+  const { 
+    checkForBadge, 
+    awardBadgeMutation 
+  } = useWeeklyBadges();
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  const [newBadge, setNewBadge] = useState<WeeklyBadge | null>(null);
   
   // Set selected week to current week when data is loaded
   useEffect(() => {
@@ -30,6 +39,41 @@ const WeeklyChallenge = () => {
       setSelectedWeek(currentWeek);
     }
   }, [isLoading, weeklyChallenge, getCurrentWeek]);
+  
+  // Check for week completion and award badges if needed
+  useEffect(() => {
+    if (!isLoading && weeklyChallenge?.status === 'in_progress') {
+      const tier = weeklyChallenge.progress?.selectedTier as WeeklyChallengeTier;
+      const completedPrompts = weeklyChallenge.progress?.completedPrompts || [];
+      
+      // Check each unlocked week for completion
+      const currentWeekNum = getCurrentWeek();
+      
+      // Use a simpler approach - just check if the current week is complete
+      const currentWeekPrompts = getWeeklyPrompts(currentWeekNum, tier);
+      const allWeekPromptsCompleted = currentWeekPrompts.every(prompt => 
+        completedPrompts.includes(prompt.id)
+      );
+      
+      // If all prompts in current week are completed and badge doesn't exist yet
+      if (allWeekPromptsCompleted && !checkForBadge(tier, currentWeekNum)) {
+        // Award badge for completed week
+        awardBadgeMutation.mutate({ tier, weekNumber: currentWeekNum });
+        
+        // Force a refetch after mutation to update badges data
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['/api/weekly-badges'] });
+          // Check if badge exists now after refetch
+          setTimeout(() => {
+            const badge = checkForBadge(tier, currentWeekNum);
+            if (badge) {
+              setNewBadge(badge);
+            }
+          }, 500);
+        }, 1000);
+      }
+    }
+  }, [isLoading, weeklyChallenge, getCurrentWeek, getWeeklyPrompts, checkForBadge, awardBadgeMutation]);
 
   // If user is not logged in, redirect to login page
   if (!user && !isLoading) {
@@ -199,6 +243,15 @@ const WeeklyChallenge = () => {
           </Card>
         </div>
       </div>
+      
+      {/* Badge modal */}
+      {newBadge && (
+        <BadgeModal
+          badge={newBadge}
+          isOpen={!!newBadge}
+          onClose={() => setNewBadge(null)}
+        />
+      )}
     </div>
   );
 };

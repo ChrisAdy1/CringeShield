@@ -1,0 +1,40 @@
+  // Weekly Badge methods
+  async getWeeklyBadges(userId: number): Promise<WeeklyBadge[]> {
+    return Array.from(this.weeklyBadges.values())
+      .filter(badge => badge.userId === userId);
+  }
+  
+  async getWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge | undefined> {
+    return Array.from(this.weeklyBadges.values())
+      .find(badge => 
+        badge.userId === userId && 
+        badge.tier === tier && 
+        badge.weekNumber === weekNumber
+      );
+  }
+  
+  async awardWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<WeeklyBadge> {
+    // Check if badge already exists
+    const existingBadge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    if (existingBadge) {
+      return existingBadge;
+    }
+    
+    // Create new badge
+    const id = this.weeklyBadgeId++;
+    const badge: WeeklyBadge = {
+      id,
+      userId,
+      tier,
+      weekNumber,
+      earnedAt: new Date()
+    };
+    
+    this.weeklyBadges.set(id, badge);
+    return badge;
+  }
+  
+  async hasWeeklyBadge(userId: number, tier: string, weekNumber: number): Promise<boolean> {
+    const badge = await this.getWeeklyBadge(userId, tier, weekNumber);
+    return !!badge;
+  }

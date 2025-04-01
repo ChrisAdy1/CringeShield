@@ -1,14 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { LogIn, Loader2, Camera, Video, Calendar, Trophy, Activity, BarChart, Clock, History } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { 
+  LogIn, 
+  Loader2, 
+  Camera, 
+  Video, 
+  Calendar, 
+  Trophy, 
+  Activity, 
+  BarChart, 
+  Clock, 
+  History, 
+  Award 
+} from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useChallengeProgress } from '@/hooks/useChallengeProgress';
 import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
+import { useWeeklyBadges } from '@/hooks/useWeeklyBadges';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
+import { useAuth } from '@/hooks/useAuth';
 import { getProgressPercentage } from '@/lib/weeklyPrompts';
 import { WeeklyChallengeTier } from '@shared/schema';
+import BadgeDisplay from '@/components/BadgeDisplay';
 
 // Progress Dashboard Component
 interface ProgressDashboardProps {
@@ -20,6 +35,7 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
   const { progress, progressPercentage: challengePercentage } = useChallengeProgress();
   const { weeklyChallenge } = useWeeklyChallenge();
   const { reflections, getAverageRating } = useSelfReflections();
+  const { totalBadges, countBadgesByTier } = useWeeklyBadges();
   
   // Calculate statistics
   const totalPracticeSessions = progress.length + (reflections?.length || 0);
@@ -28,121 +44,118 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
   
   // Calculate weekly challenge progress
   let weeklyPercentage = 0;
+  let selectedTier: WeeklyChallengeTier | null = null;
   if (weeklyChallenge?.status === 'in_progress' && weeklyChallenge.progress) {
-    const { selectedTier, completedPrompts } = weeklyChallenge.progress;
-    // Cast to WeeklyChallengeTier type and ensure completedPrompts is an array
+    selectedTier = weeklyChallenge.progress.selectedTier as WeeklyChallengeTier;
+    const { completedPrompts } = weeklyChallenge.progress;
+    // Ensure completedPrompts is an array
     weeklyPercentage = getProgressPercentage(
-      selectedTier as WeeklyChallengeTier, 
+      selectedTier, 
       Array.isArray(completedPrompts) ? completedPrompts : []
     );
   }
   
   return (
-    <Card>
-      <CardContent className="p-4">
-        <h2 className="text-lg font-bold mb-4">Your Progress</h2>
-        
-        <div className="space-y-5">
-          {/* Total Practice Sessions */}
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium">Practice Sessions</span>
-              <span className="text-sm font-medium">{totalPracticeSessions}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              <Progress value={Math.min(totalPracticeSessions * 10, 100)} className="h-2" />
-            </div>
-          </div>
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="text-lg font-bold mb-4">Your Progress</h2>
           
-          {/* Weekly Challenge */}
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium">Weekly Challenge</span>
-              <span className="text-sm font-medium">{weeklyPercentage}%</span>
+          <div className="space-y-5">
+            {/* Total Practice Sessions */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">Practice Sessions</span>
+                <span className="text-sm font-medium">{totalPracticeSessions}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-primary" />
+                <Progress value={Math.min(totalPracticeSessions * 10, 100)} className="h-2" />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              <Progress value={weeklyPercentage} className="h-2" />
+            
+            {/* Weekly Challenge */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">Weekly Challenge</span>
+                <span className="text-sm font-medium">{weeklyPercentage}%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <Progress value={weeklyPercentage} className="h-2" />
+              </div>
+              {weeklyChallenge?.status === 'in_progress' && weeklyChallenge.progress && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {weeklyChallenge.progress.selectedTier.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                  ).join(' ')} Tier
+                </p>
+              )}
             </div>
-            {weeklyChallenge?.status === 'in_progress' && weeklyChallenge.progress && (
+            
+            {/* 30-Day Challenge */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">30-Day Challenge</span>
+                <span className="text-sm font-medium">{challengePercentage}%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-primary" />
+                <Progress value={challengePercentage} className="h-2" />
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {weeklyChallenge.progress.selectedTier.split('_').map(word => 
-                  word.charAt(0).toUpperCase() + word.slice(1)
-                ).join(' ')} Tier
+                {progress.length} of 30 days completed
               </p>
-            )}
-          </div>
-          
-          {/* 30-Day Challenge */}
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium">30-Day Challenge</span>
-              <span className="text-sm font-medium">{challengePercentage}%</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-primary" />
-              <Progress value={challengePercentage} className="h-2" />
+            
+            {/* Confidence Score */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">Average Confidence</span>
+                <span className="text-sm font-medium">{formattedConfidence}/5</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <BarChart className="h-4 w-4 text-primary" />
+                <Progress value={(averageConfidence / 5) * 100} className="h-2" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Based on your last {reflections?.length || 0} self-reflections
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {progress.length} of 30 days completed
-            </p>
-          </div>
-          
-          {/* Confidence Score */}
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium">Average Confidence</span>
-              <span className="text-sm font-medium">{formattedConfidence}/5</span>
+            
+            {/* Start button */}
+            <div className="pt-2">
+              <Button 
+                className="w-full"
+                onClick={() => window.location.href = '/recording?type=free'}
+              >
+                <Video className="mr-2 h-4 w-4" />
+                Start New Practice Session
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <BarChart className="h-4 w-4 text-primary" />
-              <Progress value={(averageConfidence / 5) * 100} className="h-2" />
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Based on your last {reflections?.length || 0} self-reflections
-            </p>
           </div>
-          
-          {/* Start button */}
-          <div className="pt-2">
-            <Button 
-              className="w-full"
-              onClick={() => document.location.href = '/recording?type=free'}
-            >
-              <Video className="mr-2 h-4 w-4" />
-              Start New Practice Session
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      
+      {/* Badges Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Award className="h-5 w-5 text-primary" />
+            Your Badges
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BadgeDisplay compact={true} />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
 const Home: React.FC = () => {
   const [, navigate] = useLocation();
-  const [user, setUser] = useState<any>(null);
-  const [userLoading, setUserLoading] = useState(true);
-  
-  // Fetch current user
-  useEffect(() => {
-    const checkCurrentUser = async () => {
-      try {
-        const response = await fetch('/api/auth/current-user');
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Error checking current user:', error);
-      } finally {
-        setUserLoading(false);
-      }
-    };
-    
-    checkCurrentUser();
-  }, []);
+  const { user, isLoading } = useAuth();
   
   // Start free recording session
   const startRecording = () => {
@@ -170,7 +183,7 @@ const Home: React.FC = () => {
         {/* Account section */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            {userLoading ? (
+            {isLoading ? (
               <div className="flex justify-center py-2">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
               </div>
@@ -245,10 +258,10 @@ const Home: React.FC = () => {
                 <Button 
                   variant="outline"
                   className="h-auto py-3 flex flex-col"
-                  onClick={() => navigate('/settings')}
+                  onClick={() => navigate('/badges')}
                 >
-                  <History className="h-5 w-5 mb-1" />
-                  <span className="text-xs">History</span>
+                  <Award className="h-5 w-5 mb-1" />
+                  <span className="text-xs">View Badges</span>
                 </Button>
               </div>
             </CardContent>
