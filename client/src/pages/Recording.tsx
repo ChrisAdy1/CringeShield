@@ -227,10 +227,9 @@ const Recording: React.FC = () => {
       sessions.push(sessionData);
       localStorage.setItem('practice-sessions', JSON.stringify(sessions));
       
-      // If this is a challenge and auto-complete is desired, mark it as completed
+      // If this is a challenge, mark it as completed since they've actually recorded something
       if (challenge && !isCurrentChallengeCompleted) {
-        // Uncomment the line below to auto-complete challenges after recording
-        // completeChallenge(challenge.day);
+        completeChallenge(challenge.day);
       }
       
       // Navigate to post-session screen
@@ -276,10 +275,8 @@ const Recording: React.FC = () => {
       sessionData.challengeDay = challenge.day;
       sessionData.challengeTitle = challenge.title;
       
-      // Mark challenge as completed for demo purposes if desired
-      // if (!isCurrentChallengeCompleted) {
-      //   completeChallenge(challenge.day);
-      // }
+      // We don't complete the challenge for skipped sessions
+      // Only mark challenges complete when actual recordings are made
     }
     
     // Store in local storage
@@ -415,14 +412,10 @@ const Recording: React.FC = () => {
                 </AlertDescription>
               </Alert>
               
-              {!isCurrentChallengeCompleted && !isRecording && recordedBlob && (
-                <Button 
-                  onClick={() => challengeDay && completeChallenge(challengeDay)}
-                  className="w-full mt-2 bg-green-500 hover:bg-green-600"
-                  disabled={isCompleting}
-                >
-                  {isCompleting ? 'Marking as Complete...' : 'Mark Challenge as Complete'}
-                </Button>
+              {!isCurrentChallengeCompleted && (
+                <div className="text-xs mt-2 text-primary/80 bg-primary/5 p-2 rounded">
+                  <span className="font-medium">Note:</span> This challenge will be automatically marked as complete once you finish recording.
+                </div>
               )}
             </div>
           ) : (
