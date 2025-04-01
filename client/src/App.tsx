@@ -10,6 +10,9 @@ import PostSession from "@/pages/PostSession";
 import Auth from "@/pages/Auth";
 import Account from "@/pages/Account";
 import Settings from "@/pages/Settings";
+import ChallengePage from "@/pages/ChallengePage";
+import { AuthProvider } from "./hooks/useAuth";
+import { ProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
   const [location] = useLocation();
@@ -21,10 +24,11 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
-      <Route path="/recording" component={Recording} />
-      <Route path="/post-session" component={PostSession} />
-      <Route path="/account" component={Account} />
-      <Route path="/settings" component={Settings} />
+      <ProtectedRoute path="/recording" component={Recording} />
+      <ProtectedRoute path="/post-session" component={PostSession} />
+      <ProtectedRoute path="/account" component={Account} />
+      <ProtectedRoute path="/settings" component={Settings} />
+      <ProtectedRoute path="/challenge" component={ChallengePage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -40,8 +44,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

@@ -276,6 +276,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Challenge progress routes
+  
+  // Get user's challenge progress
+  app.get("/api/challenge-progress", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const progress = await storage.getChallengeProgress(userId);
+      res.json(progress);
+    } catch (error: any) {
+      console.error("Error getting challenge progress:", error);
+      res.status(500).json({ message: "Failed to get challenge progress" });
+    }
+  });
+  
+  // Complete a challenge day
+  app.post("/api/challenge-progress", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { dayNumber } = req.body;
+      
+      // Validate the day number
+      const validDayNumber = z.number()
+        .int()
+        .min(1)
+        .max(30)
+        .parse(dayNumber);
+      
+      const progress = await storage.completeChallengeDay(userId, validDayNumber);
+      res.status(201).json(progress);
+    } catch (error: any) {
+      console.error("Error completing challenge day:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid day number. Must be between 1 and 30.",
+          details: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to complete challenge day" });
+    }
+  });
+  
+  // Check if a specific day is completed
+  app.get("/api/challenge-progress/:dayNumber", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const dayNumber = parseInt(req.params.dayNumber, 10);
+      
+      // Validate the day number
+      if (isNaN(dayNumber) || dayNumber < 1 || dayNumber > 30) {
+        return res.status(400).json({ message: "Invalid day number. Must be between 1 and 30." });
+      }
+      
+      const isCompleted = await storage.isDayChallengeCompleted(userId, dayNumber);
+      res.json({ isCompleted });
+    } catch (error: any) {
+      console.error("Error checking challenge day completion:", error);
+      res.status(500).json({ message: "Failed to check challenge day completion" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }

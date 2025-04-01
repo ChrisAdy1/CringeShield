@@ -76,6 +76,22 @@ export type Session = typeof sessions.$inferSelect;
 export type InsertPrompt = z.infer<typeof insertPromptSchema>;
 export type Prompt = typeof prompts.$inferSelect;
 
+// Challenge progress model
+export const challengeProgress = pgTable("challenge_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  dayNumber: integer("day_number").notNull(),
+  completedAt: timestamp("completed_at").notNull().defaultNow(),
+});
+
+export const insertChallengeProgressSchema = createInsertSchema(challengeProgress).omit({
+  id: true,
+  completedAt: true,
+});
+
+export type InsertChallengeProgress = z.infer<typeof insertChallengeProgressSchema>;
+export type ChallengeProgress = typeof challengeProgress.$inferSelect;
+
 // Auth schemas
 export const loginSchema = z.object({
   email: z.string().email(),

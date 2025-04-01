@@ -3,6 +3,7 @@ import {
   sessions, 
   prompts,
   promptCompletions,
+  challengeProgress,
   type User, 
   type InsertUser, 
   type Session,
@@ -10,7 +11,9 @@ import {
   type Prompt,
   type InsertPrompt,
   type PromptCompletion,
-  type InsertPromptCompletion
+  type InsertPromptCompletion,
+  type ChallengeProgress,
+  type InsertChallengeProgress
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
@@ -44,6 +47,11 @@ export interface IStorage {
   getPromptCompletions(userId: number): Promise<PromptCompletion[]>;
   createPromptCompletion(completion: InsertPromptCompletion): Promise<PromptCompletion>;
   getPromptCompletionCount(userId: number): Promise<number>;
+  
+  // Challenge progress methods
+  getChallengeProgress(userId: number): Promise<ChallengeProgress[]>;
+  completeChallengeDay(userId: number, dayNumber: number): Promise<ChallengeProgress>;
+  isDayChallengeCompleted(userId: number, dayNumber: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -51,20 +59,24 @@ export class MemStorage implements IStorage {
   private sessions: Map<number, Session>;
   private prompts: Map<number, Prompt>;
   private promptCompletions: Map<number, PromptCompletion>;
+  private challengeProgress: Map<number, ChallengeProgress>;
   private userId: number;
   private sessionId: number;
   private promptId: number;
   private promptCompletionId: number;
+  private challengeProgressId: number;
 
   constructor() {
     this.users = new Map();
     this.sessions = new Map();
     this.prompts = new Map();
     this.promptCompletions = new Map();
+    this.challengeProgress = new Map();
     this.userId = 1;
     this.sessionId = 1;
     this.promptId = 1;
     this.promptCompletionId = 1;
+    this.challengeProgressId = 1;
   }
 
   // User methods
@@ -114,6 +126,14 @@ export class MemStorage implements IStorage {
     
     for (const completion of userCompletions) {
       this.promptCompletions.delete(completion.id);
+    }
+    
+    // Delete challenge progress
+    const userChallengeProgress = Array.from(this.challengeProgress.values())
+      .filter(progress => progress.userId === id);
+    
+    for (const progress of userChallengeProgress) {
+      this.challengeProgress.delete(progress.id);
     }
   }
   
@@ -225,6 +245,40 @@ export class MemStorage implements IStorage {
   async getPromptCompletionCount(userId: number): Promise<number> {
     return (await this.getPromptCompletions(userId)).length;
   }
+
+  // Challenge progress methods
+  async getChallengeProgress(userId: number): Promise<ChallengeProgress[]> {
+    return Array.from(this.challengeProgress.values())
+      .filter(progress => progress.userId === userId)
+      .sort((a, b) => a.dayNumber - b.dayNumber);
+  }
+
+  async completeChallengeDay(userId: number, dayNumber: number): Promise<ChallengeProgress> {
+    // Check if already completed
+    const existing = Array.from(this.challengeProgress.values())
+      .find(progress => progress.userId === userId && progress.dayNumber === dayNumber);
+      
+    if (existing) {
+      return existing;
+    }
+
+    // Create new progress
+    const id = this.challengeProgressId++;
+    const progress: ChallengeProgress = {
+      id,
+      userId,
+      dayNumber,
+      completedAt: new Date()
+    };
+    
+    this.challengeProgress.set(id, progress);
+    return progress;
+  }
+
+  async isDayChallengeCompleted(userId: number, dayNumber: number): Promise<boolean> {
+    return Array.from(this.challengeProgress.values())
+      .some(progress => progress.userId === userId && progress.dayNumber === dayNumber);
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -272,6 +326,11 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(promptCompletions)
       .where(eq(promptCompletions.userId, id));
+    
+    // Delete user's challenge progress
+    await db
+      .delete(challengeProgress)
+      .where(eq(challengeProgress.userId, id));
     
     // Delete the user
     await db
@@ -394,6 +453,53 @@ export class DatabaseStorage implements IStorage {
       .from(promptCompletions)
       .where(eq(promptCompletions.userId, userId));
     return results.length;
+  }
+
+  // Challenge progress methods
+  async getChallengeProgress(userId: number): Promise<ChallengeProgress[]> {
+    return db
+      .select()
+      .from(challengeProgress)
+      .where(eq(challengeProgress.userId, userId))
+      .orderBy(challengeProgress.dayNumber);
+  }
+
+  async completeChallengeDay(userId: number, dayNumber: number): Promise<ChallengeProgress> {
+    // Check if already completed
+    const existing = await db
+      .select()
+      .from(challengeProgress)
+      .where(and(
+        eq(challengeProgress.userId, userId),
+        eq(challengeProgress.dayNumber, dayNumber)
+      ));
+      
+    if (existing.length > 0) {
+      return existing[0];
+    }
+
+    // Create new progress
+    const [progress] = await db
+      .insert(challengeProgress)
+      .values({
+        userId,
+        dayNumber
+      })
+      .returning();
+      
+    return progress;
+  }
+
+  async isDayChallengeCompleted(userId: number, dayNumber: number): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(challengeProgress)
+      .where(and(
+        eq(challengeProgress.userId, userId),
+        eq(challengeProgress.dayNumber, dayNumber)
+      ));
+      
+    return result.length > 0;
   }
 }
 

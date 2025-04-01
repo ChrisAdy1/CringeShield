@@ -2,7 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Circle, Square, FastForward } from 'lucide-react';
+import { ArrowLeft, Circle, Square, FastForward, CheckCircle } from 'lucide-react';
+import { challengeDays } from '@/lib/challengeDays';
+import { useChallengeProgress } from '@/hooks/useChallengeProgress';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Define BlobEvent type if not available
 interface BlobEvent extends Event {
@@ -13,9 +16,20 @@ interface BlobEvent extends Event {
 const Recording: React.FC = () => {
   const [, navigate] = useLocation();
   const queryParams = new URLSearchParams(window.location.search);
+  const challengeParam = queryParams.get('challenge');
+  const challengeDay = challengeParam ? parseInt(challengeParam, 10) : null;
   
-  // Get parameters from URL (only type remains)
-  const recordingType = 'free'; // All recordings are now free talk mode
+  // Get challenge information
+  const challenge = challengeDay 
+    ? challengeDays.find(c => c.day === challengeDay) 
+    : null;
+  
+  // Get challenge progress
+  const { completeChallenge, isDayCompleted, isCompleting } = useChallengeProgress();
+  const isCurrentChallengeCompleted = challengeDay ? isDayCompleted(challengeDay) : false;
+  
+  // Get parameters from URL
+  const recordingType = challenge ? 'challenge' : 'free';
   
   // Camera ref
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -165,6 +179,7 @@ const Recording: React.FC = () => {
         // Store the actual blob for access in the post-session screen
         if (chunksRef.current && chunksRef.current.length > 0) {
           recordingBlob = new Blob(chunksRef.current, { type: 'video/webm' });
+          setRecordedBlob(recordingBlob);
           
           // Store blob in a session-specific localStorage item
           // This is not ideal for large files, but works for demo purposes
@@ -180,7 +195,7 @@ const Recording: React.FC = () => {
         console.error('Error creating blob from recording:', err);
       }
       
-      // Define sessionData with proper type annotation to avoid implicit 'any'
+      // Enhanced sessionData to include challenge information
       const sessionData: {
         id: number;
         date: string;
@@ -189,6 +204,8 @@ const Recording: React.FC = () => {
         cameraOn: boolean;
         recordingKey: string;
         hasRecording: boolean;
+        challengeDay?: number;
+        challengeTitle?: string;
       } = {
         id: sessionId,
         date: new Date().toISOString(),
@@ -199,10 +216,22 @@ const Recording: React.FC = () => {
         hasRecording: !!recordingBlob, // Flag to indicate if recording exists
       };
       
+      // Add challenge info if applicable
+      if (challenge) {
+        sessionData.challengeDay = challenge.day;
+        sessionData.challengeTitle = challenge.title;
+      }
+      
       // Store in local storage
       const sessions = JSON.parse(localStorage.getItem('practice-sessions') || '[]');
       sessions.push(sessionData);
       localStorage.setItem('practice-sessions', JSON.stringify(sessions));
+      
+      // If this is a challenge and auto-complete is desired, mark it as completed
+      if (challenge && !isCurrentChallengeCompleted) {
+        // Uncomment the line below to auto-complete challenges after recording
+        // completeChallenge(challenge.day);
+      }
       
       // Navigate to post-session screen
       navigate(`/post-session?sessionId=${sessionData.id}`);
@@ -221,7 +250,7 @@ const Recording: React.FC = () => {
     // Generate an ID for the session
     const sessionId = Date.now();
     
-    // Create a simple mock session for demo with proper typing
+    // Create a simple mock session for demo with challenge support
     const sessionData: {
       id: number;
       date: string;
@@ -230,6 +259,8 @@ const Recording: React.FC = () => {
       cameraOn: boolean;
       recordingKey: string;
       hasRecording: boolean;
+      challengeDay?: number;
+      challengeTitle?: string;
     } = {
       id: sessionId,
       date: new Date().toISOString(),
@@ -239,6 +270,17 @@ const Recording: React.FC = () => {
       recordingKey: `recording-${sessionId}`, // Include key for consistency
       hasRecording: false // Indicate there's no actual recording data
     };
+    
+    // Add challenge info if applicable
+    if (challenge) {
+      sessionData.challengeDay = challenge.day;
+      sessionData.challengeTitle = challenge.title;
+      
+      // Mark challenge as completed for demo purposes if desired
+      // if (!isCurrentChallengeCompleted) {
+      //   completeChallenge(challenge.day);
+      // }
+    }
     
     // Store in local storage
     const sessions = JSON.parse(localStorage.getItem('practice-sessions') || '[]');
@@ -357,11 +399,37 @@ const Recording: React.FC = () => {
           </Button>
         </div>
         
-        {/* Info on bottom */}
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          <div className="mb-2">Free talking mode</div>
+        {/* Challenge info or free mode info */}
+        <div className="mt-4 text-sm">
+          {challenge ? (
+            <div className="mb-3">
+              <Alert variant="default" className="bg-primary/10 border-primary/20">
+                <AlertTitle className="text-sm font-semibold flex items-center">
+                  Day {challenge.day}: {challenge.title}
+                  {isCurrentChallengeCompleted && 
+                    <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
+                  }
+                </AlertTitle>
+                <AlertDescription className="text-xs mt-1">
+                  {challenge.description}
+                </AlertDescription>
+              </Alert>
+              
+              {!isCurrentChallengeCompleted && !isRecording && recordedBlob && (
+                <Button 
+                  onClick={() => challengeDay && completeChallenge(challengeDay)}
+                  className="w-full mt-2 bg-green-500 hover:bg-green-600"
+                  disabled={isCompleting}
+                >
+                  {isCompleting ? 'Marking as Complete...' : 'Mark Challenge as Complete'}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="text-center mb-2 text-muted-foreground">Free talking mode</div>
+          )}
           
-          <div className="mt-2 text-xs bg-gray-100 p-2 rounded-md">
+          <div className="text-xs bg-gray-100 p-2 rounded-md text-center">
             After recording, you'll be taken to a review screen where you can download your video. 
             Your video stays on your device and is not uploaded anywhere.
           </div>

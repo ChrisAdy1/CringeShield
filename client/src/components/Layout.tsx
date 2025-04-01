@@ -1,8 +1,8 @@
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { SmilePlus, Home, Video, BarChart2, Settings } from "lucide-react";
+import { SmilePlus, Home, Video, Award, Settings } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,15 +12,15 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
   const isMobile = useIsMobile();
   
-  // Fetch current user
-  const { data: user } = useQuery({
-    queryKey: ['/api/auth/current-user'],
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  // Get user from auth context
+  const { user } = useAuth();
   
   // Navigation items
   const navItems = [
     { path: "/", label: "Home", icon: Home },
+    { path: "/recording", label: "Practice", icon: Video },
+    { path: "/challenge", label: "Challenge", icon: Award },
+    { path: "/settings", label: "Settings", icon: Settings },
   ];
 
   return (
@@ -34,35 +34,36 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
               <h1 className="text-xl font-semibold text-gray-900">CringeShield</h1>
             </div>
           </Link>
-          <div className="flex space-x-6">
-            {navItems.map((item) => (
-              <Link 
-                key={item.path} 
-                href={item.path}
-                className={cn(
-                  "text-sm font-medium flex items-center gap-1",
-                  isMobile ? "p-2" : "", // Add padding on mobile for easier tapping
-                  currentPath === item.path
-                    ? "text-primary"
-                    : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                <item.icon className={isMobile ? "w-6 h-6" : "w-4 h-4"} />
-                {!isMobile && (
+          
+          {/* Desktop Navigation in Header */}
+          {!isMobile && (
+            <div className="flex space-x-6">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.path} 
+                  href={item.path}
+                  className={cn(
+                    "text-sm font-medium flex items-center gap-1",
+                    currentPath === item.path
+                      ? "text-primary"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  <item.icon className="w-4 h-4" />
                   <span>{item.label}</span>
-                )}
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto max-w-5xl px-4 py-6 pb-8">
+      <main className="flex-1 container mx-auto max-w-5xl px-4 py-6 pb-20">
         {children}
       </main>
 
-      {/* Footer - only show on desktop */}
+      {/* Desktop Footer */}
       {!isMobile && (
         <footer className="bg-white border-t border-gray-200 py-4">
           <div className="container mx-auto max-w-5xl px-4">
@@ -82,6 +83,29 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
             </div>
           </div>
         </footer>
+      )}
+      
+      {/* Mobile Navigation Bar */}
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
+          <div className="flex justify-around items-center py-2">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={cn(
+                  "flex flex-col items-center p-2 text-xs",
+                  currentPath === item.path
+                    ? "text-primary"
+                    : "text-gray-500"
+                )}
+              >
+                <item.icon className="w-6 h-6 mb-1" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </nav>
       )}
     </div>
   );

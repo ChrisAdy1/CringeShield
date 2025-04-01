@@ -1,0 +1,152 @@
+export const challengeDays = [
+  {
+    day: 1,
+    title: "Record a 1-min intro video just for you",
+    note: "Say who you are and what your vibe is",
+  },
+  {
+    day: 2,
+    title: "Talk about why you're doing this",
+    note: "Keep it chill, no pressure",
+  },
+  {
+    day: 3,
+    title: "Speak on a mindset idea casually (2 mins)",
+    note: "Don't teach it yet, just express it",
+  },
+  {
+    day: 4,
+    title: "Record same message sitting vs standing",
+    note: "Feel the difference in energy",
+  },
+  {
+    day: 5,
+    title: "Smile once during your video",
+    note: "Only where it feels natural",
+  },
+  {
+    day: 6,
+    title: "Watch a video and list 3 things you like",
+    note: "Focus on positives only",
+  },
+  {
+    day: 7,
+    title: "Record a 1-min 'one take only' video",
+    note: "Topic doesn’t matter—just don’t re-record",
+  },
+  {
+    day: 8,
+    title: "Pretend you're FaceTiming a friend",
+    note: "Record a personal mindset share",
+  },
+  {
+    day: 9,
+    title: "Practice pausing after key lines",
+    note: "Watch how it adds clarity",
+  },
+  {
+    day: 10,
+    title: "Emphasize one word per sentence",
+    note: "Start playing with tone",
+  },
+  {
+    day: 11,
+    title: "Tell a personal story (under 3 mins)",
+    note: "Let it be honest and real",
+  },
+  {
+    day: 12,
+    title: "Add one hand gesture per idea",
+    note: "Let gestures flow naturally",
+  },
+  {
+    day: 13,
+    title: "Record standing with stronger voice",
+    note: "Just a slight energy bump",
+  },
+  {
+    day: 14,
+    title: "Review 2 vids – what felt you?",
+    note: "Notice forced vs. authentic",
+  },
+  {
+    day: 15,
+    title: "Teach 1 idea in 2 mins (to younger self)",
+    note: "Keep the tone personal",
+  },
+  {
+    day: 16,
+    title: "Record a mindset myth-busting video",
+    note: "“They say X, but here’s my view”",
+  },
+  {
+    day: 17,
+    title: "Give advice to someone stuck",
+    note: "Speak to one person",
+  },
+  {
+    day: 18,
+    title: "End your vid with a question",
+    note: "Encourage engagement",
+  },
+  {
+    day: 19,
+    title: "Use 1 smile, 1 nod, 1 gesture, 1 pause",
+    note: "Basic dynamic delivery practice",
+  },
+  {
+    day: 20,
+    title: "Record in a new setting",
+    note: "Shake up your vibe",
+  },
+  {
+    day: 21,
+    title: "Watch Day 1 vs. Day 21 video",
+    note: "Reflect + celebrate progress",
+  },
+  {
+    day: 22,
+    title: "Record a 3-min 'tip of the day'",
+    note: "Usable content, no overthinking",
+  },
+  {
+    day: 23,
+    title: "Break down 1 idea into 3 parts",
+    note: "1) Problem 2) Your take 3) Action step",
+  },
+  {
+    day: 24,
+    title: "Talk to a specific person type",
+    note: 'E.g., “If you’re someone who…”',
+  },
+  {
+    day: 25,
+    title: "Record 2 energy levels: chill + +10%",
+    note: "Feel the shift without being fake",
+  },
+  {
+    day: 26,
+    title: "Batch 3 short vids, no editing",
+    note: "Build reps, fast and loose",
+  },
+  {
+    day: 27,
+    title: "Identify your signature style",
+    note: "What feels unique to you?",
+  },
+  {
+    day: 28,
+    title: "Open with a bold line or question",
+    note: "Hook the viewer early",
+  },
+  {
+    day: 29,
+    title: "Get feedback from someone",
+    note: "Ask what feels you vs. off",
+  },
+  {
+    day: 30,
+    title: "Record a video you'd be proud to post",
+    note: "No perfect—just real",
+  },
+];
