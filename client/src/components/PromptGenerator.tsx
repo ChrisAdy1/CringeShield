@@ -35,10 +35,11 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ category, onPromptGen
       // Get a random prompt from the selected category
       let effectiveCategory = category;
       
-      // If the category is 'exercise', use the confidence tier
+      // If the category is 'exercise', use a default tier based on user level
       if (category === 'exercise') {
-        const confidenceTier: ConfidenceTier = preferences.confidenceTier || 'shy_starter';
-        effectiveCategory = confidenceTier;
+        // Default to shy_starter since we removed the preferences.confidenceTier
+        const defaultTier: ConfidenceTier = 'shy_starter';
+        effectiveCategory = defaultTier;
       }
       
       // Get random prompt from our library

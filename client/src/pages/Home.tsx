@@ -8,6 +8,7 @@ import { useChallengeProgress } from '@/hooks/useChallengeProgress';
 import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { getProgressPercentage } from '@/lib/weeklyPrompts';
+import { WeeklyChallengeTier } from '@shared/schema';
 
 // Progress Dashboard Component
 interface ProgressDashboardProps {
@@ -28,8 +29,12 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
   // Calculate weekly challenge progress
   let weeklyPercentage = 0;
   if (weeklyChallenge?.status === 'in_progress' && weeklyChallenge.progress) {
-    const { selectedTier, completedPrompts = [] } = weeklyChallenge.progress;
-    weeklyPercentage = getProgressPercentage(selectedTier, completedPrompts);
+    const { selectedTier, completedPrompts } = weeklyChallenge.progress;
+    // Cast to WeeklyChallengeTier type and ensure completedPrompts is an array
+    weeklyPercentage = getProgressPercentage(
+      selectedTier as WeeklyChallengeTier, 
+      Array.isArray(completedPrompts) ? completedPrompts : []
+    );
   }
   
   return (

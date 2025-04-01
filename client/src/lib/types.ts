@@ -74,5 +74,4 @@ export interface UserPreferences {
   showTimer: boolean;
   enableFaceFilters: boolean;
   favoritePrompts: number[];
-  confidenceTier?: ConfidenceTier;
 }
