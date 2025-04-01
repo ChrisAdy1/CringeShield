@@ -246,14 +246,17 @@ const Recording: React.FC = () => {
       sessions.push(sessionData);
       localStorage.setItem('practice-sessions', JSON.stringify(sessions));
       
-      // If this is a challenge, mark it as completed since they've actually recorded something
-      if (challenge && !isCurrentChallengeCompleted) {
-        completeChallenge(challenge.day);
-      }
-      
-      // If this is a weekly challenge prompt, mark it as completed
-      if (weeklyPrompt && promptParam && !isCurrentPromptCompleted) {
-        completePrompt.mutate(promptParam);
+      // Only mark challenges/prompts as complete if we actually have a recording
+      if (recordingBlob && recordingBlob.size > 0) {
+        // If this is a challenge, mark it as completed since they've actually recorded something
+        if (challenge && !isCurrentChallengeCompleted) {
+          completeChallenge(challenge.day);
+        }
+        
+        // If this is a weekly challenge prompt, mark it as completed
+        if (weeklyPrompt && promptParam && !isCurrentPromptCompleted) {
+          completePrompt.mutate(promptParam);
+        }
       }
       
       // Navigate to post-session screen

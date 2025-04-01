@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { getProgressPercentage, isWeekUnlocked } from '@/lib/weeklyPrompts';
 import { Loader2, LockIcon, CheckIcon, ArrowRightIcon } from 'lucide-react';
+import type { WeeklyChallengeTier } from '@shared/schema';
 
 const WeeklyChallenge = () => {
   const { user } = useAuth();
@@ -49,7 +50,7 @@ const WeeklyChallenge = () => {
   }
 
   // Get progress data
-  const tier = weeklyChallenge?.progress?.tier || 'shy_starter';
+  const tier = weeklyChallenge?.progress?.selectedTier as WeeklyChallengeTier || 'shy_starter';
   const startDate = weeklyChallenge?.progress?.startDate ? new Date(weeklyChallenge.progress.startDate) : new Date();
   const completedPrompts = weeklyChallenge?.progress?.completedPrompts || [];
   const currentWeek = getCurrentWeek();
@@ -143,7 +144,7 @@ const WeeklyChallenge = () => {
                       <p>{prompt.text}</p>
                     </CardContent>
                     <CardFooter>
-                      <Link to={`/record?promptId=${prompt.id}`}>
+                      <Link to={`/recording?promptId=${prompt.id}`}>
                         <Button 
                           disabled={isLocked} 
                           className="w-full md:w-auto"
