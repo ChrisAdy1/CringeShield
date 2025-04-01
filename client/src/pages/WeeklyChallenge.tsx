@@ -27,7 +27,7 @@ const WeeklyChallenge = () => {
   } = useWeeklyChallenge();
   const { 
     checkForBadge, 
-    awardBadgeMutation 
+    checkAndAwardWeeklyBadge 
   } = useWeeklyBadges();
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [newBadge, setNewBadge] = useState<WeeklyBadge | null>(null);
@@ -57,23 +57,22 @@ const WeeklyChallenge = () => {
       
       // If all prompts in current week are completed and badge doesn't exist yet
       if (allWeekPromptsCompleted && !checkForBadge(tier, currentWeekNum)) {
-        // Award badge for completed week
-        awardBadgeMutation.mutate({ tier, weekNumber: currentWeekNum });
-        
-        // Force a refetch after mutation to update badges data
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['/api/weekly-badges'] });
-          // Check if badge exists now after refetch
-          setTimeout(() => {
-            const badge = checkForBadge(tier, currentWeekNum);
+        // Use our combined check and award function
+        const checkAndAward = async () => {
+          try {
+            const badge = await checkAndAwardWeeklyBadge(tier, currentWeekNum);
             if (badge) {
               setNewBadge(badge);
             }
-          }, 500);
-        }, 1000);
+          } catch (error) {
+            console.error("Error awarding badge:", error);
+          }
+        };
+        
+        checkAndAward();
       }
     }
-  }, [isLoading, weeklyChallenge, getCurrentWeek, getWeeklyPrompts, checkForBadge, awardBadgeMutation]);
+  }, [isLoading, weeklyChallenge, getCurrentWeek, getWeeklyPrompts, checkForBadge, checkAndAwardWeeklyBadge]);
 
   // If user is not logged in, redirect to login page
   if (!user && !isLoading) {

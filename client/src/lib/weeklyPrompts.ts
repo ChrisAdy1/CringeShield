@@ -257,6 +257,11 @@ export function getPrompts(week: number, tier: WeeklyChallengeTier): WeeklyPromp
   ).sort((a, b) => a.order - b.order);
 }
 
+// Alias for getPrompts function to use in server-side
+export function getWeeklyPrompts(week: number, tier: WeeklyChallengeTier): WeeklyPrompt[] {
+  return getPrompts(week, tier);
+}
+
 // Function to get a prompt by ID
 export function getPromptById(promptId: string): WeeklyPrompt | undefined {
   return allWeeklyPrompts.find(prompt => prompt.id === promptId);

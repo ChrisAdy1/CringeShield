@@ -14,6 +14,16 @@ import pg from 'pg';
 // Use named import from the default export
 const Pool = pg.Pool;
 import { db } from './db';
+// Import WeeklyPrompt type for route handlers
+import { WeeklyChallengeTier } from '@shared/schema';
+interface WeeklyPrompt {
+  id: string;
+  week: number;
+  title?: string;
+  text: string;
+  tier: WeeklyChallengeTier;
+  order: number;
+}
 
 // Define extended Request interface with file property for TypeScript
 declare global {
@@ -502,6 +512,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error awarding weekly badge:', error);
       res.status(500).json({ message: "Failed to award weekly badge" });
+    }
+  });
+  
+  // Combined endpoint to check if all prompts are complete and award badge if eligible
+  app.post("/api/weekly-badges/check-and-award", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      const { tier, weekNumber } = req.body;
+      
+      // Validate input
+      const schema = z.object({
+        tier: z.string(),
+        weekNumber: z.number().int().positive()
+      });
+      
+      const parsed = schema.safeParse({ tier, weekNumber });
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          message: "Invalid data format", 
+          details: parsed.error.errors 
+        });
+      }
+      
+      // First check if badge already exists
+      const hasBadge = await storage.hasWeeklyBadge(userId, tier, weekNumber);
+      if (hasBadge) {
+        const badge = await storage.getWeeklyBadge(userId, tier, weekNumber);
+        return res.status(200).json(badge);
+      }
+      
+      // Get weekly progress to check completed prompts
+      const weeklyProgress = await storage.getWeeklyProgress(userId);
+      if (!weeklyProgress) {
+        return res.status(400).json({ message: "No weekly progress found" });
+      }
+      
+      // Get prompts for this week and tier
+      // Directly import the logic for getting weekly prompts
+      const { getWeeklyPrompts } = require('../client/src/lib/weeklyPrompts');
+      
+      const weekPrompts = getWeeklyPrompts(weekNumber, tier);
+      
+      // Check if all prompts in this week are completed
+      const completedPrompts = weeklyProgress.completedPrompts || [];
+      const allCompleted = weekPrompts.every((prompt: WeeklyPrompt) => 
+        completedPrompts.includes(prompt.id)
+      );
+      
+      if (!allCompleted) {
+        return res.status(400).json({ message: "Not all prompts completed for this week" });
+      }
+      
+      // All prompts are completed, award the badge
+      const badge = await storage.awardWeeklyBadge(userId, tier, weekNumber);
+      res.status(201).json(badge);
+    } catch (error) {
+      console.error('Error checking and awarding weekly badge:', error);
+      res.status(500).json({ message: "Failed to check and award badge" });
     }
   });
   

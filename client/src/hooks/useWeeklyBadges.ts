@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { WeeklyBadge } from '@shared/schema';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient } from '../lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface UseWeeklyBadgesReturn {
@@ -10,11 +10,7 @@ interface UseWeeklyBadgesReturn {
   totalBadges: number;
   countBadgesByTier: (tier: string) => number;
   checkForBadge: (tier: string, weekNumber: number) => WeeklyBadge | undefined;
-  awardBadgeMutation: {
-    mutate: (params: { tier: string; weekNumber: number }) => void;
-    isLoading: boolean;
-    error: Error | null;
-  };
+  checkAndAwardWeeklyBadge: (tier: string, weekNumber: number) => Promise<WeeklyBadge | null>;
 }
 
 export function useWeeklyBadges(): UseWeeklyBadgesReturn {
@@ -43,53 +39,62 @@ export function useWeeklyBadges(): UseWeeklyBadgesReturn {
     return badges.find(badge => badge.tier === tier && badge.weekNumber === weekNumber);
   };
   
-  // Mutation to award a new badge - using v5 of TanStack Query
-  const awardBadgeMutation = useMutation({
-    mutationFn: async (params: { tier: string; weekNumber: number }) => {
-      const response = await fetch('/api/weekly-badges', {
+  // Combined function to check if all prompts are completed and award a badge if needed
+  const checkAndAwardWeeklyBadge = async (tier: string, weekNumber: number): Promise<WeeklyBadge | null> => {
+    // First check if badge already exists
+    const existingBadge = checkForBadge(tier, weekNumber);
+    if (existingBadge) {
+      return existingBadge;
+    }
+    
+    try {
+      // Call the backend to check if all prompts are completed and award badge if needed
+      const response = await fetch('/api/weekly-badges/check-and-award', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(params),
+        body: JSON.stringify({ tier, weekNumber }),
         credentials: 'include',
       });
       
       if (!response.ok) {
-        throw new Error('Failed to award badge');
+        // If response is not a server error but rather "not eligible", return null
+        if (response.status === 400) {
+          return null;
+        }
+        throw new Error('Failed to check badge eligibility');
       }
       
-      return await response.json();
-    },
-    onSuccess: (newBadge: WeeklyBadge) => {
-      // Update the badges cache with the new badge
-      queryClient.setQueryData<WeeklyBadge[]>(['/api/weekly-badges'], (oldBadges = []) => {
-        // Check if the badge already exists to prevent duplicates
-        const exists = oldBadges.some(
-          badge => badge.tier === newBadge.tier && badge.weekNumber === newBadge.weekNumber
-        );
-        
-        if (exists) {
-          return oldBadges;
-        }
-        
-        return [...oldBadges, newBadge];
-      });
+      const newBadge = await response.json();
       
-      toast({
-        title: 'Badge Earned!',
-        description: `You earned a new badge for your progress!`,
-        variant: 'default',
-      });
-    },
-    onError: (error: Error) => {
+      // If a new badge was awarded, update the cache and show a toast
+      if (newBadge) {
+        // Update the badges cache
+        queryClient.setQueryData<WeeklyBadge[]>(['/api/weekly-badges'], (oldBadges = []) => {
+          return [...oldBadges, newBadge];
+        });
+        
+        toast({
+          title: 'Badge Earned!',
+          description: `You earned a new badge for completing Week ${weekNumber}!`,
+          variant: 'default',
+        });
+        
+        return newBadge;
+      }
+      
+      return null;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       toast({
         title: 'Error',
-        description: `Failed to award badge: ${error.message}`,
+        description: `Error checking badge eligibility: ${errorMessage}`,
         variant: 'destructive',
       });
-    },
-  });
+      return null;
+    }
+  };
   
   return {
     badges,
@@ -98,10 +103,6 @@ export function useWeeklyBadges(): UseWeeklyBadgesReturn {
     totalBadges,
     countBadgesByTier,
     checkForBadge,
-    awardBadgeMutation: {
-      mutate: awardBadgeMutation.mutate,
-      isLoading: awardBadgeMutation.isPending,
-      error: awardBadgeMutation.error,
-    },
+    checkAndAwardWeeklyBadge,
   };
 }
