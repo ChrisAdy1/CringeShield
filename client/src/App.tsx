@@ -12,7 +12,7 @@ import Account from "@/pages/Account";
 import Settings from "@/pages/Settings";
 import ChallengePage from "@/pages/ChallengePage";
 import { AuthProvider } from "./hooks/useAuth";
-import { ProtectedRoute } from "@/lib/protected-route";
+import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
   const [location] = useLocation();
