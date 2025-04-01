@@ -2,7 +2,118 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { LogIn, Loader2, Camera, Video, Calendar, Trophy } from 'lucide-react';
+import { LogIn, Loader2, Camera, Video, Calendar, Trophy, Activity, BarChart, Clock, History } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { useChallengeProgress } from '@/hooks/useChallengeProgress';
+import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
+import { useSelfReflections } from '@/hooks/useSelfReflections';
+import { getProgressPercentage } from '@/lib/weeklyPrompts';
+
+// Progress Dashboard Component
+interface ProgressDashboardProps {
+  userId: number;
+}
+
+const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
+  // Use hooks to get progress data
+  const { progress, progressPercentage: challengePercentage } = useChallengeProgress();
+  const { weeklyChallenge } = useWeeklyChallenge();
+  const { reflections, getAverageRating } = useSelfReflections();
+  
+  // Calculate statistics
+  const totalPracticeSessions = progress.length + (reflections?.length || 0);
+  const averageConfidence = getAverageRating(30);
+  const formattedConfidence = averageConfidence ? averageConfidence.toFixed(1) : '0.0';
+  
+  // Calculate weekly challenge progress
+  let weeklyPercentage = 0;
+  if (weeklyChallenge?.status === 'in_progress' && weeklyChallenge.progress) {
+    const { selectedTier, completedPrompts = [] } = weeklyChallenge.progress;
+    weeklyPercentage = getProgressPercentage(selectedTier, completedPrompts);
+  }
+  
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <h2 className="text-lg font-bold mb-4">Your Progress</h2>
+        
+        <div className="space-y-5">
+          {/* Total Practice Sessions */}
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm font-medium">Practice Sessions</span>
+              <span className="text-sm font-medium">{totalPracticeSessions}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-primary" />
+              <Progress value={Math.min(totalPracticeSessions * 10, 100)} className="h-2" />
+            </div>
+          </div>
+          
+          {/* Weekly Challenge */}
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm font-medium">Weekly Challenge</span>
+              <span className="text-sm font-medium">{weeklyPercentage}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <Progress value={weeklyPercentage} className="h-2" />
+            </div>
+            {weeklyChallenge?.status === 'in_progress' && weeklyChallenge.progress && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {weeklyChallenge.progress.selectedTier.split('_').map(word => 
+                  word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ')} Tier
+              </p>
+            )}
+          </div>
+          
+          {/* 30-Day Challenge */}
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm font-medium">30-Day Challenge</span>
+              <span className="text-sm font-medium">{challengePercentage}%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-primary" />
+              <Progress value={challengePercentage} className="h-2" />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {progress.length} of 30 days completed
+            </p>
+          </div>
+          
+          {/* Confidence Score */}
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-sm font-medium">Average Confidence</span>
+              <span className="text-sm font-medium">{formattedConfidence}/5</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <BarChart className="h-4 w-4 text-primary" />
+              <Progress value={(averageConfidence / 5) * 100} className="h-2" />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Based on your last {reflections?.length || 0} self-reflections
+            </p>
+          </div>
+          
+          {/* Start button */}
+          <div className="pt-2">
+            <Button 
+              className="w-full"
+              onClick={() => document.location.href = '/recording?type=free'}
+            >
+              <Video className="mr-2 h-4 w-4" />
+              Start New Practice Session
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Home: React.FC = () => {
   const [, navigate] = useLocation();
@@ -90,50 +201,52 @@ const Home: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Main practice cards */}
+        {/* User Progress Section (Only for logged in users) */}
+        {user && (
+          <div className="grid grid-cols-1 gap-6 mb-6">
+            {/* Your Progress Dashboard */}
+            <ProgressDashboard userId={user.id} />
+          </div>
+        )}
+
+        {/* Quick Actions */}
         <div className="grid grid-cols-1 gap-6 mb-6">
-          {/* Free talk card */}
           <Card className="overflow-hidden">
-            <div className="bg-gradient-to-b from-primary/10 to-primary/5 p-6 text-center">
-              <div className="mb-4 flex justify-center">
-                <div className="rounded-full bg-white p-3 shadow-md">
-                  <Camera className="h-10 w-10 text-primary" />
-                </div>
+            <CardContent className="p-4">
+              <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  className="h-auto py-3 flex flex-col"
+                  onClick={startRecording}
+                >
+                  <Video className="h-5 w-5 mb-1" />
+                  <span className="text-xs">Free Talk</span>
+                </Button>
+                <Button 
+                  className="h-auto py-3 flex flex-col"
+                  onClick={() => navigate('/weekly-challenge')}
+                >
+                  <Calendar className="h-5 w-5 mb-1" />
+                  <span className="text-xs">Weekly Challenge</span>
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="h-auto py-3 flex flex-col"
+                  onClick={() => navigate('/challenge')}
+                >
+                  <Trophy className="h-5 w-5 mb-1" />
+                  <span className="text-xs">30-Day Challenge</span>
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="h-auto py-3 flex flex-col"
+                  onClick={() => navigate('/settings')}
+                >
+                  <History className="h-5 w-5 mb-1" />
+                  <span className="text-xs">History</span>
+                </Button>
               </div>
-              <h2 className="text-lg font-bold mb-2">Free Talk Practice</h2>
-              <p className="text-muted-foreground mb-4 text-sm">
-                Record yourself speaking freely without any specific prompts. Perfect for practicing your natural speaking style.
-              </p>
-              <Button 
-                className="w-full"
-                onClick={startRecording}
-              >
-                <Video className="mr-2 h-4 w-4" />
-                Start Recording
-              </Button>
-            </div>
-          </Card>
-          
-          {/* Weekly Challenge card */}
-          <Card className="overflow-hidden">
-            <div className="bg-gradient-to-b from-purple-100 to-purple-50 dark:from-purple-900/20 dark:to-purple-800/10 p-6 text-center">
-              <div className="mb-4 flex justify-center">
-                <div className="rounded-full bg-white p-3 shadow-md">
-                  <Calendar className="h-10 w-10 text-primary" />
-                </div>
-              </div>
-              <h2 className="text-lg font-bold mb-2">Weekly Challenge</h2>
-              <p className="text-muted-foreground mb-4 text-sm">
-                Structured 15-week speaking program with weekly prompts tailored to your comfort level. Track your progress and build skills systematically.
-              </p>
-              <Button 
-                className="w-full"
-                onClick={() => navigate('/weekly-challenge')}
-              >
-                <Trophy className="mr-2 h-4 w-4" />
-                Join Challenge
-              </Button>
-            </div>
+            </CardContent>
           </Card>
         </div>
         
