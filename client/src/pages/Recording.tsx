@@ -2,12 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Circle, Square, FastForward, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Circle, Square, FastForward, CheckCircle, Download } from 'lucide-react';
 import { challengeDays } from '@/lib/challengeDays';
 import { useChallengeProgress } from '@/hooks/useChallengeProgress';
 import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
 import { getPromptById } from '@/lib/weeklyPrompts';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from '@/hooks/use-toast';
 
 // Define BlobEvent type if not available
 interface BlobEvent extends Event {
@@ -49,7 +50,9 @@ const Recording: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const [cameraOn, setCameraOn] = useState(true);
+  const [showDownloadOption, setShowDownloadOption] = useState(false);
   
   // Timer interval ref
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -168,6 +171,32 @@ const Recording: React.FC = () => {
     }, 1000);
   };
   
+  // Handle direct download of the recording
+  const handleDownloadRecording = () => {
+    if (!recordedBlob) return;
+    
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `cringe-shield-recording-${date}.webm`;
+    
+    try {
+      // Create download link
+      const url = URL.createObjectURL(recordedBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // Revoke object URL
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (err) {
+      console.error('Error downloading recording:', err);
+    }
+  };
+  
   // Stop recording
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
@@ -190,6 +219,13 @@ const Recording: React.FC = () => {
           recordingBlob = new Blob(chunksRef.current, { type: 'video/webm' });
           setRecordedBlob(recordingBlob);
           
+          // Create object URL for direct download functionality
+          const blobUrl = URL.createObjectURL(recordingBlob);
+          setRecordingUrl(blobUrl);
+          
+          // Show download option after recording is complete
+          setShowDownloadOption(true);
+          
           // Store blob in a session-specific localStorage item
           // This is not ideal for large files, but works for demo purposes
           const reader = new FileReader();
@@ -198,6 +234,9 @@ const Recording: React.FC = () => {
             const base64data = reader.result;
             // Store separately from session data to avoid localStorage size limits
             localStorage.setItem(`recording-${sessionId}`, base64data as string);
+            
+            // Also store the Blob URL for direct access
+            localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
           };
         }
       } catch (err) {
@@ -400,45 +439,70 @@ const Recording: React.FC = () => {
       
       {/* Controls */}
       <div className="p-4 bg-background">
-        <div className="flex justify-center items-center space-x-4">
-          {isRecording ? (
-            <div className="flex flex-col items-center">
-              <Button
-                variant="destructive"
-                size="lg"
-                className="rounded-full h-14 w-14 flex items-center justify-center mb-2"
-                onClick={stopRecording}
+        {showDownloadOption && recordedBlob ? (
+          <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+            <h3 className="font-medium text-green-800 mb-2">Recording Complete!</h3>
+            <p className="text-sm text-gray-700 mb-3">Your video has been saved. You can download it now or continue to the feedback screen.</p>
+            <div className="flex gap-2 justify-center">
+              <Button 
+                variant="default"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handleDownloadRecording}
               >
-                <Square className="h-6 w-6" />
+                <Download className="mr-2 h-4 w-4" />
+                Download Now
               </Button>
-              <span className="text-sm font-medium">Stop</span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center">
-              <Button
-                size="lg"
-                className="rounded-full h-14 w-14 flex items-center justify-center bg-red-500 hover:bg-red-600 mb-2"
-                onClick={startRecording}
+              <Button 
+                variant="outline"
+                onClick={() => navigate(`/post-session?sessionId=${Date.now()}`)}
               >
-                <Circle className="h-6 w-6" fill="currentColor" />
+                Continue to Feedback
               </Button>
-              <span className="text-sm font-medium">Start</span>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex justify-center items-center space-x-4">
+            {isRecording ? (
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="destructive"
+                  size="lg"
+                  className="rounded-full h-14 w-14 flex items-center justify-center mb-2"
+                  onClick={stopRecording}
+                >
+                  <Square className="h-6 w-6" />
+                </Button>
+                <span className="text-sm font-medium">Stop</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <Button
+                  size="lg"
+                  className="rounded-full h-14 w-14 flex items-center justify-center bg-red-500 hover:bg-red-600 mb-2"
+                  onClick={startRecording}
+                >
+                  <Circle className="h-6 w-6" fill="currentColor" />
+                </Button>
+                <span className="text-sm font-medium">Start</span>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Demo-only shortcut */}
-        <div className="text-center mt-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-xs text-muted-foreground"
-            onClick={skipToPostSession}
-          >
-            <FastForward className="h-3 w-3 mr-1" />
-            Skip to feedback (demo)
-          </Button>
-        </div>
+        {!showDownloadOption && (
+          <div className="text-center mt-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs text-muted-foreground"
+              onClick={skipToPostSession}
+            >
+              <FastForward className="h-3 w-3 mr-1" />
+              Skip to feedback (demo)
+            </Button>
+          </div>
+        )}
         
         {/* Challenge/prompt info or free mode info */}
         <div className="mt-4 text-sm">

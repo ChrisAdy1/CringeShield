@@ -202,10 +202,19 @@ const PostSession: React.FC = () => {
   
   // Create URL from base64 data
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [isAutoDownloadAttempted, setIsAutoDownloadAttempted] = useState(false);
   
   // Get recording data from localStorage when session loads
   useEffect(() => {
     if (session && session.recordingKey) {
+      // First try to get the Blob URL for better performance
+      const savedBlobUrl = localStorage.getItem(`recording-url-${session.id}`);
+      if (savedBlobUrl) {
+        setBlobUrl(savedBlobUrl);
+      }
+      
+      // Also get base64 data as a fallback
       const recordingData = localStorage.getItem(session.recordingKey);
       if (recordingData) {
         // For data URLs, we can just use them directly
@@ -218,20 +227,39 @@ const PostSession: React.FC = () => {
     }
   }, [session]);
   
-  // Handle downloading the recording
+  // Handle downloading the recording - prioritize Blob URL for better performance
   const handleDownloadRecording = () => {
-    if (recordingUrl) {
-      const date = new Date().toISOString().slice(0, 10);
-      const filename = `cringe-shield-recording-${date}.webm`;
-      
-      // Create temporary anchor element for download
-      const a = document.createElement('a');
-      a.href = recordingUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    if (blobUrl) {
+      downloadWithUrl(blobUrl);
+    } else if (recordingUrl) {
+      downloadWithUrl(recordingUrl);
+    } else {
+      toast({
+        title: "Download Failed",
+        description: "Unable to download the recording. Please try again.",
+        variant: "destructive"
+      });
     }
+  };
+  
+  // Helper function to download with URL
+  const downloadWithUrl = (url: string) => {
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `cringe-shield-recording-${date}.webm`;
+    
+    // Create temporary anchor element for download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Download Started",
+      description: "Your recording is being saved to your device.",
+      duration: 3000
+    });
   };
   
   // Function to detect if the user is on a mobile device
@@ -242,24 +270,37 @@ const PostSession: React.FC = () => {
   // Handle saving to camera roll for mobile devices
   const handleSaveToCameraRoll = async () => {
     try {
-      if (!recordingUrl) return;
+      // Use blobUrl as the preferred source, with recordingUrl as fallback
+      const url = blobUrl || recordingUrl;
+      if (!url) return;
       
       const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       const isAndroid = /Android/i.test(navigator.userAgent);
       
       if (isIOS || isAndroid) {
-        // For iOS devices that support the Web Share API
-        if (navigator.share && isIOS) {
-          const blob = await fetch(recordingUrl).then(r => r.blob());
-          const file = new File([blob], "cringe-shield-recording.webm", { type: "video/webm" });
-          
-          await navigator.share({
-            files: [file],
-            title: 'CringeShield Recording',
-            text: 'Check out my speaking practice recording!'
-          });
-          
-          return;
+        // For devices that support the Web Share API
+        if (navigator.share) {
+          try {
+            const blob = await fetch(url).then(r => r.blob());
+            const file = new File([blob], "cringe-shield-recording.webm", { type: "video/webm" });
+            
+            await navigator.share({
+              files: [file],
+              title: 'CringeShield Recording',
+              text: 'My speaking practice recording'
+            });
+            
+            toast({
+              title: "Success!",
+              description: "Your recording has been shared. You can save it to your device from there.",
+              duration: 3000
+            });
+            
+            return;
+          } catch (shareError) {
+            console.error('Share API failed:', shareError);
+            // Fall back to download if share fails
+          }
         }
         
         // For Android and iOS, fall back to download
@@ -273,6 +314,9 @@ const PostSession: React.FC = () => {
             "Find your recording in your Downloads folder. You can move it to your Gallery from there.",
           duration: 6000
         });
+      } else {
+        // Non-mobile device - just use regular download
+        handleDownloadRecording();
       }
     } catch (error) {
       console.error('Error saving to camera roll:', error);
@@ -281,11 +325,27 @@ const PostSession: React.FC = () => {
       
       toast({
         title: "Download Started",
-        description: "Your recording is downloading. You may need to manually save it to your camera roll.",
+        description: "Your recording is downloading. You may need to manually save it to your device.",
         duration: 4000
       });
     }
   };
+  
+  // Auto-save prompt for mobile devices
+  useEffect(() => {
+    if (!isAutoDownloadAttempted && (blobUrl || recordingUrl) && session && session.hasRecording) {
+      setIsAutoDownloadAttempted(true);
+      
+      // For mobile users, show a toast with download instructions
+      if (isMobileDevice()) {
+        toast({
+          title: "Recording Ready",
+          description: "Your video is ready! Use the 'Save to Device' button to download it.",
+          duration: 6000
+        });
+      }
+    }
+  }, [blobUrl, recordingUrl, session, isAutoDownloadAttempted]);
   
   // Handle retry
   const handleRetry = () => {
