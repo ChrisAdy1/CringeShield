@@ -14,6 +14,9 @@ import pg from 'pg';
 // Use named import from the default export
 const Pool = pg.Pool;
 import { db } from './db';
+// Import fs and path modules for theme editing
+import fs from 'fs';
+import path from 'path';
 // Import WeeklyPrompt type for route handlers
 import { WeeklyChallengeTier } from '@shared/schema';
 interface WeeklyPrompt {
@@ -705,11 +708,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Theme API endpoint - Update theme.json file
+  // Theme API endpoint - Update theme.json file (no authentication required)
   app.post("/api/theme", async (req, res) => {
     try {
-      const fs = require('fs');
-      const path = require('path');
+      // fs and path are imported at the top of the file
       
       // Validate the theme data
       const themeSchema = z.object({

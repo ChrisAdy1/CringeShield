@@ -28,10 +28,10 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/auth" component={Auth} />
+      <Route path="/settings" component={Settings} />
       <ProtectedRoute path="/recording" component={Recording} />
       <ProtectedRoute path="/post-session" component={PostSession} />
       <ProtectedRoute path="/account" component={Account} />
-      <ProtectedRoute path="/settings" component={Settings} />
       <ProtectedRoute path="/challenge" component={ChallengePage} />
       <ProtectedRoute path="/weekly-challenge" component={WeeklyChallenge} />
       <ProtectedRoute path="/weekly-challenge-select" component={WeeklyChallengeSelect} />
