@@ -18,6 +18,7 @@ interface BlobEvent extends Event {
 
 const Recording: React.FC = () => {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const queryParams = new URLSearchParams(window.location.search);
   const challengeParam = queryParams.get('challenge');
   const challengeDay = challengeParam ? parseInt(challengeParam, 10) : null;
@@ -149,11 +150,53 @@ const Recording: React.FC = () => {
         if (chunksRef.current && chunksRef.current.length > 0) {
           const blob = new Blob(chunksRef.current, { type: 'video/webm' });
           setRecordedBlob(blob);
+          
+          // Create object URL for direct download
+          const blobUrl = URL.createObjectURL(blob);
+          setRecordingUrl(blobUrl);
+          
+          // Show download option immediately
+          setShowDownloadOption(true);
+          
+          console.log('Recording stopped, blob created successfully');
+          
+          // Only mark challenges/prompts as complete if we actually have a recording
+          if (blob && blob.size > 0) {
+            // If this is a challenge, mark it as completed
+            if (challenge && !isCurrentChallengeCompleted) {
+              completeDayMutation.mutate(challenge.day);
+            }
+            
+            // If this is a weekly challenge prompt, mark it as completed
+            if (weeklyPrompt && promptParam && !isCurrentPromptCompleted) {
+              completePrompt.mutate(promptParam);
+            }
+          }
+          
+          // Store blob in localStorage for the post-session screen
+          const sessionId = Date.now();
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = function() {
+            const base64data = reader.result;
+            localStorage.setItem(`recording-${sessionId}`, base64data as string);
+            localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
+          };
         } else {
           console.warn('No chunks available when recording stopped');
+          toast({
+            title: "Recording issue",
+            description: "No video data was captured during recording. Please try again.",
+            variant: "destructive"
+          });
         }
       } catch (err) {
         console.error('Error creating blob from chunks:', err);
+        toast({
+          title: "Recording failed",
+          description: "There was an error processing your video. Please try again.",
+          variant: "destructive"
+        });
       }
     };
     
@@ -173,7 +216,15 @@ const Recording: React.FC = () => {
   
   // Handle direct download of the recording
   const handleDownloadRecording = () => {
-    if (!recordedBlob) return;
+    if (!recordedBlob) {
+      console.error('No recording blob available for download');
+      toast({
+        title: "Download failed",
+        description: "No recording available to download. Please try recording again.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     const date = new Date().toISOString().slice(0, 10);
     const filename = `cringe-shield-recording-${date}.webm`;
@@ -188,12 +239,23 @@ const Recording: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       
+      toast({
+        title: "Download started",
+        description: "Your recording is being downloaded to your device.",
+        duration: 3000
+      });
+      
       // Revoke object URL
       setTimeout(() => {
         URL.revokeObjectURL(url);
       }, 100);
     } catch (err) {
       console.error('Error downloading recording:', err);
+      toast({
+        title: "Download failed",
+        description: "There was an error downloading your recording. Please try again.",
+        variant: "destructive"
+      });
     }
   };
   
@@ -208,40 +270,14 @@ const Recording: React.FC = () => {
         clearInterval(timerRef.current);
       }
       
-      // Save session data in a simplistic way for MVP
-      let recordingBlob;
       // Generate ID once for use in both the recording key and session data
       const sessionId = Date.now();
       
-      try {
-        // Store the actual blob for access in the post-session screen
-        if (chunksRef.current && chunksRef.current.length > 0) {
-          recordingBlob = new Blob(chunksRef.current, { type: 'video/webm' });
-          setRecordedBlob(recordingBlob);
-          
-          // Create object URL for direct download functionality
-          const blobUrl = URL.createObjectURL(recordingBlob);
-          setRecordingUrl(blobUrl);
-          
-          // Show download option after recording is complete
-          setShowDownloadOption(true);
-          
-          // Store blob in a session-specific localStorage item
-          // This is not ideal for large files, but works for demo purposes
-          const reader = new FileReader();
-          reader.readAsDataURL(recordingBlob);
-          reader.onloadend = function() {
-            const base64data = reader.result;
-            // Store separately from session data to avoid localStorage size limits
-            localStorage.setItem(`recording-${sessionId}`, base64data as string);
-            
-            // Also store the Blob URL for direct access
-            localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
-          };
-        }
-      } catch (err) {
-        console.error('Error creating blob from recording:', err);
-      }
+      // We'll let the mediaRecorderRef.current.onstop event handler 
+      // do the actual blob creation and UI updates for better stability
+      
+      // Session metadata gets created here, but the actual recording will be handled
+      // by the onstop event handler already defined in startRecording()
       
       // Enhanced sessionData to include challenge information
       const sessionData: {
@@ -265,7 +301,7 @@ const Recording: React.FC = () => {
         type: recordingType,
         cameraOn: cameraOn,
         recordingKey: `recording-${sessionId}`, // Key to look up the recording in localStorage
-        hasRecording: !!recordingBlob, // Flag to indicate if recording exists
+        hasRecording: true, // We assume we'll have a recording since the stop event will create it
       };
       
       // Add challenge info if applicable
@@ -287,21 +323,14 @@ const Recording: React.FC = () => {
       sessions.push(sessionData);
       localStorage.setItem('practice-sessions', JSON.stringify(sessions));
       
-      // Only mark challenges/prompts as complete if we actually have a recording
-      if (recordingBlob && recordingBlob.size > 0) {
-        // If this is a challenge, mark it as completed since they've actually recorded something
-        if (challenge && !isCurrentChallengeCompleted) {
-          completeDayMutation.mutate(challenge.day);
-        }
-        
-        // If this is a weekly challenge prompt, mark it as completed
-        if (weeklyPrompt && promptParam && !isCurrentPromptCompleted) {
-          completePrompt.mutate(promptParam);
-        }
-      }
+      // Don't navigate automatically - let the user choose to download or continue
+      // The mediaRecorder.onstop handler will show the download UI
       
-      // Navigate to post-session screen
-      navigate(`/post-session?sessionId=${sessionData.id}`);
+      toast({
+        title: "Recording completed",
+        description: "Your recording has finished. You can download it now.",
+        duration: 3000
+      });
     }
   };
   
@@ -454,7 +483,18 @@ const Recording: React.FC = () => {
               </Button>
               <Button 
                 variant="outline"
-                onClick={() => navigate(`/post-session?sessionId=${Date.now()}`)}
+                onClick={() => {
+                  // We need to find the latest session in localStorage to navigate to it
+                  const sessions = JSON.parse(localStorage.getItem('practice-sessions') || '[]');
+                  if (sessions.length > 0) {
+                    // Get the most recent session
+                    const latestSession = sessions[sessions.length - 1];
+                    navigate(`/post-session?sessionId=${latestSession.id}`);
+                  } else {
+                    // Fallback - should never happen
+                    navigate('/');
+                  }
+                }}
               >
                 Continue to Feedback
               </Button>
