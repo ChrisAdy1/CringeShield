@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Play, Repeat, Home, Download, CheckCircle, Loader2 } from 'lucide-react';
+import { Play, Repeat, Home, Download, CheckCircle, Loader2, Save, Smartphone } from 'lucide-react';
 import { useBadges } from '@/hooks/useBadges';
 import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { SelfReflectionRating } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 import { getBadgeByPromptId } from '@/lib/promptBadges';
 
 // Helper functions
@@ -42,6 +43,7 @@ const PostSession: React.FC = () => {
   const [, navigate] = useLocation();
   const queryParams = new URLSearchParams(window.location.search);
   const sessionId = queryParams.get('sessionId');
+  const { toast } = useToast();
   
   const [session, setSession] = useState<any>(null);
   const [note, setNote] = useState('');
@@ -229,6 +231,59 @@ const PostSession: React.FC = () => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+    }
+  };
+  
+  // Function to detect if the user is on a mobile device
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+  
+  // Handle saving to camera roll for mobile devices
+  const handleSaveToCameraRoll = async () => {
+    try {
+      if (!recordingUrl) return;
+      
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      
+      if (isIOS || isAndroid) {
+        // For iOS devices that support the Web Share API
+        if (navigator.share && isIOS) {
+          const blob = await fetch(recordingUrl).then(r => r.blob());
+          const file = new File([blob], "cringe-shield-recording.webm", { type: "video/webm" });
+          
+          await navigator.share({
+            files: [file],
+            title: 'CringeShield Recording',
+            text: 'Check out my speaking practice recording!'
+          });
+          
+          return;
+        }
+        
+        // For Android and iOS, fall back to download
+        handleDownloadRecording();
+        
+        // Show instructions for mobile users
+        toast({
+          title: "Download Complete",
+          description: isIOS ? 
+            "Find your recording in your Downloads folder. You can save it to your Camera Roll from there." :
+            "Find your recording in your Downloads folder. You can move it to your Gallery from there.",
+          duration: 6000
+        });
+      }
+    } catch (error) {
+      console.error('Error saving to camera roll:', error);
+      // Fall back to regular download
+      handleDownloadRecording();
+      
+      toast({
+        title: "Download Started",
+        description: "Your recording is downloading. You may need to manually save it to your camera roll.",
+        duration: 4000
+      });
     }
   };
   
@@ -420,16 +475,36 @@ const PostSession: React.FC = () => {
                 />
               </div>
               <p className="text-sm mb-1">
-                Your recording is ready! You can download it to your device.
+                Your recording is ready! {isMobileDevice() ? 'Save it to your camera roll:' : 'Download it to your device:'}
               </p>
-              <Button 
-                variant="default" 
-                onClick={handleDownloadRecording}
-                className="mt-2 bg-green-600 hover:bg-green-700"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download Recording
-              </Button>
+              {isMobileDevice() ? (
+                <div className="flex flex-col gap-2 mt-2">
+                  <Button 
+                    variant="default" 
+                    onClick={handleSaveToCameraRoll}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    Save to Camera Roll
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={handleDownloadRecording}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Instead
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  variant="default" 
+                  onClick={handleDownloadRecording}
+                  className="mt-2 bg-green-600 hover:bg-green-700"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Recording
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}
