@@ -11,7 +11,6 @@ export default function ChallengePage() {
     isLoading, 
     isDayCompleted, 
     progressPercentage,
-    completeChallenge,
     isCompleting
   } = useChallengeProgress();
 
@@ -58,7 +57,6 @@ export default function ChallengePage() {
             key={challenge.day}
             challenge={challenge}
             isCompleted={isDayCompleted(challenge.day)}
-            onComplete={completeChallenge}
             isCompleting={isCompleting}
           />
         ))}

@@ -15,14 +15,12 @@ interface ChallengeDay {
 interface ChallengeDayCardProps {
   challenge: ChallengeDay;
   isCompleted: boolean;
-  onComplete: (dayNumber: number) => void;
-  isCompleting: boolean;
+  isCompleting?: boolean;
 }
 
 export const ChallengeDayCard: React.FC<ChallengeDayCardProps> = ({
   challenge,
   isCompleted,
-  onComplete,
   isCompleting,
 }) => {
   const { day, title, description, note } = challenge;
@@ -51,7 +49,7 @@ export const ChallengeDayCard: React.FC<ChallengeDayCardProps> = ({
           </div>
         )}
       </CardHeader>
-      <CardFooter className="flex justify-between pt-2">
+      <CardFooter className="flex justify-end pt-2">
         <Button
           variant="outline"
           size="sm"
@@ -59,20 +57,9 @@ export const ChallengeDayCard: React.FC<ChallengeDayCardProps> = ({
         >
           <Link href={`/recording?challenge=${day}`}>
             <PlayCircle className="mr-2 h-4 w-4" />
-            Practice Now
+            {isCompleted ? 'Practice Again' : 'Practice Now'}
           </Link>
         </Button>
-        
-        {!isCompleted && (
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => onComplete(day)}
-            disabled={isCompleting}
-          >
-            Mark Complete
-          </Button>
-        )}
       </CardFooter>
     </Card>
   );
