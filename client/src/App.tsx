@@ -7,7 +7,6 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Recording from "@/pages/Recording";
 import PostSession from "@/pages/PostSession";
-import Badges from "@/pages/Badges";
 import Auth from "@/pages/Auth";
 import Account from "@/pages/Account";
 import Settings from "@/pages/Settings";
@@ -24,7 +23,6 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/recording" component={Recording} />
       <Route path="/post-session" component={PostSession} />
-      <Route path="/badges" component={Badges} />
       <Route path="/account" component={Account} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />

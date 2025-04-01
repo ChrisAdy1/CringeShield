@@ -145,14 +145,27 @@ export class MemStorage implements IStorage {
   
   async createSession(sessionData: Omit<InsertSession, "userId">, userId?: number): Promise<Session> {
     const id = this.sessionId++;
+    
+    // Set default values for required fields that might be missing in schema
+    const defaults = {
+      // For backward compatibility with old schema
+      promptCategory: 'free',
+      prompt: 'Free talk',
+      filter: 'none',
+      confidenceScore: 0
+    };
+    
     const session: Session = {
+      ...defaults,
       ...sessionData,
       id,
       userId: userId || null,
       date: sessionData.date || new Date(),
+      cameraOn: sessionData.cameraOn ?? true,
       userRating: sessionData.userRating || null,
       aiNotes: sessionData.aiNotes || null
     };
+    
     this.sessions.set(id, session);
     return session;
   }
@@ -297,11 +310,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createSession(sessionData: Omit<InsertSession, "userId">, userId?: number): Promise<Session> {
+    // Set default values for required fields that might be missing in schema
+    const defaults = {
+      // For backward compatibility with old schema
+      promptCategory: 'free',
+      prompt: 'Free talk',
+      filter: 'none',
+      confidenceScore: 0
+    };
+    
     const [session] = await db
       .insert(sessions)
       .values({
+        ...defaults,
         ...sessionData,
-        userId: userId || null
+        userId: userId || null,
+        cameraOn: sessionData.cameraOn ?? true
       })
       .returning();
     return session;

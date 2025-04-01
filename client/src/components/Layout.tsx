@@ -18,10 +18,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
   
-  // Only show Badges link if user is logged in
+  // Navigation items
   const navItems = [
     { path: "/", label: "Home", icon: Home },
-    ...(user ? [{ path: "/badges", label: "Badges", icon: SmilePlus }] : []),
   ];
 
   return (

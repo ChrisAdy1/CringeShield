@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation, useRoute } from 'wouter';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Circle, Square, FastForward } from 'lucide-react';
-import { useCustomScripts } from '@/hooks/useCustomScripts';
-import { useUserPreferences } from '@/hooks/useUserPreferences';
 
 // Define BlobEvent type if not available
 interface BlobEvent extends Event {
@@ -14,13 +12,10 @@ interface BlobEvent extends Event {
 
 const Recording: React.FC = () => {
   const [, navigate] = useLocation();
-  const [, params] = useRoute('/recording');
   const queryParams = new URLSearchParams(window.location.search);
   
-  // Get parameters from URL
-  const recordingType = queryParams.get('type') || 'free';
-  const promptId = queryParams.get('id');
-  const promptText = queryParams.get('text') || '';
+  // Get parameters from URL (only type remains)
+  const recordingType = 'free'; // All recordings are now free talk mode
   
   // Camera ref
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,19 +26,10 @@ const Recording: React.FC = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [cameraOn, setCameraOn] = useState(true);
   
   // Timer interval ref
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Get custom script if needed
-  const { getScriptById } = useCustomScripts();
-  const script = recordingType === 'script' && promptId 
-    ? getScriptById(promptId) 
-    : null;
-  
-  // Teleprompter state
-  const [showTeleprompter, setShowTeleprompter] = useState(true);
-  const { preferences } = useUserPreferences();
   
   // Camera error state
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -200,8 +186,7 @@ const Recording: React.FC = () => {
         date: string;
         duration: number;
         type: string;
-        promptId?: number | string;
-        promptText?: string;
+        cameraOn: boolean;
         recordingKey: string;
         hasRecording: boolean;
       } = {
@@ -209,8 +194,7 @@ const Recording: React.FC = () => {
         date: new Date().toISOString(),
         duration: recordingTime,
         type: recordingType,
-        promptId: promptId || undefined,
-        promptText: promptText || (script ? script.text : ''),
+        cameraOn: cameraOn,
         recordingKey: `recording-${sessionId}`, // Key to look up the recording in localStorage
         hasRecording: !!recordingBlob, // Flag to indicate if recording exists
       };
@@ -243,8 +227,7 @@ const Recording: React.FC = () => {
       date: string;
       duration: number;
       type: string;
-      promptId?: number | string;
-      promptText?: string;
+      cameraOn: boolean;
       recordingKey: string;
       hasRecording: boolean;
     } = {
@@ -252,8 +235,7 @@ const Recording: React.FC = () => {
       date: new Date().toISOString(),
       duration: 30, // Mock 30 seconds
       type: recordingType,
-      promptId: promptId || undefined,
-      promptText: promptText || (script ? script.text : ''),
+      cameraOn: cameraOn,
       recordingKey: `recording-${sessionId}`, // Include key for consistency
       hasRecording: false // Indicate there's no actual recording data
     };
@@ -286,10 +268,9 @@ const Recording: React.FC = () => {
         <Button 
           variant="ghost" 
           size="sm"
-          onClick={() => setShowTeleprompter(!showTeleprompter)}
-          className={recordingType === 'free' ? 'invisible' : ''}
+          onClick={() => setCameraOn(!cameraOn)}
         >
-          {showTeleprompter ? 'Hide Text' : 'Show Text'}
+          {cameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
         </Button>
       </div>
       
@@ -311,22 +292,23 @@ const Recording: React.FC = () => {
           </div>
         ) : (
           <>
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              muted 
-              className="w-full h-full object-cover"
-            />
-            
-            {/* Teleprompter overlay */}
-            {showTeleprompter && recordingType !== 'free' && (
-              <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-4 text-white max-h-[30%] overflow-y-auto">
-                <p className="text-lg leading-relaxed">
-                  {recordingType === 'script' && script 
-                    ? script.text 
-                    : promptText}
-                </p>
+            {cameraOn ? (
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                muted 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                <div className="text-center p-6">
+                  <div className="mb-4 text-4xl">🎙️</div>
+                  <h3 className="text-lg font-medium mb-2">Audio Only Mode</h3>
+                  <p className="text-muted-foreground">
+                    Camera is turned off. Your audio will still be recorded.
+                  </p>
+                </div>
               </div>
             )}
           </>
@@ -377,13 +359,11 @@ const Recording: React.FC = () => {
         
         {/* Info on bottom */}
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          {recordingType === 'prompt' && "Speaking from prompt"}
-          {recordingType === 'script' && "Reading from script"}
-          {recordingType === 'free' && "Free talking mode"}
+          <div className="mb-2">Free talking mode</div>
           
           <div className="mt-2 text-xs bg-gray-100 p-2 rounded-md">
-            After recording, you'll be taken to a review screen where you can download your video 
-            or get a report. Your video stays on your device and is not uploaded anywhere.
+            After recording, you'll be taken to a review screen where you can download your video. 
+            Your video stays on your device and is not uploaded anywhere.
           </div>
         </div>
       </div>
