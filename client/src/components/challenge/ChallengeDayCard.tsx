@@ -9,6 +9,7 @@ interface ChallengeDay {
   day: number;
   title: string;
   description: string;
+  note?: string;
 }
 
 interface ChallengeDayCardProps {
@@ -24,7 +25,7 @@ export const ChallengeDayCard: React.FC<ChallengeDayCardProps> = ({
   onComplete,
   isCompleting,
 }) => {
-  const { day, title, description } = challenge;
+  const { day, title, description, note } = challenge;
 
   return (
     <Card className={cn(
@@ -44,6 +45,11 @@ export const ChallengeDayCard: React.FC<ChallengeDayCardProps> = ({
         </div>
         <CardTitle className="text-lg">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
+        {note && (
+          <div className="mt-2 text-sm font-medium text-muted-foreground bg-muted p-2 rounded-md">
+            {note}
+          </div>
+        )}
       </CardHeader>
       <CardFooter className="flex justify-between pt-2">
         <Button
