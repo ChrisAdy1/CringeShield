@@ -49,6 +49,27 @@
     scrollbar-width: none;
   }
   
+  /* Tutorial highlighting */
+  .tutorial-highlight {
+    position: relative;
+    z-index: 60;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 0 10px rgba(154, 125, 255, 0.3);
+    border-radius: 4px;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(154, 125, 255, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(154, 125, 255, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(154, 125, 255, 0);
+    }
+  }
+  
   /* Custom color utilities */
   .bg-accent-lavender {
     background-color: rgb(var(--accent-lavender));

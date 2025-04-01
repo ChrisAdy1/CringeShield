@@ -1,8 +1,12 @@
+import React, { useEffect } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { SmilePlus, Home, Video, Award, Calendar, Settings } from "lucide-react";
+import { SmilePlus, Home, Video, Award, Calendar, Settings, HelpCircle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
+import { useTutorial } from "@/hooks/useTutorial";
+import TutorialWalkthrough from "@/components/TutorialWalkthrough";
+import { Button } from "@/components/ui/button";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,6 +18,21 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
   
   // Get user from auth context
   const { user } = useAuth();
+  
+  // Get tutorial state
+  const { hasSeenTutorial, isOpen, showTutorial, closeTutorial, completeTutorial } = useTutorial();
+  
+  // Show tutorial automatically for new users on the home page
+  useEffect(() => {
+    if (user && !hasSeenTutorial && currentPath === '/') {
+      // Small delay to ensure the page is fully loaded
+      const timer = setTimeout(() => {
+        showTutorial();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user, hasSeenTutorial, currentPath, showTutorial]);
   
   // Navigation items
   const navItems = [
@@ -27,6 +46,13 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Tutorial Walkthrough */}
+      <TutorialWalkthrough 
+        isOpen={isOpen} 
+        onClose={closeTutorial} 
+        onComplete={completeTutorial} 
+      />
+      
       {/* Header */}
       <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="container mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
@@ -39,7 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
           
           {/* Desktop Navigation in Header */}
           {!isMobile && (
-            <div className="flex space-x-6">
+            <div className="flex space-x-6 items-center">
               {navItems.map((item) => (
                 <Link 
                   key={item.path} 
@@ -55,6 +81,17 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
                   <span>{item.label}</span>
                 </Link>
               ))}
+              
+              {/* Help Button */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="ml-2 text-gray-500 hover:text-primary hover:bg-gray-50"
+                onClick={showTutorial}
+              >
+                <HelpCircle className="w-4 h-4 mr-1" />
+                <span>Help</span>
+              </Button>
             </div>
           )}
         </div>
@@ -78,7 +115,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
                 <p className="text-xs text-gray-500 mt-1">Your safe space to practice speaking</p>
               </div>
               <div className="flex space-x-6">
-                <a href="#" className="text-sm text-gray-600 hover:text-primary">Help</a>
+                <button 
+                  onClick={showTutorial} 
+                  className="text-sm text-gray-600 hover:text-primary"
+                >
+                  Help
+                </button>
                 <a href="#" className="text-sm text-gray-600 hover:text-primary">Privacy</a>
                 <a href="#" className="text-sm text-gray-600 hover:text-primary">Terms</a>
               </div>
@@ -106,6 +148,14 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
                 <span>{item.label}</span>
               </Link>
             ))}
+            {/* Mobile Help Button */}
+            <button
+              className="flex flex-col items-center p-2 text-xs text-gray-500"
+              onClick={showTutorial}
+            >
+              <HelpCircle className="w-6 h-6 mb-1" />
+              <span>Help</span>
+            </button>
           </div>
         </nav>
       )}
