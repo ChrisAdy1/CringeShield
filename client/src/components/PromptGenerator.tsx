@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RefreshCw } from 'lucide-react';
 import { Prompt, ConfidenceTier } from '@/lib/types';
-import { apiRequest } from '@/lib/queryClient';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { getRandomPrompt } from '@/lib/promptLibrary';
 import { exercisePrompts } from '@/lib/exercisePrompts';
 
 interface PromptGeneratorProps {
@@ -27,35 +27,28 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ category, onPromptGen
     }
   }, [category]);
 
-  const generateNewPrompt = async () => {
+  const generateNewPrompt = () => {
     try {
       setIsLoading(true);
       setError(null);
       
-      // If the category is 'exercise', use confidence-based exercise prompts
+      // Get a random prompt from the selected category
+      let effectiveCategory = category;
+      
+      // If the category is 'exercise', use the confidence tier
       if (category === 'exercise') {
         const confidenceTier: ConfidenceTier = preferences.confidenceTier || 'shy_starter';
-        const tierExercises = exercisePrompts[confidenceTier];
-        
-        // Select a random exercise from the appropriate tier
-        const randomIndex = Math.floor(Math.random() * tierExercises.length);
-        const exercise = tierExercises[randomIndex];
-        
-        const exercisePrompt: Prompt = {
-          id: -100 - randomIndex, // Use negative IDs for exercises to distinguish from database prompts
-          category: 'exercise',
-          text: exercise.text
-        };
-        
-        setCurrentPrompt(exercisePrompt);
-        onPromptGenerated(exercisePrompt);
+        effectiveCategory = confidenceTier;
+      }
+      
+      // Get random prompt from our library
+      const randomPrompt = getRandomPrompt(effectiveCategory);
+      
+      if (randomPrompt) {
+        setCurrentPrompt(randomPrompt);
+        onPromptGenerated(randomPrompt);
       } else {
-        // For other categories, fetch from the server
-        const response = await apiRequest('GET', `/api/prompts/generate?category=${category}`, undefined);
-        const promptData = await response.json();
-        
-        setCurrentPrompt(promptData);
-        onPromptGenerated(promptData);
+        setError('No prompts available for this category.');
       }
     } catch (err) {
       console.error('Error generating prompt:', err);

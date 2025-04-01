@@ -131,6 +131,48 @@ export const promptCategories = [
     icon: 'video'
   },
   { 
+    id: 'persuasion', 
+    name: 'Persuasive Speaking', 
+    description: 'Convincing and influential talks',
+    icon: 'megaphone'
+  },
+  { 
+    id: 'feedback', 
+    name: 'Giving Feedback', 
+    description: 'Constructive communication',
+    icon: 'message-square'
+  },
+  { 
+    id: 'technical', 
+    name: 'Technical Explanations', 
+    description: 'Making complex topics simple',
+    icon: 'code'
+  },
+  { 
+    id: 'debate', 
+    name: 'Debate Topics', 
+    description: 'Practice articulating positions',
+    icon: 'scale'
+  },
+  { 
+    id: 'networking', 
+    name: 'Networking', 
+    description: 'Building professional connections',
+    icon: 'link'
+  },
+  { 
+    id: 'crisis', 
+    name: 'Crisis Communication', 
+    description: 'Handling difficult situations',
+    icon: 'alert-triangle'
+  },
+  { 
+    id: 'improv', 
+    name: 'Impromptu Speaking', 
+    description: 'Thinking on your feet',
+    icon: 'zap'
+  },
+  { 
     id: 'random', 
     name: 'Random Topics', 
     description: 'Unexpected conversation starters',
