@@ -116,6 +116,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           primary: primaryColor,
           appearance: colorAppearance === 'system' ? 'system' : colorAppearance,
           radius: 0.75,
+          useLocalOnly: true, // Flag to tell server not to modify theme.json
         }),
       });
     } catch (error) {

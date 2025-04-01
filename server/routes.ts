@@ -731,18 +731,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         primary: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
         appearance: z.enum(['light', 'dark', 'system']),
         radius: z.number().min(0).max(1),
+        useLocalOnly: z.boolean().optional()
       });
       
       const themeData = themeSchema.parse(req.body);
       
-      // Path to theme.json in the project root
-      const themePath = path.resolve(process.cwd(), 'theme.json');
+      // Only write to the theme.json file if not using local CSS variables only
+      if (!themeData.useLocalOnly) {
+        // Path to theme.json in the project root
+        const themePath = path.resolve(process.cwd(), 'theme.json');
+        
+        // Write the new theme data to the file
+        fs.writeFileSync(themePath, JSON.stringify({
+          variant: themeData.variant,
+          primary: themeData.primary,
+          appearance: themeData.appearance,
+          radius: themeData.radius
+        }, null, 2));
+      }
       
-      // Write the new theme data to the file
-      fs.writeFileSync(themePath, JSON.stringify(themeData, null, 2));
+      // Save theme preferences to user account if authenticated
+      if (req.isAuthenticated()) {
+        // Could store theme preferences in user settings in database here
+      }
       
       // Add a small delay to reduce constant refreshes
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       isUpdatingTheme = false;
       res.status(200).json({ message: "Theme updated successfully" });
