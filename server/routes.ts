@@ -705,6 +705,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Theme API endpoint - Update theme.json file
+  app.post("/api/theme", async (req, res) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      // Validate the theme data
+      const themeSchema = z.object({
+        variant: z.enum(['professional', 'tint', 'vibrant']),
+        primary: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+        appearance: z.enum(['light', 'dark', 'system']),
+        radius: z.number().min(0).max(1),
+      });
+      
+      const themeData = themeSchema.parse(req.body);
+      
+      // Path to theme.json in the project root
+      const themePath = path.resolve(process.cwd(), 'theme.json');
+      
+      // Write the new theme data to the file
+      fs.writeFileSync(themePath, JSON.stringify(themeData, null, 2));
+      
+      res.status(200).json({ message: "Theme updated successfully" });
+    } catch (error: any) {
+      console.error("Error updating theme:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ 
+          message: "Invalid theme data", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to update theme" });
+    }
+  });
+  
   const httpServer = createServer(app);
   return httpServer;
 }
