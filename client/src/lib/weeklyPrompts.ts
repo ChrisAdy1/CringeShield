@@ -3,6 +3,7 @@ import { WeeklyChallengeTier } from '@shared/schema';
 export interface WeeklyPrompt {
   id: string;
   week: number;
+  title?: string; // Make title optional to maintain backward compatibility
   text: string;
   tier: WeeklyChallengeTier;
   order: number; // 1, 2, or 3 for the three prompts per week
@@ -11,9 +12,9 @@ export interface WeeklyPrompt {
 // Shy Starter prompts are shorter and simpler, designed for beginners
 export const shyStarterPrompts: WeeklyPrompt[] = [
   // Week 1
-  { id: 'shy_w1_p1', week: 1, text: 'Introduce yourself in 30 seconds. Say your name and one thing you enjoy doing.', tier: 'shy_starter', order: 1 },
-  { id: 'shy_w1_p2', week: 1, text: 'Describe the room you are in right now in 30-45 seconds.', tier: 'shy_starter', order: 2 },
-  { id: 'shy_w1_p3', week: 1, text: 'Talk about your favorite time of day for 30 seconds. Morning, afternoon, or evening?', tier: 'shy_starter', order: 3 },
+  { id: 'shy_w1_p1', week: 1, title: 'Introduce Yourself', text: 'Say your name, where you\'re from, and one fun fact—no pressure, just a chill intro.', tier: 'shy_starter', order: 1 },
+  { id: 'shy_w1_p2', week: 1, title: 'Describe What You See', text: 'Look around and describe 3 things near you. This gets you talking without thinking too hard.', tier: 'shy_starter', order: 2 },
+  { id: 'shy_w1_p3', week: 1, title: 'My Favorite Thing', text: 'Talk for 30–60 seconds about something you love—music, a show, a snack—whatever feels easy.', tier: 'shy_starter', order: 3 },
   
   // Week 2
   { id: 'shy_w2_p1', week: 2, text: 'Name three things you\'re grateful for and briefly explain why.', tier: 'shy_starter', order: 1 },

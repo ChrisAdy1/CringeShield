@@ -218,6 +218,7 @@ const Recording: React.FC = () => {
         weeklyPromptId?: string;
         weeklyPromptText?: string;
         weeklyPromptTier?: string;
+        weeklyPromptTitle?: string;
       } = {
         id: sessionId,
         date: new Date().toISOString(),
@@ -239,6 +240,7 @@ const Recording: React.FC = () => {
         sessionData.weeklyPromptId = weeklyPrompt.id;
         sessionData.weeklyPromptText = weeklyPrompt.text;
         sessionData.weeklyPromptTier = weeklyPrompt.tier;
+        sessionData.weeklyPromptTitle = weeklyPrompt.title;
       }
       
       // Store in local storage
@@ -290,6 +292,7 @@ const Recording: React.FC = () => {
       weeklyPromptId?: string;
       weeklyPromptText?: string;
       weeklyPromptTier?: string;
+      weeklyPromptTitle?: string;
     } = {
       id: sessionId,
       date: new Date().toISOString(),
@@ -314,6 +317,7 @@ const Recording: React.FC = () => {
       sessionData.weeklyPromptId = weeklyPrompt.id;
       sessionData.weeklyPromptText = weeklyPrompt.text;
       sessionData.weeklyPromptTier = weeklyPrompt.tier;
+      sessionData.weeklyPromptTitle = weeklyPrompt.title;
       
       // We don't complete the weekly challenge for skipped sessions
       // Only mark prompts complete when actual recordings are made
@@ -462,7 +466,11 @@ const Recording: React.FC = () => {
             <div className="mb-3">
               <Alert variant="default" className="bg-primary/10 border-primary/20">
                 <AlertTitle className="text-sm font-semibold flex items-center">
-                  Weekly Challenge: Week {weeklyPrompt.week}, Prompt {weeklyPrompt.order}
+                  {weeklyPrompt.title ? (
+                    <>Weekly Challenge: {weeklyPrompt.title}</>
+                  ) : (
+                    <>Weekly Challenge: Week {weeklyPrompt.week}, Prompt {weeklyPrompt.order}</>
+                  )}
                   {isCurrentPromptCompleted && 
                     <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
                   }

@@ -136,7 +136,9 @@ const WeeklyChallenge = () => {
                   <Card key={prompt.id} className={`border ${completed ? 'bg-muted' : 'bg-card'}`}>
                     <CardHeader>
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">Prompt {prompt.order}</CardTitle>
+                        <CardTitle className="text-lg">
+                          {prompt.title || `Prompt ${prompt.order}`}
+                        </CardTitle>
                         {completed && <Badge className="bg-green-500">Completed</Badge>}
                       </div>
                     </CardHeader>

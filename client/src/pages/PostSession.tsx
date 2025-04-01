@@ -10,6 +10,34 @@ import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { SelfReflectionRating } from '@/lib/types';
 import { getBadgeByPromptId } from '@/lib/promptBadges';
 
+// Helper functions
+function formatDuration(seconds: number) {
+  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+  const secs = (seconds % 60).toString().padStart(2, '0');
+  return `${mins}:${secs}`;
+}
+
+function formatTierName(tierName: string): string {
+  return tierName.split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function getBadgeDescription(badgeName: string) {
+  const descriptions: Record<string, string> = {
+    'First Step': 'Completed your first practice session!',
+    'Smooth Reader': 'Successfully used a script in your practice.',
+    'Free Spirit': 'Practiced without a script or prompt.',
+    'Bounce Back': 'Retried a session - showing real dedication!',
+    'Reflector': 'Added thoughtful self-reflection to your practice.',
+    'Regular': 'Completed 5 practice sessions.',
+    'Dedicated': 'Completed 10 practice sessions.',
+    'Master': 'Completed 25 practice sessions.',
+  };
+  
+  return descriptions[badgeName] || 'You earned a special achievement!';
+}
+
 const PostSession: React.FC = () => {
   const [, navigate] = useLocation();
   const queryParams = new URLSearchParams(window.location.search);
@@ -79,35 +107,60 @@ const PostSession: React.FC = () => {
   
   // Save prompt completion to database
   const savePromptCompletion = async () => {
-    // Only attempt to save if user is logged in and prompt has an ID
-    if (user && session && session.promptId) {
-      // Don't save for free-talking mode (no prompt)
-      if (session.type !== 'prompt') {
+    // Only attempt to save if user is logged in 
+    if (user && session) {
+      // Handle regular prompts
+      if (session.type === 'prompt' && session.promptId) {
+        try {
+          setIsSavingCompletion(true);
+          const response = await fetch('/api/prompt-completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              promptId: parseInt(session.promptId),
+              cameraOn: session.cameraOn ?? true
+            }),
+          });
+          
+          if (response.ok) {
+            setCompletionSaved(true);
+          } else {
+            console.error('Failed to save prompt completion');
+          }
+        } catch (error) {
+          console.error('Error saving prompt completion:', error);
+        } finally {
+          setIsSavingCompletion(false);
+        }
         return;
       }
       
-      try {
-        setIsSavingCompletion(true);
-        const response = await fetch('/api/prompt-completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            promptId: parseInt(session.promptId),
-            cameraOn: true // We could make this dynamic later
-          }),
-        });
-        
-        if (response.ok) {
-          setCompletionSaved(true);
-        } else {
-          console.error('Failed to save prompt completion');
+      // Handle weekly challenge prompts
+      if (session.weeklyPromptId) {
+        try {
+          setIsSavingCompletion(true);
+          const response = await fetch('/api/weekly-challenge/complete-prompt', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              promptId: session.weeklyPromptId
+            }),
+          });
+          
+          if (response.ok) {
+            setCompletionSaved(true);
+          } else {
+            console.error('Failed to save weekly challenge completion');
+          }
+        } catch (error) {
+          console.error('Error saving weekly challenge completion:', error);
+        } finally {
+          setIsSavingCompletion(false);
         }
-      } catch (error) {
-        console.error('Error saving prompt completion:', error);
-      } finally {
-        setIsSavingCompletion(false);
       }
     }
   };
@@ -251,28 +304,57 @@ const PostSession: React.FC = () => {
           </Card>
         )}
         
-        {/* Prompt completion status for logged-in users */}
-        {user && session && session.type === 'prompt' && session.promptId && (
+        {/* Prompt display and completion status */}
+        {session && (session.type === 'prompt' || session.weeklyPromptId) && (
           <Card className="mb-6">
             <CardContent className="p-4">
-              {isSavingCompletion ? (
-                <div className="flex items-center justify-center py-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
-                  <span>Saving progress...</span>
+              {/* For regular prompts */}
+              {session.type === 'prompt' && session.promptId && (
+                <div className="mb-2">
+                  <h3 className="font-medium">Prompt</h3>
+                  <p className="text-sm text-muted-foreground">{session.promptText}</p>
                 </div>
-              ) : completionSaved ? (
-                <div className="flex items-center text-green-600">
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  <div>
-                    <p className="font-medium">Progress saved!</p>
-                    <p className="text-sm text-muted-foreground">This prompt is now marked as completed</p>
-                  </div>
+              )}
+              
+              {/* For weekly challenge prompts */}
+              {session.weeklyPromptId && (
+                <div className="mb-2">
+                  <h3 className="font-medium">Weekly Challenge</h3>
+                  {session.weeklyPromptTitle && (
+                    <p className="text-sm font-medium">{session.weeklyPromptTitle}</p>
+                  )}
+                  <p className="text-sm text-muted-foreground">{session.weeklyPromptText}</p>
+                  {session.weeklyPromptTier && (
+                    <Badge variant="outline" className="mt-1">
+                      {formatTierName(session.weeklyPromptTier)}
+                    </Badge>
+                  )}
                 </div>
-              ) : (
-                <div className="flex items-center">
-                  <p className="text-sm">
-                    {user ? 'Saving your progress...' : 'Log in to track your progress'}
-                  </p>
+              )}
+              
+              {/* Progress indicator */}
+              {user && (session.promptId || session.weeklyPromptId) && (
+                <div className="mt-3 pt-3 border-t">
+                  {isSavingCompletion ? (
+                    <div className="flex items-center py-2">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
+                      <span>Saving progress...</span>
+                    </div>
+                  ) : completionSaved ? (
+                    <div className="flex items-center text-green-600">
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      <div>
+                        <p className="font-medium">Progress saved!</p>
+                        <p className="text-sm text-muted-foreground">This prompt is now marked as completed</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <p className="text-sm">
+                        {user ? 'Saving your progress...' : 'Log in to track your progress'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -375,27 +457,5 @@ const PostSession: React.FC = () => {
     </div>
   );
 };
-
-// Helper functions
-function formatDuration(seconds: number) {
-  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const secs = (seconds % 60).toString().padStart(2, '0');
-  return `${mins}:${secs}`;
-}
-
-function getBadgeDescription(badgeName: string) {
-  const descriptions: Record<string, string> = {
-    'First Step': 'Completed your first practice session!',
-    'Smooth Reader': 'Successfully used a script in your practice.',
-    'Free Spirit': 'Practiced without a script or prompt.',
-    'Bounce Back': 'Retried a session - showing real dedication!',
-    'Reflector': 'Added thoughtful self-reflection to your practice.',
-    'Regular': 'Completed 5 practice sessions.',
-    'Dedicated': 'Completed 10 practice sessions.',
-    'Master': 'Completed 25 practice sessions.',
-  };
-  
-  return descriptions[badgeName] || 'You earned a special achievement!';
-}
 
 export default PostSession;
