@@ -247,19 +247,65 @@ const PostSession: React.FC = () => {
     const date = new Date().toISOString().slice(0, 10);
     const filename = `cringe-shield-recording-${date}.webm`;
     
-    // Create temporary anchor element for download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    toast({
-      title: "Download Started",
-      description: "Your recording is being saved to your device.",
-      duration: 3000
-    });
+    try {
+      // Handle potentially large files by using browser-native fetch when possible
+      // For Blob URLs this works more reliably than direct download for large files
+      if (url.startsWith('blob:')) {
+        toast({
+          title: "Preparing Download",
+          description: "Your recording is being prepared for download...",
+          duration: 3000
+        });
+        
+        // Create temporary anchor element for download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // For data URLs, make sure we use the best method to handle large files
+        fetch(url)
+          .then(res => res.blob())
+          .then(blob => {
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = objectUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Revoke the URL to free memory
+            setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
+          })
+          .catch(err => {
+            console.error('Error downloading via fetch:', err);
+            // Fallback to direct download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          });
+      }
+      
+      toast({
+        title: "Download Started",
+        description: "Your recording is being saved to your device.",
+        duration: 3000
+      });
+    } catch (err) {
+      console.error('Error in download function:', err);
+      toast({
+        title: "Download Error",
+        description: "There was a problem downloading your recording. Try using your browser's download button on the video.",
+        variant: "destructive",
+        duration: 5000
+      });
+    }
   };
   
   // Function to detect if the user is on a mobile device

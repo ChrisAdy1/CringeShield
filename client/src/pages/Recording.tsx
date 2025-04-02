@@ -175,13 +175,46 @@ const Recording: React.FC = () => {
           
           // Store blob in localStorage for the post-session screen
           const sessionId = Date.now();
-          const reader = new FileReader();
-          reader.readAsDataURL(blob);
-          reader.onloadend = function() {
-            const base64data = reader.result;
-            localStorage.setItem(`recording-${sessionId}`, base64data as string);
-            localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
-          };
+          
+          // Only try to store the recording in localStorage if it's smaller than 5MB
+          // This prevents quota exceeded errors for large recordings
+          if (blob.size < 5 * 1024 * 1024) {
+            try {
+              const reader = new FileReader();
+              reader.readAsDataURL(blob);
+              reader.onloadend = function() {
+                try {
+                  const base64data = reader.result;
+                  localStorage.setItem(`recording-${sessionId}`, base64data as string);
+                  localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
+                } catch (storageErr) {
+                  console.error('Error saving to localStorage:', storageErr);
+                  // Still continue but warn user
+                  toast({
+                    title: "Storage limit reached",
+                    description: "Your recording is available for download now, but won't be stored for replay.",
+                    variant: "destructive",
+                    duration: 5000
+                  });
+                }
+              };
+            } catch (readerErr) {
+              console.error('Error reading blob:', readerErr);
+            }
+          } else {
+            // For large recordings, only save the URL and inform the user
+            try {
+              localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
+              toast({
+                title: "Large recording detected",
+                description: "Your recording is too large to store locally. Please download it now to keep it.",
+                variant: "destructive",
+                duration: 5000
+              });
+            } catch (err) {
+              console.error('Error saving URL to localStorage:', err);
+            }
+          }
         } else {
           console.warn('No chunks available when recording stopped');
           toast({
