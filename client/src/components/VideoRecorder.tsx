@@ -34,16 +34,8 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
   const [recordingDuration, setRecordingDuration] = useState<number>(0);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Request camera permission
-  useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(() => setCameraPermission('granted'))
-      .catch((err) => {
-        console.error('Error accessing camera:', err);
-        setCameraPermission('denied');
-        setError('Camera access denied. Please enable camera permissions to use this feature.');
-      });
-  }, []);
+  // We'll request camera permission only when user clicks Start Recording button
+  // (Removed automatic camera access on page load)
 
   // Handle capturing video
   const handleDataAvailable = useCallback(
@@ -121,22 +113,51 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleStartRecording = useCallback(() => {
+  const handleStartRecording = useCallback(async () => {
     setRecordedChunks([]);
     setShowDownloadButton(false);
     setRecordedBlob(null);
     
-    if (webcamRef.current && webcamRef.current.stream) {
-      mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream, {
-        mimeType: 'video/webm'
+    try {
+      // Request camera access when user clicks "Start Recording"
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: {
+          facingMode: "user",
+          width: isMobile ? { ideal: 720 } : { ideal: 1280 },
+          height: isMobile ? { ideal: 1280 } : { ideal: 720 }
+        }, 
+        audio: true 
       });
-      mediaRecorderRef.current.addEventListener('dataavailable', handleDataAvailable);
-      mediaRecorderRef.current.start();
-      onStartRecording();
-    } else {
-      setError('Camera not available. Please check your camera permissions.');
+      
+      // Set camera permission state
+      setCameraPermission('granted');
+      
+      // Use the stream directly with MediaRecorder
+      // We don't need to set the stream on webcamRef.current as react-webcam doesn't expose this API directly
+      
+      // Wait a brief moment before attempting to record
+      setTimeout(() => {
+        try {
+          // Create media recorder with the stream we received from getUserMedia
+          mediaRecorderRef.current = new MediaRecorder(stream, {
+            mimeType: 'video/webm'
+          });
+          mediaRecorderRef.current.addEventListener('dataavailable', handleDataAvailable);
+          mediaRecorderRef.current.start();
+          onStartRecording();
+        } catch (err) {
+          console.error('Error creating MediaRecorder:', err);
+          setError('Failed to start recording. Please try a different browser.');
+          // Make sure to stop all tracks if there's an error
+          stream.getTracks().forEach(track => track.stop());
+        }
+      }, 300);
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+      setCameraPermission('denied');
+      setError('Camera access denied. Please enable camera permissions to use this feature.');
     }
-  }, [handleDataAvailable, onStartRecording]);
+  }, [handleDataAvailable, onStartRecording, isMobile]);
 
   const handleStopRecording = useCallback(() => {
     if (mediaRecorderRef.current) {
@@ -190,7 +211,7 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
     <div className="relative overflow-hidden rounded-lg">
       <div className={`${isMobile ? 'aspect-[9/16]' : 'aspect-video'} bg-black rounded-lg overflow-hidden relative`}>
         <Webcam
-          audio={true}
+          audio={false}
           ref={webcamRef}
           muted={true}
           className="w-full h-full object-cover"
@@ -199,6 +220,9 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
             width: isMobile ? { ideal: 720 } : { ideal: 1280 },
             height: isMobile ? { ideal: 1280 } : { ideal: 720 }
           }}
+          // Prevent auto-requesting camera on component mount
+          onUserMedia={() => {}}
+          onUserMediaError={() => {}}
         />
         <FaceFilter filterType={filterType} webcamRef={webcamRef} />
         

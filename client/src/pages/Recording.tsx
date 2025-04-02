@@ -61,77 +61,53 @@ const Recording: React.FC = () => {
   // Camera error state
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Set up camera
-  useEffect(() => {
-    async function setupCamera() {
-      try {
-        // First try just video without audio in case audio is causing issues
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "user" }, 
-          audio: false 
-        });
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        
-        // After video succeeds, try to add audio separately
-        try {
-          const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          const videoTracks = stream.getVideoTracks();
-          const audioTracks = audioStream.getAudioTracks();
-          
-          // Combine tracks if available
-          if (videoTracks.length > 0 && audioTracks.length > 0) {
-            const combinedStream = new MediaStream([...videoTracks, ...audioTracks]);
-            if (videoRef.current) {
-              videoRef.current.srcObject = combinedStream;
-            }
-          }
-        } catch (audioErr) {
-          console.warn('Could not access microphone, continuing with video only');
-        }
-      } catch (err) {
-        console.error('Error accessing camera:', err);
-        setCameraError('Unable to access camera. Please make sure camera permissions are granted and try again.');
-      }
-    }
-    
-    setupCamera();
-    
-    // Cleanup
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
-      }
-    };
-  }, []);
+  // Camera access now happens only when user clicks "Start Recording" button
+  // (Removed automatic camera access on page load)
   
-  // Start recording
-  const startRecording = () => {
-    if (!videoRef.current || !videoRef.current.srcObject) {
-      console.error('No video source found for recording');
-      return;
-    }
-    
-    chunksRef.current = [];
-    const stream = videoRef.current.srcObject as MediaStream;
-    
+  // Start recording - now requests camera access when user clicks "Start Recording"
+  const startRecording = async () => {
     try {
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
-      mediaRecorderRef.current = mediaRecorder;
-    } catch (err) {
-      console.warn('MediaRecorder with specified options not supported, trying fallback', err);
-      try {
-        // Try a simpler configuration as fallback
-        const mediaRecorder = new MediaRecorder(stream);
-        mediaRecorderRef.current = mediaRecorder;
-      } catch (fallbackErr) {
-        console.error('MediaRecorder not supported in this browser', fallbackErr);
-        setCameraError('Recording is not supported in this browser. Try a different browser or device.');
-        return;
+      // Request camera access when user clicks "Start Recording"
+      const videoConstraints = cameraOn 
+        ? { facingMode: "user" }
+        : false;
+      
+      // Request camera and microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: videoConstraints, 
+        audio: true 
+      });
+      
+      // Attach stream to video element
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
       }
+      
+      // Prepare recording data
+      chunksRef.current = [];
+      
+      // Initialize MediaRecorder with appropriate options
+      try {
+        const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
+        mediaRecorderRef.current = mediaRecorder;
+      } catch (err) {
+        console.warn('MediaRecorder with specified options not supported, trying fallback', err);
+        try {
+          // Try a simpler configuration as fallback
+          const mediaRecorder = new MediaRecorder(stream);
+          mediaRecorderRef.current = mediaRecorder;
+        } catch (fallbackErr) {
+          console.error('MediaRecorder not supported in this browser', fallbackErr);
+          setCameraError('Recording is not supported in this browser. Try a different browser or device.');
+          // Make sure to stop all tracks if there's an error
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error accessing camera/microphone:', err);
+      setCameraError('Unable to access camera or microphone. Please make sure permissions are granted and try again.');
+      return;
     }
     
     if (!mediaRecorderRef.current) {
