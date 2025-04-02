@@ -1,323 +1,222 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
-import Webcam from 'react-webcam';
-import { Button } from '@/components/ui/button';
-import { MicIcon, VideoIcon, StopCircleIcon, RefreshCwIcon, Camera, Download } from 'lucide-react';
-import { FaceFilter } from './FaceFilter';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { formatDate } from '@/lib/utils';
+import { useRef, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Video, StopCircle } from "lucide-react";
 
-interface VideoRecorderProps {
-  filterType: string;
-  onRecordingComplete: (blob: Blob) => void;
-  isRecording: boolean;
-  onStartRecording: () => void;
-  onStopRecording: () => void;
-  promptCategory?: string;
-  promptText?: string;
-}
-
-const VideoRecorder: React.FC<VideoRecorderProps> = ({
-  filterType,
+export default function VideoRecorder({ 
   onRecordingComplete,
-  isRecording,
-  onStartRecording,
-  onStopRecording,
-  promptCategory = 'practice',
-  promptText = ''
-}) => {
-  const isMobile = useIsMobile();
-  const webcamRef = useRef<Webcam>(null);
+  autoDownload = false
+}: {
+  onRecordingComplete?: (blob: Blob) => void;
+  autoDownload?: boolean;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  const [cameraPermission, setCameraPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
-  const [error, setError] = useState<string | null>(null);
-  const [recordingDuration, setRecordingDuration] = useState<number>(0);
-  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordedChunks = useRef<BlobPart[]>([]);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // We'll request camera permission only when user clicks Start Recording button
-  // (Removed automatic camera access on page load)
-
-  // Handle capturing video
-  const handleDataAvailable = useCallback(
-    ({ data }: BlobEvent) => {
-      if (data.size > 0) {
-        setRecordedChunks((prev) => [...prev, data]);
-      }
-    },
-    []
-  );
-
-  // Track recording duration
-  useEffect(() => {
-    if (isRecording) {
-      setRecordingDuration(0);
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
-      }, 1000);
-    } else {
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
-      }
+  // Cleanup function to properly release all resources
+  const cleanupResources = () => {
+    // Stop any ongoing recording
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
     }
     
-    return () => {
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-      }
-    };
-  }, [isRecording]);
-
-  // State to store the recorded blob for download
-  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
-  const [showDownloadButton, setShowDownloadButton] = useState(false);
-
-  // Complete recording and pass the blob
-  useEffect(() => {
-    if (recordedChunks.length > 0 && !isRecording) {
-      const blob = new Blob(recordedChunks, {
-        type: 'video/webm'
+    // Stop and release all media tracks
+    if (stream) {
+      stream.getTracks().forEach(track => {
+        if (track.readyState === 'live') {
+          track.stop();
+        }
       });
-      setRecordedBlob(blob);
-      onRecordingComplete(blob);
-      setShowDownloadButton(true);
     }
-  }, [recordedChunks, isRecording, onRecordingComplete]);
-  
-  // Handle downloading the recording
-  const handleDownload = useCallback(() => {
-    if (recordedBlob) {
-      // Create a date-based filename
-      const date = formatDate(new Date());
-      const category = promptCategory.replace(/\s+/g, '-').toLowerCase();
-      const filename = `cringe-shield-${category}-${date}.webm`;
-      
-      // Create download link
-      const url = URL.createObjectURL(recordedBlob);
-      const a = document.createElement('a');
-      document.body.appendChild(a);
-      a.style.display = 'none';
-      a.href = url;
-      a.download = filename;
-      a.click();
-      
-      // Clean up
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+    
+    // Clear video element source
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
-  }, [recordedBlob, promptCategory]);
+    
+    // Stop the timer if it's running
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
 
+    // Reset state
+    setStream(null);
+    setRecording(false);
+    setRecordingTime(0);
+  };
+
+  // Effect to clean up resources when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanupResources();
+    };
+  }, []);
+
+  const startRecording = async () => {
+    // Reset recorded chunks
+    recordedChunks.current = [];
+    setLoading(true);
+    
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
+      }
+
+      setStream(mediaStream);
+
+      const mediaRecorder = new MediaRecorder(mediaStream, {
+        mimeType: "video/webm",
+      });
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunks.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        if (recordedChunks.current.length === 0) return;
+        
+        const blob = new Blob(recordedChunks.current, {
+          type: "video/webm",
+        });
+
+        // Call the callback if provided
+        if (onRecordingComplete) {
+          onRecordingComplete(blob);
+        }
+
+        // Auto-download if enabled
+        if (autoDownload) {
+          const url = URL.createObjectURL(blob);
+          const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+          
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `cringeshield-recording-${timestamp}.webm`;
+          a.click();
+
+          URL.revokeObjectURL(url);
+        }
+      };
+
+      // Start recording and timer
+      mediaRecorder.start(1000); // Collect data every second
+      mediaRecorderRef.current = mediaRecorder;
+      setRecording(true);
+      setLoading(false);
+      
+      // Start the timer
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+    } catch (err) {
+      console.error("Camera access error:", err);
+      setLoading(false);
+      // Could add UI error notification here
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+    }
+    
+    // Stop tracks individually
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Clear the timer
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    
+    setRecording(false);
+    setStream(null);
+  };
+
+  // Format seconds into MM:SS
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleStartRecording = useCallback(async () => {
-    setRecordedChunks([]);
-    setShowDownloadButton(false);
-    setRecordedBlob(null);
-    
-    try {
-      // Request camera access when user clicks "Start Recording"
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: {
-          facingMode: "user",
-          width: isMobile ? { ideal: 720 } : { ideal: 1280 },
-          height: isMobile ? { ideal: 1280 } : { ideal: 720 }
-        }, 
-        audio: true 
-      });
-      
-      // Set camera permission state
-      setCameraPermission('granted');
-      
-      // Use the stream directly with MediaRecorder
-      // We don't need to set the stream on webcamRef.current as react-webcam doesn't expose this API directly
-      
-      // Wait a brief moment before attempting to record
-      setTimeout(() => {
-        try {
-          // Create media recorder with the stream we received from getUserMedia
-          mediaRecorderRef.current = new MediaRecorder(stream, {
-            mimeType: 'video/webm'
-          });
-          mediaRecorderRef.current.addEventListener('dataavailable', handleDataAvailable);
-          mediaRecorderRef.current.start();
-          onStartRecording();
-        } catch (err) {
-          console.error('Error creating MediaRecorder:', err);
-          setError('Failed to start recording. Please try a different browser.');
-          // Make sure to stop all tracks if there's an error
-          stream.getTracks().forEach(track => track.stop());
-        }
-      }, 300);
-    } catch (err) {
-      console.error('Error accessing camera:', err);
-      setCameraPermission('denied');
-      setError('Camera access denied. Please enable camera permissions to use this feature.');
-    }
-  }, [handleDataAvailable, onStartRecording, isMobile]);
-
-  const handleStopRecording = useCallback(() => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      
-      // Properly release camera and microphone resources
-      if (webcamRef.current && webcamRef.current.stream) {
-        webcamRef.current.stream.getTracks().forEach(track => track.stop());
-      }
-      
-      onStopRecording();
-    }
-  }, [onStopRecording]);
-
-  if (cameraPermission === 'denied') {
-    return (
-      <div className="flex flex-col items-center justify-center bg-gray-100 rounded-lg p-6 text-center">
-        <div className="text-red-500 mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium mb-2">Camera Access Required</h3>
-        <p className="text-gray-600 mb-4">
-          Please enable camera access in your browser settings to use the video recording feature.
-        </p>
-        <Button
-          onClick={() => navigator.mediaDevices.getUserMedia({video: true, audio: true})
-            .then(() => setCameraPermission('granted'))
-            .catch(() => setError('Camera permission is still denied.'))
-          }
-        >
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-lg bg-red-50 p-4 text-sm text-red-500">
-        {error}
-        <Button variant="outline" size="sm" className="mt-2" onClick={() => setError(null)}>
-          <RefreshCwIcon className="h-4 w-4 mr-1" /> Retry
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative overflow-hidden rounded-lg">
-      <div className={`${isMobile ? 'aspect-[9/16]' : 'aspect-video'} bg-black rounded-lg overflow-hidden relative`}>
-        <Webcam
-          audio={false}
-          ref={webcamRef}
-          muted={true}
-          className="w-full h-full object-cover"
-          videoConstraints={{
-            facingMode: "user",
-            width: isMobile ? { ideal: 720 } : { ideal: 1280 },
-            height: isMobile ? { ideal: 1280 } : { ideal: 720 }
-          }}
-          // Prevent auto-requesting camera on component mount
-          onUserMedia={() => {}}
-          onUserMediaError={() => {}}
+    <div className="flex flex-col items-center">
+      <div className="relative w-full max-w-lg rounded-lg overflow-hidden bg-gray-100 aspect-video">
+        {/* Video element */}
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          muted 
+          playsInline
+          className={`w-full h-full object-cover ${!stream ? 'hidden' : ''}`} 
         />
-        <FaceFilter filterType={filterType} webcamRef={webcamRef} />
+        
+        {/* Placeholder when no stream */}
+        {!stream && !loading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Video className="w-16 h-16 text-gray-400" />
+          </div>
+        )}
+        
+        {/* Loading indicator */}
+        {loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <p className="mt-2 text-gray-700">Accessing camera...</p>
+          </div>
+        )}
         
         {/* Recording indicator and timer */}
-        {isRecording && (
-          <div className="absolute top-4 left-0 right-0 flex justify-center">
-            <div className="bg-black/60 px-3 py-1 rounded-full flex items-center text-white text-sm">
-              <div className="w-2 h-2 rounded-full bg-red-500 mr-2 animate-pulse"></div>
-              {formatTime(recordingDuration)}
-            </div>
+        {recording && (
+          <div className="absolute top-4 right-4 flex items-center bg-black/40 text-white px-3 py-1 rounded-full">
+            <div className="w-3 h-3 rounded-full bg-red-500 mr-2 animate-pulse" />
+            <span className="text-sm font-medium">{formatTime(recordingTime)}</span>
           </div>
         )}
       </div>
       
-      <div className={`flex justify-center mt-4 ${isMobile ? 'pb-4' : ''}`}>
-        {isMobile ? (
-          // Mobile-optimized recording controls
-          <div className="flex flex-col items-center">
-            {showDownloadButton ? (
-              <>
-                <div className="flex gap-3">
-                  <button 
-                    onClick={handleStartRecording}
-                    className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg"
-                    aria-label="Record again"
-                  >
-                    <Camera className="w-8 h-8" />
-                  </button>
-                  <button 
-                    onClick={handleDownload}
-                    className="w-16 h-16 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg"
-                    aria-label="Download recording"
-                  >
-                    <Download className="w-8 h-8" />
-                  </button>
-                </div>
-                <div className="flex mt-2 gap-6">
-                  <span className="text-sm text-gray-600">Record again</span>
-                  <span className="text-sm text-gray-600">Download</span>
-                </div>
-              </>
-            ) : !isRecording ? (
-              <>
-                <button 
-                  onClick={handleStartRecording}
-                  className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg"
-                  aria-label="Start recording"
-                >
-                  <Camera className="w-8 h-8" />
-                </button>
-                <span className="mt-2 text-sm text-gray-600">Tap to record</span>
-              </>
+      <div className="mt-4">
+        {!recording ? (
+          <Button 
+            onClick={startRecording} 
+            disabled={loading}
+            className="bg-primary text-white"
+            size="lg"
+          >
+            {loading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Starting Camera</>
             ) : (
-              <>
-                <button 
-                  onClick={handleStopRecording}
-                  className="w-16 h-16 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg"
-                  aria-label="Stop recording"
-                >
-                  <StopCircleIcon className="w-8 h-8" />
-                </button>
-                <span className="mt-2 text-sm text-gray-600">Tap to stop</span>
-              </>
+              <><Video className="mr-2 h-4 w-4" /> Start Recording</>
             )}
-          </div>
+          </Button>
         ) : (
-          // Desktop controls
-          <div className="space-x-3">
-            {showDownloadButton ? (
-              <>
-                <Button onClick={handleStartRecording} className="flex items-center" variant="outline" size="lg">
-                  <VideoIcon className="mr-2 h-4 w-4" />
-                  Record Again
-                </Button>
-                <Button onClick={handleDownload} className="flex items-center" variant="default" size="lg">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Recording
-                </Button>
-              </>
-            ) : !isRecording ? (
-              <Button onClick={handleStartRecording} className="flex items-center" size="lg">
-                <VideoIcon className="mr-2 h-4 w-4" />
-                Start Recording
-              </Button>
-            ) : (
-              <Button variant="destructive" onClick={handleStopRecording} className="flex items-center" size="lg">
-                <StopCircleIcon className="mr-2 h-4 w-4" />
-                Stop Recording
-              </Button>
-            )}
-          </div>
+          <Button 
+            onClick={stopRecording} 
+            variant="destructive"
+            size="lg"
+          >
+            <StopCircle className="mr-2 h-4 w-4" /> Stop Recording
+          </Button>
         )}
       </div>
     </div>
   );
-};
-
-export default VideoRecorder;
+}

@@ -1,0 +1,78 @@
+import { useRef, useState } from "react";
+
+export default function Recorder() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const recordedChunks = useRef<BlobPart[]>([]);
+
+  const startRecording = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        videoRef.current.play();
+      }
+
+      setStream(mediaStream);
+
+      const mediaRecorder = new MediaRecorder(mediaStream, {
+        mimeType: "video/webm",
+      });
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunks.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks.current, {
+          type: "video/webm",
+        });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "cringeshield-recording.webm";
+        a.click();
+
+        URL.revokeObjectURL(url);
+      };
+
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+      setRecording(true);
+    } catch (err) {
+      console.error("Camera access error:", err);
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    stream?.getTracks().forEach((track) => track.stop());
+    setRecording(false);
+  };
+
+  return (
+    <div>
+      <video ref={videoRef} autoPlay muted className="w-full h-auto rounded" />
+      <div className="mt-4">
+        {!recording ? (
+          <button onClick={startRecording} className="bg-blue-600 text-white px-4 py-2 rounded">
+            Start Recording
+          </button>
+        ) : (
+          <button onClick={stopRecording} className="bg-red-500 text-white px-4 py-2 rounded">
+            Stop Recording
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
