@@ -355,23 +355,13 @@ const ChallengePage: React.FC = () => {
                   Completed
                 </Button>
               ) : (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="gap-1"
-                    onClick={() => completeDay(challenge.day)}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-1" />
-                    Mark Complete
-                  </Button>
-                  <Button 
-                    variant="default" 
-                    className="gap-1"
-                    onClick={() => startRecording(challenge.day)}
-                  >
-                    Practice Now
-                  </Button>
-                </>
+                <Button 
+                  variant="default" 
+                  className="gap-1"
+                  onClick={() => startRecording(challenge.day)}
+                >
+                  Practice Now
+                </Button>
               )}
             </CardFooter>
           </Card>
