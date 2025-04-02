@@ -1,7 +1,9 @@
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Video, StopCircle, Camera, MicIcon, RefreshCw } from "lucide-react";
+import { Loader2, Video, StopCircle, Camera, MicIcon, RefreshCw, Computer } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function VideoRecorder({ 
   onRecordingComplete,
@@ -10,6 +12,8 @@ export default function VideoRecorder({
   onRecordingComplete?: (blob: Blob) => void;
   autoDownload?: boolean;
 }) {
+  // Setting for mock mode (for testing in environments where camera access consistently fails)
+  const [mockMode, setMockMode] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [recording, setRecording] = useState(false);
@@ -123,7 +127,66 @@ export default function VideoRecorder({
     }
   };
 
+  // Mock recording (when camera access is restricted in environment)
+  const startMockRecording = () => {
+    setCameraError(null);
+    setLoading(true);
+    recordedChunks.current = [];
+    
+    // Simulate loading
+    setTimeout(() => {
+      setLoading(false);
+      setAudioOnly(true);  // Use the audio only UI
+      setStream({} as MediaStream);  // Fake a stream without actually having a camera
+      setRecording(true);
+      
+      // Start recording timer
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    }, 1000);
+  }
+  
+  const stopMockRecording = () => {
+    // Clear timer
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    
+    // Create a very small empty "recording" blob
+    const blob = new Blob(['mock recording data'], { type: 'text/plain' });
+    
+    // Call the callback with the mock blob
+    if (onRecordingComplete) {
+      onRecordingComplete(blob);
+    }
+    
+    // Auto-download if enabled
+    if (autoDownload) {
+      const url = URL.createObjectURL(blob);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `cringeshield-mock-${timestamp}.txt`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+    }
+    
+    setRecording(false);
+    setStream(null);
+    setAudioOnly(false);
+  }
+  
   const startRecording = async () => {
+    // If mock mode is enabled, use the mock implementation
+    if (mockMode) {
+      startMockRecording();
+      return;
+    }
+  
     // Reset error state
     setCameraError(null);
     // Reset recorded chunks
@@ -242,6 +305,12 @@ export default function VideoRecorder({
   };
 
   const stopRecording = () => {
+    // If in mock mode, use the mock stop implementation
+    if (mockMode) {
+      stopMockRecording();
+      return;
+    }
+    
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
     }
@@ -458,6 +527,37 @@ export default function VideoRecorder({
           </Button>
         )}
       </div>
+      
+      {/* Mock mode switch for development/testing */}
+      <div className="mt-6 flex items-center gap-2">
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="mock-mode" 
+            checked={mockMode}
+            onCheckedChange={setMockMode} 
+          />
+          <Label htmlFor="mock-mode" className="flex items-center gap-1">
+            <Computer className="h-4 w-4" /> 
+            <span>Mock Mode</span>
+          </Label>
+        </div>
+        <p className="text-xs text-gray-500 ml-2">
+          (Use when camera access is restricted)
+        </p>
+      </div>
+      
+      {/* Mock mode UI indicator */}
+      {mockMode && (
+        <div className="mt-2 w-full">
+          <Alert variant="info" className="bg-blue-50 border-blue-200">
+            <Computer className="h-4 w-4 mr-2 text-blue-500" />
+            <AlertTitle className="text-blue-700">Mock Mode Enabled</AlertTitle>
+            <AlertDescription className="text-blue-600">
+              Camera access is simulated. No real camera or microphone will be used.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
     </div>
   );
 }
