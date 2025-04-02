@@ -31,7 +31,6 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
     { path: "/recording", label: "Practice", icon: Video },
     { path: "/challenge", label: "30-Day", icon: Award },
     { path: "/weekly-challenge", label: "Weekly", icon: Calendar },
-    { path: "/badges", label: "Badges", icon: Award },
     { path: "/settings", label: "Settings", icon: Settings },
     ...(user?.isAdmin ? [{ path: "/admin", label: "Admin", icon: Users }] : []),
   ];
