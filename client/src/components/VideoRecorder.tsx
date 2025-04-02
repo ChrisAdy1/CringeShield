@@ -8,11 +8,13 @@ import { Label } from "@/components/ui/label";
 export default function VideoRecorder({ 
   onRecordingComplete,
   autoDownload = false,
-  showMockModeToggle = false  // Default to hide mock mode UI
+  showMockModeToggle = false,  // Default to hide mock mode UI
+  prompt // Optional prompt text to display
 }: {
   onRecordingComplete?: (blob: Blob) => void;
   autoDownload?: boolean;
   showMockModeToggle?: boolean;  // Control whether to show the mock mode toggle
+  prompt?: string; // The prompt text for the practice session
 }) {
   // Setting for mock mode (for testing in environments where camera access consistently fails)
   const [mockMode, setMockMode] = useState(false);
@@ -24,6 +26,7 @@ export default function VideoRecorder({
   const [recordingTime, setRecordingTime] = useState(0);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [audioOnly, setAudioOnly] = useState(false);
+  const [preferAudioOnly, setPreferAudioOnly] = useState(false); // User preference for audio-only mode
   const recordedChunks = useRef<BlobPart[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -295,7 +298,8 @@ export default function VideoRecorder({
       
       // Now actually get the stream - use the same constraints that worked during permission check
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
+        // If preferAudioOnly is true, don't request video
+        video: preferAudioOnly ? false : {
           width: { ideal: 640 },
           height: { ideal: 480 },
           facingMode: "user"
@@ -625,10 +629,36 @@ export default function VideoRecorder({
         )}
       </div>
       
+      {/* Audio-only toggle - always visible */}
+      <div className="mt-4 flex items-center gap-2">
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="audio-only" 
+            checked={preferAudioOnly}
+            onCheckedChange={setPreferAudioOnly} 
+          />
+          <Label htmlFor="audio-only" className="flex items-center gap-1">
+            <MicIcon className="h-4 w-4" /> 
+            <span>Audio Only Mode</span>
+          </Label>
+        </div>
+        <p className="text-xs text-gray-500 ml-2">
+          (Record without camera)
+        </p>
+      </div>
+
+      {/* Prompt display if provided */}
+      {prompt && (
+        <div className="mt-4 w-full p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <h3 className="font-medium text-blue-800 mb-1">Your Practice Prompt:</h3>
+          <p className="text-blue-700">{prompt}</p>
+        </div>
+      )}
+      
       {/* Mock mode switch for development/testing - only shown when explicitly enabled */}
       {showMockModeToggle && (
         <>
-          <div className="mt-6 flex items-center gap-2">
+          <div className="mt-4 flex items-center gap-2">
             <div className="flex items-center space-x-2">
               <Switch 
                 id="mock-mode" 

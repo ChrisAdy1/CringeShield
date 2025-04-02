@@ -66,7 +66,8 @@ export default function RecorderTest() {
             <CardContent>
               <VideoRecorder 
                 onRecordingComplete={handleRecordingComplete} 
-                showMockModeToggle={true} 
+                showMockModeToggle={true}
+                prompt="This is a test prompt to verify that prompts display correctly in the recording interface."
               />
               
               <div className="mt-4 text-sm text-gray-500">
@@ -77,6 +78,9 @@ export default function RecorderTest() {
                   <li>Error handling with helpful messages</li>
                   <li>Proper cleanup on unmount</li>
                   <li>Recording callback with blob data</li>
+                  <li>Audio-only recording mode toggle</li>
+                  <li>Prompt display in recording interface</li>
+                  <li>Mock mode for testing without camera access</li>
                 </ul>
               </div>
             </CardContent>

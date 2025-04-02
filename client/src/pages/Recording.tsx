@@ -222,7 +222,8 @@ const Recording: React.FC = () => {
             <CardContent className="pt-6">
               <h2 className="text-lg font-semibold text-center mb-3 text-primary">Record Your Practice</h2>
               <VideoRecorder 
-                onRecordingComplete={handleRecordingComplete} 
+                onRecordingComplete={handleRecordingComplete}
+                prompt={challenge?.description || weeklyPrompt?.text}
               />
             </CardContent>
           </Card>
