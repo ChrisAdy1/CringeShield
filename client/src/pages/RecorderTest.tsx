@@ -64,7 +64,10 @@ export default function RecorderTest() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <VideoRecorder onRecordingComplete={handleRecordingComplete} />
+              <VideoRecorder 
+                onRecordingComplete={handleRecordingComplete} 
+                showMockModeToggle={true} 
+              />
               
               <div className="mt-4 text-sm text-gray-500">
                 <h3 className="font-medium text-gray-700">Features being tested:</h3>

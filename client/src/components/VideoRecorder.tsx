@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 
 export default function VideoRecorder({ 
   onRecordingComplete,
-  autoDownload = false
+  autoDownload = false,
+  showMockModeToggle = false  // Default to hide mock mode UI
 }: {
   onRecordingComplete?: (blob: Blob) => void;
   autoDownload?: boolean;
+  showMockModeToggle?: boolean;  // Control whether to show the mock mode toggle
 }) {
   // Setting for mock mode (for testing in environments where camera access consistently fails)
   const [mockMode, setMockMode] = useState(false);
@@ -619,35 +621,39 @@ export default function VideoRecorder({
         )}
       </div>
       
-      {/* Mock mode switch for development/testing */}
-      <div className="mt-6 flex items-center gap-2">
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="mock-mode" 
-            checked={mockMode}
-            onCheckedChange={setMockMode} 
-          />
-          <Label htmlFor="mock-mode" className="flex items-center gap-1">
-            <Computer className="h-4 w-4" /> 
-            <span>Mock Mode</span>
-          </Label>
-        </div>
-        <p className="text-xs text-gray-500 ml-2">
-          (Use when camera access is restricted)
-        </p>
-      </div>
-      
-      {/* Mock mode UI indicator */}
-      {mockMode && (
-        <div className="mt-2 w-full">
-          <Alert variant="default" className="bg-blue-50 border-blue-200">
-            <Computer className="h-4 w-4 mr-2 text-blue-500" />
-            <AlertTitle className="text-blue-700">Mock Mode Enabled</AlertTitle>
-            <AlertDescription className="text-blue-600">
-              Camera access is simulated. No real camera or microphone will be used.
-            </AlertDescription>
-          </Alert>
-        </div>
+      {/* Mock mode switch for development/testing - only shown when explicitly enabled */}
+      {showMockModeToggle && (
+        <>
+          <div className="mt-6 flex items-center gap-2">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="mock-mode" 
+                checked={mockMode}
+                onCheckedChange={setMockMode} 
+              />
+              <Label htmlFor="mock-mode" className="flex items-center gap-1">
+                <Computer className="h-4 w-4" /> 
+                <span>Mock Mode</span>
+              </Label>
+            </div>
+            <p className="text-xs text-gray-500 ml-2">
+              (Use when camera access is restricted)
+            </p>
+          </div>
+          
+          {/* Mock mode UI indicator */}
+          {mockMode && (
+            <div className="mt-2 w-full">
+              <Alert variant="default" className="bg-blue-50 border-blue-200">
+                <Computer className="h-4 w-4 mr-2 text-blue-500" />
+                <AlertTitle className="text-blue-700">Mock Mode Enabled</AlertTitle>
+                <AlertDescription className="text-blue-600">
+                  Camera access is simulated. No real camera or microphone will be used.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
