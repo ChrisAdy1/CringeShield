@@ -9,13 +9,13 @@
     --warning-peach: 255 214 165; /* #FFD6A5 */
     --text-dark-gray: 68 68 68; /* #444444 */
     --light-gray: 224 224 224; /* #E0E0E0 */
-    --button-color: 36 112 255; /* #2470ff */
+    --button-color: 36 112 255; /* #2470ff - CringeBlue */
     --button-text: 255 255 255; /* White text for better contrast */
     
     /* Default theme color - will be overridden by CSS variables */
     --theme-primary: 36 112 255; /* Default is blue #2470ff */
     
-    /* Use our theme primary instead of shadcn's defaults */
+    /* Use CringeBlue for all primary elements */
     --primary: var(--button-color);
     --primary-foreground: var(--button-text);
   }
