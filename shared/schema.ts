@@ -9,6 +9,10 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   isAdmin: boolean("is_admin").notNull().default(false),
+  // Notification preferences
+  notificationOptIn: boolean("notification_opt_in").default(false),
+  notificationTime: text("notification_time"),
+  askedForNotifications: boolean("asked_for_notifications").default(false),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

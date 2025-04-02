@@ -19,6 +19,8 @@ import fs from 'fs';
 import path from 'path';
 // Import schema for database access
 import * as schema from '@shared/schema';
+// Import eq operator from drizzle-orm
+import { eq } from 'drizzle-orm';
 // Import WeeklyPrompt type for route handlers
 import { WeeklyChallengeTier } from '@shared/schema';
 interface WeeklyPrompt {
@@ -33,12 +35,16 @@ interface WeeklyPrompt {
 // Define extended Request interface with file property for TypeScript
 declare global {
   namespace Express {
+    // Make sure this interface exactly matches the User type from @shared/schema.ts
     interface User {
       id: number;
       email: string;
       passwordHash: string;
       createdAt: Date;
       isAdmin: boolean;
+      notificationOptIn: boolean;
+      notificationTime: string | null;
+      askedForNotifications: boolean;
     }
   }
 }
@@ -349,6 +355,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error checking challenge day completion:", error);
       res.status(500).json({ message: "Failed to check challenge day completion" });
+    }
+  });
+  
+  // Update notification preferences
+  app.post("/api/notification-preferences", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      
+      // Validate the notification preference data
+      const notificationPreferencesSchema = z.object({
+        notificationOptIn: z.boolean(),
+        notificationTime: z.string().optional(),
+        askedForNotifications: z.boolean()
+      });
+      
+      const { notificationOptIn, notificationTime, askedForNotifications } = 
+        notificationPreferencesSchema.parse(req.body);
+      
+      // Update user in the database
+      const updateFields: any = { 
+        notificationOptIn,
+        askedForNotifications
+      };
+      
+      if (notificationTime) {
+        updateFields.notificationTime = notificationTime;
+      }
+      
+      const updatedUser = await db
+        .update(schema.users)
+        .set(updateFields)
+        .where(eq(schema.users.id, userId))
+        .returning()
+        .then(users => users[0]);
+      
+      // Remove password hash from response
+      const { passwordHash, ...userResponse } = updatedUser;
+      
+      res.json(userResponse);
+    } catch (error: any) {
+      console.error("Error updating notification preferences:", error);
+      if (error.name === "ZodError") {
+        return res.status(400).json({ 
+          message: "Invalid notification preferences data", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Failed to update notification preferences" });
     }
   });
   

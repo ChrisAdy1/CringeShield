@@ -4,7 +4,9 @@ import { cn } from "@/lib/utils";
 import { SmilePlus, Home, Video, Award, Calendar, Settings, HelpCircle, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotificationPrompt } from "@/hooks/useNotificationPrompt";
 import { Button } from "@/components/ui/button";
+import NotificationPrompt from "@/components/NotificationPrompt";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +18,9 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
   
   // Get user from auth context
   const { user } = useAuth();
+  
+  // Check if we should show notification prompt
+  const { showPrompt, setShowPrompt } = useNotificationPrompt();
   
   // We no longer auto-show the tutorial, but keep the import for now
   // as we might need it for other features in the future
@@ -33,6 +38,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Notification Prompt */}
+      <NotificationPrompt 
+        open={showPrompt} 
+        onOpenChange={setShowPrompt} 
+      />
+      
       {/* Tutorial Walkthrough removed - Help page is used instead */}
       
       {/* Header */}
