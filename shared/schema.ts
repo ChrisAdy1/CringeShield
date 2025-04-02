@@ -44,8 +44,11 @@ export const sessions = pgTable("sessions", {
   userId: integer("user_id").references(() => users.id),
   date: timestamp("date").notNull().defaultNow(),
   duration: integer("duration").notNull(), // in seconds
-  cameraOn: boolean("camera_on").default(true),
+  confidenceScore: integer("confidence_score"),
+  filter: text("filter"),
   userRating: text("user_rating"),
+  promptCategory: text("prompt_category"),
+  prompt: text("prompt"),
   aiNotes: json("ai_notes")
 });
 
