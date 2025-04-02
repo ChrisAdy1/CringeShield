@@ -556,7 +556,7 @@ export default function VideoRecorder({
                 <MicIcon className="w-10 h-10 text-gray-500 mx-auto" />
               </div>
               <p className="text-base text-gray-700 font-medium text-center max-w-xs">
-                Click "START RECORDING" below
+                Click "Start New Practice Session" below
               </p>
               <p className="text-sm text-gray-600 text-center mt-1">
                 to activate your camera and microphone
@@ -604,23 +604,23 @@ export default function VideoRecorder({
           <Button 
             onClick={startRecording} 
             disabled={loading}
-            className="bg-primary hover:bg-primary/90 text-white font-medium shadow-md w-full py-6"
+            className="bg-[#2470ff] hover:bg-[#2470ff]/90 text-white font-medium shadow-lg w-full py-6"
             size="lg"
           >
             {loading ? (
               <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Starting Camera</>
             ) : (
-              <><Video className="mr-2 h-5 w-5" /> START RECORDING</>
+              <><Video className="mr-2 h-5 w-5" /> Start New Practice Session</>
             )}
           </Button>
         ) : (
           <Button 
             onClick={stopRecording} 
             variant="destructive"
-            className="shadow-md w-full py-6"
+            className="shadow-lg w-full py-6 font-medium"
             size="lg"
           >
-            <StopCircle className="mr-2 h-5 w-5" /> STOP RECORDING
+            <StopCircle className="mr-2 h-5 w-5" /> Stop Recording
           </Button>
         )}
       </div>
