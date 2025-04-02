@@ -9,7 +9,7 @@ interface ThemeContextType {
   colorMode: ColorMode;
   setMood: (mood: MoodTheme) => void;
   setColorMode: (mode: ColorMode) => void;
-  applyTheme: (mood: MoodTheme, colorMode: ColorMode) => void;
+  applyTheme: () => void;
   isUpdating: boolean;
 }
 
@@ -70,31 +70,17 @@ function hexToRgb(hex: string): string {
   return `${r} ${g} ${b}`;
 }
 
-// Function to apply CSS variables to the document root
-function applyThemeToDOM(primaryColor: string, colorMode: ColorMode) {
+// Function to apply CSS variables to the document root - now using fixed theme
+function applyThemeToDOM() {
   const root = document.documentElement;
-  // Convert hex color to RGB values for CSS variables
+  // Use a fixed purple theme
+  const primaryColor = '#9A7DFF';
   const rgbValues = hexToRgb(primaryColor);
   root.style.setProperty('--theme-primary', rgbValues);
   
-  // Set color mode class on the html element
-  if (colorMode === 'dark') {
-    document.documentElement.classList.add('dark');
-    document.documentElement.classList.remove('light');
-  } else if (colorMode === 'light') {
-    document.documentElement.classList.add('light');
-    document.documentElement.classList.remove('dark');
-  } else {
-    // Handle system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (prefersDark) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-    }
-  }
+  // Always use light mode
+  document.documentElement.classList.add('light');
+  document.documentElement.classList.remove('dark');
 }
 
 // Provider component
@@ -124,24 +110,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Apply theme function
-  const applyTheme = useCallback((newMood: MoodTheme, newColorMode: ColorMode) => {
+  // Apply theme function - now simplified to use fixed theme only
+  const applyTheme = useCallback(() => {
     setIsUpdating(true);
     
-    // Get the primary color based on mood and color mode
-    const effectiveColorMode = newColorMode === 'system' 
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      : newColorMode;
-      
-    const primaryColor = effectiveColorMode === 'dark' 
-      ? moodPalettes[newMood].dark 
-      : moodPalettes[newMood].light;
+    // Fixed theme settings
+    const primaryColor = '#9A7DFF';
 
-    // Apply theme directly to DOM
-    applyThemeToDOM(primaryColor, newColorMode);
+    // Apply theme directly to DOM using simplified function
+    applyThemeToDOM();
     
     // Save theme to server (background process)
-    saveThemeToServer(primaryColor, newColorMode);
+    saveThemeToServer(primaryColor, 'light');
     
     // Use a short timeout just for UI feedback
     setTimeout(() => {
@@ -149,35 +129,36 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }, 300);
   }, [saveThemeToServer]);
 
-  // Set mood and save to localStorage 
+  // Set mood and save to localStorage - no theme changes
   const setMood = useCallback((newMood: MoodTheme) => {
     setMoodState(newMood);
     localStorage.setItem('cringe-shield-mood', newMood);
-    applyTheme(newMood, colorMode);
-  }, [colorMode, applyTheme]);
+    // Always using fixed theme now
+    applyTheme();
+  }, [applyTheme]);
 
-  // Set color mode and save to localStorage
+  // Set color mode and save to localStorage - no theme changes 
   const setColorMode = useCallback((newMode: ColorMode) => {
     setColorModeState(newMode);
     localStorage.setItem('cringe-shield-color-mode', newMode);
-    applyTheme(mood, newMode);
-  }, [mood, applyTheme]);
+    // Always using fixed theme now
+    applyTheme();
+  }, [applyTheme]);
 
-  // Listen for system color theme changes
+  // Listen for system color theme changes - simplified
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const handleChange = () => {
-      if (colorMode === 'system') {
-        applyTheme(mood, 'system');
-      }
+      // Always apply the same fixed theme regardless of system changes
+      applyTheme();
     };
     
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [colorMode, mood, applyTheme]);
+  }, [applyTheme]);
 
-  // Load theme from localStorage on mount
+  // Load theme from localStorage on mount - simplified
   useEffect(() => {
     const savedMood = localStorage.getItem('cringe-shield-mood') as MoodTheme;
     const savedColorMode = localStorage.getItem('cringe-shield-color-mode') as ColorMode;
@@ -188,8 +169,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setMoodState(moodToUse);
     setColorModeState(colorModeToUse);
     
-    // Apply the theme directly
-    applyTheme(moodToUse, colorModeToUse);
+    // Apply the fixed theme directly
+    applyTheme();
   }, [applyTheme]);
 
   return (

@@ -5,9 +5,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { Trash2, Shield, Download, Palette } from 'lucide-react';
+import { Trash2, Shield, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import ThemeSelector from '@/components/ThemeSelector';
 
 const Settings: React.FC = () => {
   const [sessions, setSessions] = useLocalStorage('practice-sessions', []);
@@ -56,22 +55,6 @@ const Settings: React.FC = () => {
       </div>
       
       <div className="space-y-6">
-        
-        {/* Theme Selector */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Palette className="h-5 w-5 mr-2 text-primary" />
-              UI Appearance
-            </CardTitle>
-            <CardDescription>
-              Customize the app's theme based on your mood
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ThemeSelector />
-          </CardContent>
-        </Card>
         
         {/* Privacy & Data */}
         <Card>
