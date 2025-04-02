@@ -51,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
         <div className="container mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
           <Link href="/">
             <div className="flex items-center space-x-2 cursor-pointer">
-              <SmilePlus className="w-8 h-8 text-primary" />
+              <SmilePlus className="w-8 h-8 text-cringeblue" />
               <h1 className="text-xl font-semibold text-gray-900">CringeShield</h1>
             </div>
           </Link>
@@ -66,7 +66,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
                   className={cn(
                     "text-sm font-medium flex items-center gap-1",
                     currentPath === item.path
-                      ? "text-primary"
+                      ? "text-cringeblue" // Updated to use cringeblue color
                       : "text-gray-500 hover:text-gray-700"
                   )}
                 >
@@ -80,7 +80,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="ml-2 text-gray-500 hover:text-primary hover:bg-gray-50"
+                  className={cn(
+                    "ml-2", 
+                    currentPath === "/help"
+                      ? "text-cringeblue" // Updated to use cringeblue color
+                      : "text-gray-500 hover:text-cringeblue hover:bg-gray-50"
+                  )}
                 >
                   <HelpCircle className="w-4 h-4 mr-1" />
                   <span>Help</span>
@@ -103,17 +108,25 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
             <div className="flex flex-col md:flex-row md:justify-between md:items-center">
               <div className="mb-4 md:mb-0">
                 <div className="flex items-center">
-                  <SmilePlus className="w-6 h-6 text-primary" />
+                  <SmilePlus className="w-6 h-6 text-cringeblue" />
                   <p className="ml-2 text-sm text-gray-600">CringeShield</p>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Your safe space to practice speaking</p>
               </div>
               <div className="flex space-x-6">
-                <Link href="/help" className="text-sm text-gray-600 hover:text-primary">
+                <Link 
+                  href="/help" 
+                  className={cn(
+                    "text-sm",
+                    currentPath === "/help" 
+                      ? "text-cringeblue" 
+                      : "text-gray-600 hover:text-cringeblue"
+                  )}
+                >
                   Help
                 </Link>
-                <a href="#" className="text-sm text-gray-600 hover:text-primary">Privacy</a>
-                <a href="#" className="text-sm text-gray-600 hover:text-primary">Terms</a>
+                <a href="#" className="text-sm text-gray-600 hover:text-cringeblue">Privacy</a>
+                <a href="#" className="text-sm text-gray-600 hover:text-cringeblue">Terms</a>
               </div>
             </div>
           </div>
@@ -131,7 +144,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
                 className={cn(
                   "flex flex-col items-center p-2 text-xs",
                   currentPath === item.path
-                    ? "text-primary"
+                    ? "text-cringeblue font-medium" // Changed from text-primary to text-cringeblue
                     : "text-gray-500"
                 )}
               >
@@ -142,7 +155,12 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
             {/* Mobile Help Button */}
             <Link 
               href="/help"
-              className="flex flex-col items-center p-2 text-xs text-gray-500"
+              className={cn(
+                "flex flex-col items-center p-2 text-xs",
+                currentPath === "/help"
+                  ? "text-cringeblue font-medium" // Make Help button consistent with other items
+                  : "text-gray-500"
+              )}
             >
               <HelpCircle className="w-6 h-6 mb-1" />
               <span>Help</span>
