@@ -191,9 +191,9 @@ const Recording: React.FC = () => {
                   console.error('Error saving to localStorage:', storageErr);
                   // Still continue but warn user
                   toast({
-                    title: "Storage limit reached",
-                    description: "Your recording is available for download now, but won't be stored for replay.",
-                    variant: "destructive",
+                    title: "Recording ready for download",
+                    description: "Your video is ready! Download now to save it to your device.",
+                    variant: "default",
                     duration: 5000
                   });
                 }
@@ -206,9 +206,9 @@ const Recording: React.FC = () => {
             try {
               localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
               toast({
-                title: "Large recording detected",
-                description: "Your recording is too large to store locally. Please download it now to keep it.",
-                variant: "destructive",
+                title: "Recording ready for download",
+                description: "Your video is ready! Download now to save it to your device.",
+                variant: "default",
                 duration: 5000
               });
             } catch (err) {
