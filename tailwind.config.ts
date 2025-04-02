@@ -62,6 +62,7 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         // CringeShield custom colors
+        cringeblue: '#2470FF',
         accentLavender: "rgb(var(--accent-lavender) / <alpha-value>)",
         successMint: "rgb(var(--success-mint) / <alpha-value>)",
         warningPeach: "rgb(var(--warning-peach) / <alpha-value>)",
