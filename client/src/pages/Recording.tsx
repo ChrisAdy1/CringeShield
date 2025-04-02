@@ -555,10 +555,7 @@ const Recording: React.FC = () => {
             <div className="text-center mb-2 text-muted-foreground">Free talking mode</div>
           )}
           
-          <div className="text-xs bg-gray-100 p-2 rounded-md text-center">
-            After recording, you'll be taken to a review screen where you can download your video. 
-            Your video stays on your device and is not uploaded anywhere.
-          </div>
+
         </div>
       </div>
     </div>

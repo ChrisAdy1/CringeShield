@@ -135,7 +135,7 @@ const Help: React.FC = () => {
               </p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>Camera access required for recording (permissions will be requested)</li>
-                <li>Videos are stored locally on your device for privacy</li>
+                <li>Practice your speaking skills with video recording</li>
                 <li>Toggle camera on/off during recording if needed</li>
                 <li>Set a timer for structured practice sessions</li>
                 <li>After recording, reflect on your performance</li>
