@@ -76,10 +76,13 @@ function applyThemeToDOM() {
   // Use a fixed blue theme
   const primaryColor = '#2470ff';
   const rgbValues = hexToRgb(primaryColor);
-  root.style.setProperty('--theme-primary', rgbValues);
   
-  // Set text color for buttons
-  root.style.setProperty('--button-text', '31 32 33'); // #1f2021 in RGB
+  // Apply our theme colors to CSS variables
+  root.style.setProperty('--theme-primary', rgbValues);
+  root.style.setProperty('--button-color', rgbValues);
+  
+  // Set white text color for buttons (better contrast on blue)
+  root.style.setProperty('--button-text', '255 255 255');
   
   // Always use light mode
   document.documentElement.classList.add('light');
@@ -104,7 +107,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           variant: 'professional',
           primary: primaryColor,
           appearance: colorAppearance === 'system' ? 'system' : colorAppearance,
-          radius: 0.75,
+          radius: 0.5,
           useLocalOnly: true, // Flag to tell server not to modify theme.json
         }),
       });

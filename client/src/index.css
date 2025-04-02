@@ -9,13 +9,14 @@
     --warning-peach: 255 214 165; /* #FFD6A5 */
     --text-dark-gray: 68 68 68; /* #444444 */
     --light-gray: 224 224 224; /* #E0E0E0 */
+    --button-color: 36 112 255; /* #2470ff */
+    --button-text: 255 255 255; /* White text for better contrast */
     
     /* Default theme color - will be overridden by CSS variables */
     --theme-primary: 36 112 255; /* Default is blue #2470ff */
-    --button-text: 31 32 33; /* #1f2021 */
     
     /* Use our theme primary instead of shadcn's defaults */
-    --primary: var(--theme-primary);
+    --primary: var(--button-color);
     --primary-foreground: var(--button-text);
   }
 
@@ -128,6 +129,19 @@
     background-color: rgb(var(--light-gray));
   }
   
+  /* Button color utilities */
+  .bg-button-color {
+    background-color: rgb(var(--button-color));
+  }
+  
+  .text-button-color {
+    color: rgb(var(--button-color));
+  }
+  
+  .border-button-color {
+    border-color: rgb(var(--button-color));
+  }
+  
   /* Confidence score color bands */
   .confidence-low {
     background-color: rgb(var(--light-gray));
@@ -138,6 +152,33 @@
   }
   
   .confidence-high {
-    background-color: rgb(var(--success-mint));
+    background-color: rgb(var(--button-color));
+  }
+  
+  /* Progress bar styling */
+  progress {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background-color: rgb(var(--light-gray));
+    overflow: hidden;
+  }
+  
+  progress::-webkit-progress-bar {
+    background-color: rgb(var(--light-gray));
+    border-radius: 4px;
+  }
+  
+  progress::-webkit-progress-value {
+    background-color: rgb(var(--button-color));
+    border-radius: 4px;
+  }
+  
+  progress::-moz-progress-bar {
+    background-color: rgb(var(--button-color));
+    border-radius: 4px;
   }
 }
