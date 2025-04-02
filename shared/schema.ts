@@ -8,6 +8,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  isAdmin: boolean("is_admin").notNull().default(false),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({

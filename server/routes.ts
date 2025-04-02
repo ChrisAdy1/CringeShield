@@ -17,6 +17,8 @@ import { db } from './db';
 // Import fs and path modules for theme editing
 import fs from 'fs';
 import path from 'path';
+// Import schema for database access
+import * as schema from '@shared/schema';
 // Import WeeklyPrompt type for route handlers
 import { WeeklyChallengeTier } from '@shared/schema';
 interface WeeklyPrompt {
@@ -36,6 +38,7 @@ declare global {
       email: string;
       passwordHash: string;
       createdAt: Date;
+      isAdmin: boolean;
     }
   }
 }
@@ -773,6 +776,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin middleware - checks if the user is an admin
+  const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const user = req.user as Express.User;
+    if (!user.isAdmin) {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    }
+    next();
+  };
+
+  // ADMIN ROUTES - Only accessible to admin users
+  
+  // Get all users with stats for admin dashboard
+  app.get('/api/admin/users', isAdmin, async (req, res) => {
+    try {
+      // Get all users
+      const users = await db.query.users.findMany();
+      
+      // Prepare user data without sensitive info
+      const safeUsers = users.map(user => {
+        const { passwordHash, ...safeUser } = user;
+        return safeUser;
+      });
+      
+      res.json(safeUsers);
+    } catch (error) {
+      console.error('Error fetching users for admin:', error);
+      res.status(500).json({ message: 'Failed to fetch user data' });
+    }
+  });
+  
+  // Get global stats for admin dashboard
+  app.get('/api/admin/stats', isAdmin, async (req, res) => {
+    try {
+      // Count users
+      const users = await db.select().from(schema.users);
+      const userCount = users.length;
+      
+      // Count sessions
+      const sessions = await db.select().from(schema.sessions);
+      const sessionCount = sessions.length;
+      
+      // Count prompt completions
+      const completions = await db.select().from(schema.promptCompletions);
+      const promptCompletionCount = completions.length;
+      
+      // Get challenge milestone completion counts
+      const badges = await db.select().from(schema.challengeBadges);
+      
+      const milestone7Count = badges.filter(badge => badge.milestone === 7).length;
+      const milestone15Count = badges.filter(badge => badge.milestone === 15).length;
+      const milestone30Count = badges.filter(badge => badge.milestone === 30).length;
+      
+      // Calculate percentages
+      const milestone7Percent = userCount > 0 ? (milestone7Count / userCount) * 100 : 0;
+      const milestone15Percent = userCount > 0 ? (milestone15Count / userCount) * 100 : 0;
+      const milestone30Percent = userCount > 0 ? (milestone30Count / userCount) * 100 : 0;
+      
+      // Calculate average prompts per user
+      const avgPromptsPerUser = userCount > 0 ? promptCompletionCount / userCount : 0;
+      
+      res.json({
+        totalUsers: userCount,
+        totalSessions: sessionCount,
+        totalPromptCompletions: promptCompletionCount,
+        avgPromptsPerUser: parseFloat(avgPromptsPerUser.toFixed(2)),
+        challengeCompletion: {
+          day7Percentage: parseFloat(milestone7Percent.toFixed(2)),
+          day15Percentage: parseFloat(milestone15Percent.toFixed(2)),
+          day30Percentage: parseFloat(milestone30Percent.toFixed(2))
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      res.status(500).json({ message: 'Failed to fetch statistics' });
+    }
+  });
+  
+  // Get detailed user stats for a specific user
+  app.get('/api/admin/users/:userId', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId, 10);
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      // Get user details
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Get user's completions and badges
+      const promptCompletions = await storage.getPromptCompletions(userId);
+      const challengeProgress = await storage.getChallengeProgress(userId);
+      const weeklyProgress = await storage.getWeeklyProgress(userId);
+      const weeklyBadges = await storage.getWeeklyBadges(userId);
+      const challengeBadges = await storage.getChallengeBadges(userId);
+      
+      // Get most recent session
+      const sessions = await storage.getSessionsByUser(userId);
+      const lastSession = sessions.length > 0 
+        ? sessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+        : null;
+      
+      // Remove sensitive information
+      const { passwordHash, ...safeUser } = user;
+      
+      res.json({
+        user: safeUser,
+        stats: {
+          totalCompletions: promptCompletions.length,
+          challengeDaysCompleted: challengeProgress.length,
+          weeklyPrompts: weeklyProgress?.completedPrompts?.length || 0,
+          weeklyBadgesEarned: weeklyBadges.length,
+          challengeBadgesEarned: challengeBadges.length,
+          lastSessionDate: lastSession?.date || null
+        },
+        badges: {
+          weekly: weeklyBadges,
+          challenge: challengeBadges
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching user details for admin:', error);
+      res.status(500).json({ message: 'Failed to fetch user details' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

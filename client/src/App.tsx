@@ -15,6 +15,7 @@ import WeeklyChallenge from "@/pages/WeeklyChallenge";
 import WeeklyChallengeSelect from "@/pages/WeeklyChallengeSelect";
 import Badges from "@/pages/Badges";
 import Help from "@/pages/Help";
+import AdminPage from "@/pages/admin/AdminPage";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./lib/protected-route";
 
@@ -36,6 +37,7 @@ function Router() {
       <ProtectedRoute path="/weekly-challenge" component={WeeklyChallenge} />
       <ProtectedRoute path="/weekly-challenge-select" component={WeeklyChallengeSelect} />
       <ProtectedRoute path="/badges" component={Badges} />
+      <ProtectedRoute path="/admin" component={AdminPage} />
       <Route path="/help" component={Help} />
       <Route component={NotFound} />
     </Switch>
