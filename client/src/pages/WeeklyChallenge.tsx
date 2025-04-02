@@ -189,7 +189,7 @@ const WeeklyChallenge = () => {
                       <p>{prompt.text}</p>
                     </CardContent>
                     <CardFooter>
-                      <Link to={`/recording?promptId=${prompt.id}`}>
+                      <Link to={`/recording?prompt=${prompt.id}`}>
                         <Button 
                           disabled={isLocked} 
                           className="w-full md:w-auto"
