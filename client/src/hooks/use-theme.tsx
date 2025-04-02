@@ -73,10 +73,13 @@ function hexToRgb(hex: string): string {
 // Function to apply CSS variables to the document root - now using fixed theme
 function applyThemeToDOM() {
   const root = document.documentElement;
-  // Use a fixed purple theme
-  const primaryColor = '#9A7DFF';
+  // Use a fixed blue theme
+  const primaryColor = '#2470ff';
   const rgbValues = hexToRgb(primaryColor);
   root.style.setProperty('--theme-primary', rgbValues);
+  
+  // Set text color for buttons
+  root.style.setProperty('--button-text', '31 32 33'); // #1f2021 in RGB
   
   // Always use light mode
   document.documentElement.classList.add('light');
@@ -115,7 +118,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setIsUpdating(true);
     
     // Fixed theme settings
-    const primaryColor = '#9A7DFF';
+    const primaryColor = '#2470ff';
 
     // Apply theme directly to DOM using simplified function
     applyThemeToDOM();
