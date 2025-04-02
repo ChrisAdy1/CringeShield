@@ -281,8 +281,8 @@ const Home: React.FC = () => {
                 <span className="font-semibold">1</span>
               </div>
               <div>
-                <h4 className="font-medium">Record Yourself</h4>
-                <p className="text-sm text-muted-foreground">Start a recording session to practice speaking on camera</p>
+                <h4 className="font-medium">Choose a Mode</h4>
+                <p className="text-sm text-muted-foreground">Start your practice by picking how you want to show up—select a Weekly Challenge, dive into the 30-Day Challenge, or go freestyle.</p>
               </div>
             </div>
             
@@ -291,8 +291,8 @@ const Home: React.FC = () => {
                 <span className="font-semibold">2</span>
               </div>
               <div>
-                <h4 className="font-medium">Review Your Recording</h4>
-                <p className="text-sm text-muted-foreground">Watch your practice session and notice areas for improvement</p>
+                <h4 className="font-medium">Press Record</h4>
+                <p className="text-sm text-muted-foreground">Record yourself speaking. When you're done, you can download the video (it stays local, nothing is uploaded), then move on to self-reflection.</p>
               </div>
             </div>
             
@@ -301,8 +301,8 @@ const Home: React.FC = () => {
                 <span className="font-semibold">3</span>
               </div>
               <div>
-                <h4 className="font-medium">Improve Over Time</h4>
-                <p className="text-sm text-muted-foreground">The more you practice, the more comfortable you'll become on camera</p>
+                <h4 className="font-medium">Rate Your Session</h4>
+                <p className="text-sm text-muted-foreground">After recording, rate how uncomfortable it felt—1 being the easiest, 5 the hardest. You can retry, or save your rating and continue.</p>
               </div>
             </div>
           </div>
