@@ -1,98 +1,121 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
 import VideoRecorder from "@/components/VideoRecorder";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download, FileVideo } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function RecorderTest() {
-  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
-  const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
-  const { toast } = useToast();
-
+  const [, navigate] = useLocation();
+  const [recordedVideo, setRecordedVideo] = useState<Blob | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Handle when a recording is completed
   const handleRecordingComplete = (blob: Blob) => {
-    setRecordedBlob(blob);
+    setRecordedVideo(blob);
     
-    // Create URL for preview
+    // Create URL for video playback
     const url = URL.createObjectURL(blob);
-    setRecordedUrl(url);
+    setVideoUrl(url);
     
-    toast({
-      title: "Recording complete",
-      description: `Video recorded (${(blob.size / (1024 * 1024)).toFixed(2)} MB)`,
-    });
+    // Set the video source
+    if (videoRef.current) {
+      videoRef.current.src = url;
+    }
   };
-
+  
+  // Handle downloading the recorded video
   const handleDownload = () => {
-    if (!recordedBlob) return;
+    if (!recordedVideo) return;
     
-    const url = recordedUrl || URL.createObjectURL(recordedBlob);
+    const url = URL.createObjectURL(recordedVideo);
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    
     const a = document.createElement("a");
     a.href = url;
-    a.download = `cringeshield-recording-${timestamp}.webm`;
+    a.download = `cringeshield-test-${timestamp}.webm`;
     a.click();
     
-    if (!recordedUrl) {
-      URL.revokeObjectURL(url);
-    }
-    
-    toast({
-      title: "Download started",
-      description: "Your recording is being downloaded",
-    });
+    URL.revokeObjectURL(url);
   };
-
+  
   return (
-    <div className="container mx-auto max-w-4xl p-4">
-      <h1 className="text-2xl font-bold mb-6">Video Recorder Test</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Record Video</CardTitle>
-            <CardDescription>
-              Click Start Recording to begin. Camera and microphone access will be requested.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <VideoRecorder onRecordingComplete={handleRecordingComplete} />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Preview</CardTitle>
-            <CardDescription>
-              {recordedBlob 
-                ? `Recording complete (${(recordedBlob.size / (1024 * 1024)).toFixed(2)} MB)` 
-                : "No recording available yet. Record a video first."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {recordedUrl ? (
-              <div className="space-y-4">
-                <video 
-                  src={recordedUrl} 
-                  controls 
-                  className="w-full rounded-lg"
-                />
-                <Button 
-                  onClick={handleDownload}
-                  className="w-full"
-                >
-                  <Download className="mr-2 h-4 w-4" /> Download Recording
-                </Button>
-              </div>
-            ) : (
-              <div className="aspect-video rounded-lg bg-gray-100 flex items-center justify-center">
-                <FileVideo className="h-16 w-16 text-gray-300" />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <div className="container py-6 max-w-4xl">
+      <div className="flex items-center mb-6">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-bold ml-2">Video Recorder Test</h1>
       </div>
+
+      <Tabs defaultValue="record" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="record">Record</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="record">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recorder Component</CardTitle>
+              <CardDescription>
+                Test the video recorder component with enhanced error handling and resource management.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VideoRecorder onRecordingComplete={handleRecordingComplete} />
+              
+              <div className="mt-4 text-sm text-gray-500">
+                <h3 className="font-medium text-gray-700">Features being tested:</h3>
+                <ul className="list-disc pl-5 mt-2 space-y-1">
+                  <li>Camera/microphone resources properly released</li>
+                  <li>Recording timer and visual indicators</li>
+                  <li>Error handling with helpful messages</li>
+                  <li>Proper cleanup on unmount</li>
+                  <li>Recording callback with blob data</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="preview">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recording Preview</CardTitle>
+              <CardDescription>
+                Watch and download your test recording.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {videoUrl ? (
+                <div className="flex flex-col items-center">
+                  <div className="w-full max-w-lg overflow-hidden rounded-lg bg-gray-100 aspect-video">
+                    <video 
+                      ref={videoRef} 
+                      controls 
+                      className="w-full h-full" 
+                    />
+                  </div>
+                  
+                  <Button 
+                    onClick={handleDownload} 
+                    className="mt-4 bg-primary text-white"
+                  >
+                    Download Recording
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No recording available yet.</p>
+                  <p className="mt-2 text-sm">Record a video in the "Record" tab first.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Video, StopCircle } from "lucide-react";
+import { Loader2, Video, StopCircle, Camera, MicIcon, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function VideoRecorder({ 
   onRecordingComplete,
@@ -15,6 +16,7 @@ export default function VideoRecorder({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [loading, setLoading] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const recordedChunks = useRef<BlobPart[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -58,12 +60,56 @@ export default function VideoRecorder({
     };
   }, []);
 
+  const requestPermissions = async () => {
+    // Reset state first
+    setCameraError(null);
+    setLoading(true);
+    recordedChunks.current = [];
+    
+    try {
+      // First try to just get permission without starting anything
+      await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      
+      // If we got here, permissions were granted
+      setLoading(false);
+      return true;
+    } catch (err: any) {
+      console.error("Permission error:", err);
+      
+      // Set appropriate error message
+      if (err.name === 'NotAllowedError') {
+        setCameraError('Camera or microphone access was denied. Please check your browser permissions and try again.');
+      } else if (err.name === 'NotFoundError') {
+        setCameraError('No camera or microphone found. Please check your device connections.');
+      } else if (err.name === 'NotReadableError') {
+        setCameraError('Camera or microphone is already in use by another application. Please close other applications and try again.');
+      } else {
+        setCameraError('Unable to access camera or microphone. Please make sure permissions are granted and try again.');
+      }
+      
+      setLoading(false);
+      return false;
+    }
+  };
+
   const startRecording = async () => {
+    // Reset error state
+    setCameraError(null);
     // Reset recorded chunks
     recordedChunks.current = [];
     setLoading(true);
     
     try {
+      // Try to get permissions first
+      const permissionsGranted = await requestPermissions();
+      if (!permissionsGranted) {
+        return;
+      }
+      
+      // Now actually get the stream
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
@@ -76,9 +122,35 @@ export default function VideoRecorder({
 
       setStream(mediaStream);
 
-      const mediaRecorder = new MediaRecorder(mediaStream, {
-        mimeType: "video/webm",
-      });
+      // Try to initialize MediaRecorder with different options
+      try {
+        const mediaRecorder = new MediaRecorder(mediaStream, {
+          mimeType: 'video/webm;codecs=vp8,opus'
+        });
+        mediaRecorderRef.current = mediaRecorder;
+      } catch (e) {
+        console.warn('MediaRecorder with specified options not supported, trying fallback', e);
+        try {
+          // Try a simpler configuration as fallback
+          const mediaRecorder = new MediaRecorder(mediaStream);
+          mediaRecorderRef.current = mediaRecorder;
+        } catch (fallbackErr) {
+          console.error('MediaRecorder not supported in this browser', fallbackErr);
+          setCameraError('Recording is not supported in this browser. Try a different browser or device.');
+          // Make sure to stop all tracks if there's an error
+          mediaStream.getTracks().forEach(track => track.stop());
+          setLoading(false);
+          return;
+        }
+      }
+
+      const mediaRecorder = mediaRecorderRef.current;
+      if (!mediaRecorder) {
+        setCameraError('Failed to initialize recorder. Please try again.');
+        mediaStream.getTracks().forEach(track => track.stop());
+        setLoading(false);
+        return;
+      }
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
@@ -87,34 +159,41 @@ export default function VideoRecorder({
       };
 
       mediaRecorder.onstop = () => {
-        if (recordedChunks.current.length === 0) return;
-        
-        const blob = new Blob(recordedChunks.current, {
-          type: "video/webm",
-        });
-
-        // Call the callback if provided
-        if (onRecordingComplete) {
-          onRecordingComplete(blob);
+        if (recordedChunks.current.length === 0) {
+          setCameraError('No video data was captured. Please try again.');
+          return;
         }
+        
+        try {
+          const blob = new Blob(recordedChunks.current, {
+            type: "video/webm",
+          });
 
-        // Auto-download if enabled
-        if (autoDownload) {
-          const url = URL.createObjectURL(blob);
-          const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-          
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `cringeshield-recording-${timestamp}.webm`;
-          a.click();
+          // Call the callback if provided
+          if (onRecordingComplete) {
+            onRecordingComplete(blob);
+          }
 
-          URL.revokeObjectURL(url);
+          // Auto-download if enabled
+          if (autoDownload) {
+            const url = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+            
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `cringeshield-recording-${timestamp}.webm`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+          }
+        } catch (err) {
+          console.error('Error creating blob:', err);
+          setCameraError('Failed to process recording. Please try again.');
         }
       };
 
       // Start recording and timer
       mediaRecorder.start(1000); // Collect data every second
-      mediaRecorderRef.current = mediaRecorder;
       setRecording(true);
       setLoading(false);
       
@@ -126,7 +205,7 @@ export default function VideoRecorder({
     } catch (err) {
       console.error("Camera access error:", err);
       setLoading(false);
-      // Could add UI error notification here
+      setCameraError('Unable to access camera or microphone. Please make sure permissions are granted and try again.');
     }
   };
 
@@ -158,40 +237,67 @@ export default function VideoRecorder({
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative w-full max-w-lg rounded-lg overflow-hidden bg-gray-100 aspect-video">
-        {/* Video element */}
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          muted 
-          playsInline
-          className={`w-full h-full object-cover ${!stream ? 'hidden' : ''}`} 
-        />
-        
-        {/* Placeholder when no stream */}
-        {!stream && !loading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Video className="w-16 h-16 text-gray-400" />
+    <div className="flex flex-col items-center w-full">
+      {cameraError ? (
+        <div className="w-full mb-4">
+          <Alert variant="destructive">
+            <Camera className="h-4 w-4 mr-2" />
+            <AlertTitle>Camera Access Error</AlertTitle>
+            <AlertDescription>{cameraError}</AlertDescription>
+          </Alert>
+          <div className="mt-4 flex justify-center">
+            <Button 
+              onClick={() => {
+                setCameraError(null);
+                startRecording();
+              }}
+              className="bg-primary text-white"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Try Again
+            </Button>
           </div>
-        )}
-        
-        {/* Loading indicator */}
-        {loading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
-            <Loader2 className="w-10 h-10 animate-spin text-primary" />
-            <p className="mt-2 text-gray-700">Accessing camera...</p>
-          </div>
-        )}
-        
-        {/* Recording indicator and timer */}
-        {recording && (
-          <div className="absolute top-4 right-4 flex items-center bg-black/40 text-white px-3 py-1 rounded-full">
-            <div className="w-3 h-3 rounded-full bg-red-500 mr-2 animate-pulse" />
-            <span className="text-sm font-medium">{formatTime(recordingTime)}</span>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="relative w-full max-w-lg rounded-lg overflow-hidden bg-gray-100 aspect-video">
+          {/* Video element */}
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            muted 
+            playsInline
+            className={`w-full h-full object-cover ${!stream ? 'hidden' : ''}`} 
+          />
+          
+          {/* Placeholder when no stream */}
+          {!stream && !loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="mb-2 text-center">
+                <Camera className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                <MicIcon className="w-8 h-8 text-gray-400 mx-auto" />
+              </div>
+              <p className="text-sm text-gray-500 text-center max-w-xs">
+                Click "Start Recording" to activate your camera and microphone
+              </p>
+            </div>
+          )}
+          
+          {/* Loading indicator */}
+          {loading && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              <p className="mt-2 text-gray-700">Accessing camera...</p>
+            </div>
+          )}
+          
+          {/* Recording indicator and timer */}
+          {recording && (
+            <div className="absolute top-4 right-4 flex items-center bg-black/40 text-white px-3 py-1 rounded-full">
+              <div className="w-3 h-3 rounded-full bg-red-500 mr-2 animate-pulse" />
+              <span className="text-sm font-medium">{formatTime(recordingTime)}</span>
+            </div>
+          )}
+        </div>
+      )}
       
       <div className="mt-4">
         {!recording ? (
