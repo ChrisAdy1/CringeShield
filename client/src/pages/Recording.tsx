@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Circle, Square, FastForward, CheckCircle, Download } from 'lucide-react';
+
+import { ArrowLeft, Circle, Square, CheckCircle, Download } from 'lucide-react';
 import { challengeDays } from '@/lib/challengeDays';
 import { useChallengeProgress } from '@/hooks/useChallengeProgress';
 import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
@@ -374,64 +374,6 @@ const Recording: React.FC = () => {
     return `${mins}:${secs}`;
   };
   
-  // Skip recording (for demo purposes)
-  const skipToPostSession = () => {
-    // Generate an ID for the session
-    const sessionId = Date.now();
-    
-    // Create a simple mock session for demo with challenge/weekly challenge support
-    const sessionData: {
-      id: number;
-      date: string;
-      duration: number;
-      type: string;
-      cameraOn: boolean;
-      recordingKey: string;
-      hasRecording: boolean;
-      challengeDay?: number;
-      challengeTitle?: string;
-      weeklyPromptId?: string;
-      weeklyPromptText?: string;
-      weeklyPromptTier?: string;
-      weeklyPromptTitle?: string;
-    } = {
-      id: sessionId,
-      date: new Date().toISOString(),
-      duration: 30, // Mock 30 seconds
-      type: recordingType,
-      cameraOn: cameraOn,
-      recordingKey: `recording-${sessionId}`, // Include key for consistency
-      hasRecording: false // Indicate there's no actual recording data
-    };
-    
-    // Add challenge info if applicable
-    if (challenge) {
-      sessionData.challengeDay = challenge.day;
-      sessionData.challengeTitle = challenge.title;
-      
-      // We don't complete the challenge for skipped sessions
-      // Only mark challenges complete when actual recordings are made
-    }
-    
-    // Add weekly challenge prompt info if applicable
-    if (weeklyPrompt) {
-      sessionData.weeklyPromptId = weeklyPrompt.id;
-      sessionData.weeklyPromptText = weeklyPrompt.text;
-      sessionData.weeklyPromptTier = weeklyPrompt.tier;
-      sessionData.weeklyPromptTitle = weeklyPrompt.title;
-      
-      // We don't complete the weekly challenge for skipped sessions
-      // Only mark prompts complete when actual recordings are made
-    }
-    
-    // Store in local storage
-    const sessions = JSON.parse(localStorage.getItem('practice-sessions') || '[]');
-    sessions.push(sessionData);
-    localStorage.setItem('practice-sessions', JSON.stringify(sessions));
-    
-    navigate(`/post-session?sessionId=${sessionData.id}`);
-  };
-  
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top bar */}
@@ -468,9 +410,6 @@ const Recording: React.FC = () => {
             <div className="flex flex-col space-y-2">
               <Button onClick={() => navigate('/')}>
                 Go Back to Home
-              </Button>
-              <Button variant="outline" onClick={skipToPostSession}>
-                Skip to Feedback (Demo)
               </Button>
             </div>
           </div>
@@ -559,21 +498,6 @@ const Recording: React.FC = () => {
                 <span className="text-sm font-medium">Start</span>
               </div>
             )}
-          </div>
-        )}
-        
-        {/* Demo-only shortcut */}
-        {!showDownloadOption && (
-          <div className="text-center mt-3">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-xs text-muted-foreground"
-              onClick={skipToPostSession}
-            >
-              <FastForward className="h-3 w-3 mr-1" />
-              Skip to feedback (demo)
-            </Button>
           </div>
         )}
         
