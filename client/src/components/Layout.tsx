@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { SmilePlus, Home, Video, Award, Calendar, Settings, HelpCircle } from "lucide-react";
+import { SmilePlus, Home, Video, Award, Calendar, Settings, HelpCircle, Users } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPath }) => {
     { path: "/weekly-challenge", label: "Weekly", icon: Calendar },
     { path: "/badges", label: "Badges", icon: Award },
     { path: "/settings", label: "Settings", icon: Settings },
+    ...(user?.isAdmin ? [{ path: "/admin", label: "Admin", icon: Users }] : []),
   ];
 
   return (
