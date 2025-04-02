@@ -136,11 +136,56 @@ export default function VideoRecorder({
     // Simulate loading
     setTimeout(() => {
       setLoading(false);
-      setAudioOnly(true);  // Use the audio only UI
-      setStream({} as MediaStream);  // Fake a stream without actually having a camera
-      setRecording(true);
-      
-      // Start recording timer
+
+      // Create a canvas for generating a visual mock video
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+        
+        // Create a mock stream for the video element
+        if (ctx) {
+          // Draw a simple placeholder
+          ctx.fillStyle = '#f0f0f0';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.font = '24px Arial';
+          ctx.fillStyle = '#333';
+          ctx.textAlign = 'center';
+          ctx.fillText('Mock Recording Mode', canvas.width / 2, canvas.height / 2 - 20);
+          ctx.fillText('No actual camera access', canvas.width / 2, canvas.height / 2 + 20);
+          
+          // Try to use the captureStream API to create a mock video stream
+          try {
+            const mockStream = canvas.captureStream(30);
+            
+            if (videoRef.current) {
+              videoRef.current.srcObject = mockStream;
+            }
+            
+            setStream(mockStream);
+            setRecording(true);
+          } catch (err) {
+            console.warn('Canvas.captureStream not supported, falling back to audio-only mode', err);
+            setAudioOnly(true);
+            setStream({} as MediaStream);
+            setRecording(true);
+          }
+        } else {
+          // Fallback if canvas context fails
+          setAudioOnly(true);
+          setStream({} as MediaStream);
+          setRecording(true);
+        }
+      } catch (err) {
+        // Final fallback
+        console.warn('Canvas operations failed, using basic mock mode', err);
+        setAudioOnly(true);
+        setStream({} as MediaStream);
+        setRecording(true);
+      }
+
+      // Start recording timer in all cases
       timerIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
@@ -154,25 +199,71 @@ export default function VideoRecorder({
       timerIntervalRef.current = null;
     }
     
-    // Create a very small empty "recording" blob
-    const blob = new Blob(['mock recording data'], { type: 'text/plain' });
-    
-    // Call the callback with the mock blob
-    if (onRecordingComplete) {
-      onRecordingComplete(blob);
+    // Clean up any mock streams
+    if (videoRef.current && videoRef.current.srcObject) {
+      try {
+        const mockStream = videoRef.current.srcObject as MediaStream;
+        if (mockStream && mockStream.getTracks) {
+          mockStream.getTracks().forEach(track => {
+            if (track && track.stop) track.stop();
+          });
+        }
+        videoRef.current.srcObject = null;
+      } catch (err) {
+        console.warn('Error cleaning up mock stream', err);
+      }
     }
     
-    // Auto-download if enabled
-    if (autoDownload) {
-      const url = URL.createObjectURL(blob);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    // Create a mock video blob that's more realistic than plain text
+    // We generate a small WebM file with a minimal header
+    try {
+      // WebM minimal header (20 bytes)
+      const webmHeader = new Uint8Array([
+        0x1a, 0x45, 0xdf, 0xa3, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+      ]);
       
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `cringeshield-mock-${timestamp}.txt`;
-      a.click();
+      // Create a blob that's a valid WebM file (minimal but valid)
+      const blob = new Blob([webmHeader], { type: 'video/webm' });
       
-      URL.revokeObjectURL(url);
+      // Call the callback with the mock blob
+      if (onRecordingComplete) {
+        onRecordingComplete(blob);
+      }
+      
+      // Auto-download if enabled
+      if (autoDownload) {
+        const url = URL.createObjectURL(blob);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `cringeshield-mock-${timestamp}.webm`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.warn('Error creating mock WebM blob, falling back to text blob', err);
+      
+      // Fallback to a simple text blob if the binary approach fails
+      const textBlob = new Blob(['mock recording data'], { type: 'text/plain' });
+      
+      if (onRecordingComplete) {
+        onRecordingComplete(textBlob);
+      }
+      
+      if (autoDownload) {
+        const url = URL.createObjectURL(textBlob);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `cringeshield-mock-${timestamp}.txt`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+      }
     }
     
     setRecording(false);
@@ -549,7 +640,7 @@ export default function VideoRecorder({
       {/* Mock mode UI indicator */}
       {mockMode && (
         <div className="mt-2 w-full">
-          <Alert className="bg-blue-50 border-blue-200">
+          <Alert variant="default" className="bg-blue-50 border-blue-200">
             <Computer className="h-4 w-4 mr-2 text-blue-500" />
             <AlertTitle className="text-blue-700">Mock Mode Enabled</AlertTitle>
             <AlertDescription className="text-blue-600">
