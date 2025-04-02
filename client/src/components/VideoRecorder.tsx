@@ -141,6 +141,12 @@ const VideoRecorder: React.FC<VideoRecorderProps> = ({
   const handleStopRecording = useCallback(() => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
+      
+      // Properly release camera and microphone resources
+      if (webcamRef.current && webcamRef.current.stream) {
+        webcamRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+      
       onStopRecording();
     }
   }, [onStopRecording]);

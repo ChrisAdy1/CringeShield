@@ -298,6 +298,12 @@ const Recording: React.FC = () => {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       
+      // Stop all tracks to release camera and microphone resources
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
       // Clear timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
