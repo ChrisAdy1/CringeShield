@@ -551,12 +551,15 @@ export default function VideoRecorder({
           {/* Placeholder when no stream */}
           {!stream && !loading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="mb-2 text-center">
-                <Camera className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                <MicIcon className="w-8 h-8 text-gray-400 mx-auto" />
+              <div className="mb-4 text-center">
+                <Camera className="w-16 h-16 text-gray-500 mx-auto mb-3" />
+                <MicIcon className="w-10 h-10 text-gray-500 mx-auto" />
               </div>
-              <p className="text-sm text-gray-500 text-center max-w-xs">
-                Click "Start Recording" to activate your camera and microphone
+              <p className="text-base text-gray-700 font-medium text-center max-w-xs">
+                Click "START RECORDING" below
+              </p>
+              <p className="text-sm text-gray-600 text-center mt-1">
+                to activate your camera and microphone
               </p>
             </div>
           )}
@@ -596,27 +599,28 @@ export default function VideoRecorder({
         </div>
       )}
       
-      <div className="mt-4">
+      <div className="mt-6">
         {!recording ? (
           <Button 
             onClick={startRecording} 
             disabled={loading}
-            className="bg-primary text-white"
+            className="bg-primary hover:bg-primary/90 text-white font-medium shadow-md w-full py-6"
             size="lg"
           >
             {loading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Starting Camera</>
+              <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Starting Camera</>
             ) : (
-              <><Video className="mr-2 h-4 w-4" /> Start Recording</>
+              <><Video className="mr-2 h-5 w-5" /> START RECORDING</>
             )}
           </Button>
         ) : (
           <Button 
             onClick={stopRecording} 
             variant="destructive"
+            className="shadow-md w-full py-6"
             size="lg"
           >
-            <StopCircle className="mr-2 h-4 w-4" /> Stop Recording
+            <StopCircle className="mr-2 h-5 w-5" /> STOP RECORDING
           </Button>
         )}
       </div>

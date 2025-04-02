@@ -218,8 +218,9 @@ const Recording: React.FC = () => {
         
         {/* Recorder component */}
         {!showDownloadOption ? (
-          <Card>
+          <Card className="border-2 border-primary/20">
             <CardContent className="pt-6">
+              <h2 className="text-lg font-semibold text-center mb-3 text-primary">Record Your Practice</h2>
               <VideoRecorder 
                 onRecordingComplete={handleRecordingComplete} 
               />
