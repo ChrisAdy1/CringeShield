@@ -94,7 +94,8 @@ export default function VideoRecorder({
       
       // First try to just get permission with low constraints for maximum compatibility
       await navigator.mediaDevices.getUserMedia({
-        video: {
+        // Only request video access if not in audio-only mode
+        video: preferAudioOnly ? false : {
           width: { ideal: 640 },
           height: { ideal: 480 },
           facingMode: "user"
@@ -464,7 +465,8 @@ export default function VideoRecorder({
               onClick={() => {
                 setCameraError(null);
                 setPreferAudioOnly(true);
-                startRecording();
+                // We need to set this first, then start recording
+                setTimeout(() => startRecording(), 0);
               }}
               className="bg-[#2470ff] hover:bg-[#2470ff]/90 text-white"
             >
