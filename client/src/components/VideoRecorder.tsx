@@ -313,6 +313,11 @@ export default function VideoRecorder({
       }
 
       setStream(mediaStream);
+      
+      // If we're in audio-only mode, update the UI state
+      if (preferAudioOnly) {
+        setAudioOnly(true);
+      }
 
       // Try to initialize MediaRecorder with different options
       try {
@@ -449,7 +454,7 @@ export default function VideoRecorder({
                 setCameraError(null);
                 startRecording();
               }}
-              className="bg-primary text-white"
+              className="bg-[#2470ff] hover:bg-[#2470ff]/90 text-white"
             >
               <RefreshCw className="mr-2 h-4 w-4" /> Try Again
             </Button>
@@ -535,7 +540,7 @@ export default function VideoRecorder({
                   setCameraError('Unable to access microphone. Please check your browser permissions.');
                 }
               }}
-              variant="outline"
+              className="bg-[#2470ff] hover:bg-[#2470ff]/90 text-white"
             >
               <MicIcon className="mr-2 h-4 w-4" /> Audio Only Mode
             </Button>
@@ -572,7 +577,7 @@ export default function VideoRecorder({
           {audioOnly && stream && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100">
               <div className="p-4 bg-gray-200 rounded-full mb-4">
-                <MicIcon className="w-16 h-16 text-primary" />
+                <MicIcon className="w-16 h-16 text-[#2470ff]" />
               </div>
               <p className="text-center font-medium">Audio Only Mode</p>
               <p className="text-sm text-gray-500 mt-2">Your microphone is active, but camera is disabled</p>
@@ -588,8 +593,10 @@ export default function VideoRecorder({
           {/* Loading indicator */}
           {loading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
-              <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <p className="mt-2 text-gray-700">Accessing camera...</p>
+              <Loader2 className="w-10 h-10 animate-spin text-[#2470ff]" />
+              <p className="mt-2 text-gray-700">
+                {preferAudioOnly ? 'Accessing microphone...' : 'Accessing camera...'}
+              </p>
             </div>
           )}
           
@@ -612,9 +619,9 @@ export default function VideoRecorder({
             size="lg"
           >
             {loading ? (
-              <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Starting Camera</>
+              <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {preferAudioOnly ? 'Starting Microphone' : 'Starting Camera'}</>
             ) : (
-              <><Video className="mr-2 h-5 w-5" /> Start New Practice Session</>
+              <>{preferAudioOnly ? <MicIcon className="mr-2 h-5 w-5" /> : <Video className="mr-2 h-5 w-5" />} Start New Practice Session</>
             )}
           </Button>
         ) : (
@@ -635,7 +642,8 @@ export default function VideoRecorder({
           <Switch 
             id="audio-only" 
             checked={preferAudioOnly}
-            onCheckedChange={setPreferAudioOnly} 
+            onCheckedChange={setPreferAudioOnly}
+            className="data-[state=checked]:bg-[#2470ff]"
           />
           <Label htmlFor="audio-only" className="flex items-center gap-1">
             <MicIcon className="h-4 w-4" /> 
@@ -663,7 +671,8 @@ export default function VideoRecorder({
               <Switch 
                 id="mock-mode" 
                 checked={mockMode}
-                onCheckedChange={setMockMode} 
+                onCheckedChange={setMockMode}
+                className="data-[state=checked]:bg-[#2470ff]"
               />
               <Label htmlFor="mock-mode" className="flex items-center gap-1">
                 <Computer className="h-4 w-4" /> 
