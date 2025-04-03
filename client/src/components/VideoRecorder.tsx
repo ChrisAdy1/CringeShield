@@ -521,6 +521,11 @@ export default function VideoRecorder({
             <StopCircle className="mr-2 h-5 w-5" /> Stop Recording
           </Button>
         )}
+        
+        <div className="mt-3 text-center text-sm text-gray-600">
+          <p>Please the camera and microphone have to be on so that you can record.</p>
+          <p>Don't worry the recording will be saved on your device. We don't store them anywhere.</p>
+        </div>
       </div>
       
 
