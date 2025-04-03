@@ -566,9 +566,17 @@ export default function VideoRecorder({
       {!recording && (
         <div className="mt-4">
           <Button
-            onClick={() => setPreferAudioOnly(!preferAudioOnly)}
-            variant={preferAudioOnly ? "default" : "outline"}
-            className={preferAudioOnly ? "bg-[#2470ff] text-white hover:bg-[#2470ff]/90" : "border-[#2470ff] text-[#2470ff] hover:bg-[#2470ff]/10"}
+            onClick={() => {
+              if (!preferAudioOnly) {
+                // If not already in audio-only mode, enable it and start recording
+                setPreferAudioOnly(true);
+                startRecording();
+              } else {
+                // If already in audio-only mode, disable it
+                setPreferAudioOnly(false);
+              }
+            }}
+            className="bg-[#2470ff] text-white hover:bg-[#2470ff]/90"
           >
             <MicIcon className="mr-2 h-4 w-4" /> 
             Audio Only Mode
