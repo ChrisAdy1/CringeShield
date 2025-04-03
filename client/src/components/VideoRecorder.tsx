@@ -508,7 +508,7 @@ export default function VideoRecorder({
             {loading ? (
               <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Starting Camera</>
             ) : (
-              <><Video className="mr-2 h-5 w-5" /> Start New Practice Session</>
+              <><Video className="mr-2 h-5 w-5" /> Start Recording</>
             )}
           </Button>
         ) : (

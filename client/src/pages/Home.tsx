@@ -13,7 +13,8 @@ import {
   BarChart, 
   Clock, 
   History, 
-  Award 
+  Award,
+  HelpCircle
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useChallengeProgress } from '@/hooks/useChallengeProgress';
@@ -126,14 +127,21 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
               </p>
             </div>
             
-            {/* Start button */}
-            <div className="pt-2">
+            {/* Buttons to access challenges */}
+            <div className="pt-2 grid grid-cols-2 gap-3">
               <Button 
                 className="w-full"
-                onClick={() => window.location.href = '/recording?type=free'}
+                onClick={() => window.location.href = '/weekly-challenge'}
               >
-                <Video className="mr-2 h-4 w-4" />
-                Start New Practice Session
+                <Calendar className="mr-2 h-4 w-4" />
+                Weekly Challenge
+              </Button>
+              <Button 
+                className="w-full"
+                onClick={() => window.location.href = '/challenge'}
+              >
+                <Award className="mr-2 h-4 w-4" />
+                30-Day Challenge
               </Button>
             </div>
           </div>
@@ -160,18 +168,7 @@ const Home: React.FC = () => {
   const [, navigate] = useLocation();
   const { user, isLoading } = useAuth();
   
-  // Start free recording session
-  const startRecording = () => {
-    // If user is not logged in, redirect to registration page
-    if (!user) {
-      localStorage.setItem('auth-message', 'Please register to use the recording feature');
-      navigate('/auth?mode=register');
-      return;
-    }
-    
-    // Navigate to recording page with free talk mode
-    navigate('/recording?type=free');
-  };
+  // No longer need the startRecording function since we removed free practice mode
   
   return (
     <div className="min-h-screen p-4 pb-24">
@@ -238,22 +235,14 @@ const Home: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <Button 
                   className="h-auto py-3 flex flex-col"
-                  onClick={startRecording}
-                >
-                  <Video className="h-5 w-5 mb-1" />
-                  <span className="text-xs">Free Talk</span>
-                </Button>
-                <Button 
-                  className="h-auto py-3 flex flex-col"
-                  onClick={() => navigate('/weekly-challenge')}
+                  onClick={() => window.location.href = '/weekly-challenge'}
                 >
                   <Calendar className="h-5 w-5 mb-1" />
                   <span className="text-xs">Weekly Challenge</span>
                 </Button>
                 <Button 
-                  variant="outline"
                   className="h-auto py-3 flex flex-col"
-                  onClick={() => navigate('/challenge')}
+                  onClick={() => window.location.href = '/challenge'}
                 >
                   <Trophy className="h-5 w-5 mb-1" />
                   <span className="text-xs">30-Day Challenge</span>
@@ -261,10 +250,18 @@ const Home: React.FC = () => {
                 <Button 
                   variant="outline"
                   className="h-auto py-3 flex flex-col"
-                  onClick={() => navigate('/badges')}
+                  onClick={() => window.location.href = '/badges'}
                 >
                   <Award className="h-5 w-5 mb-1" />
                   <span className="text-xs">View Badges</span>
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="h-auto py-3 flex flex-col"
+                  onClick={() => window.location.href = '/help'}
+                >
+                  <HelpCircle className="h-5 w-5 mb-1" />
+                  <span className="text-xs">Help</span>
                 </Button>
               </div>
             </CardContent>
@@ -281,8 +278,8 @@ const Home: React.FC = () => {
                 <span className="font-semibold">1</span>
               </div>
               <div>
-                <h4 className="font-medium">Choose a Mode</h4>
-                <p className="text-sm text-muted-foreground">Start your practice by picking how you want to show up—select a Weekly Challenge, dive into the 30-Day Challenge, or go freestyle.</p>
+                <h4 className="font-medium">Choose a Challenge</h4>
+                <p className="text-sm text-muted-foreground">Start your practice by picking how you want to improve—select the Weekly Challenge for focused speaking topics or dive into the 30-Day Challenge for consistent practice.</p>
               </div>
             </div>
             

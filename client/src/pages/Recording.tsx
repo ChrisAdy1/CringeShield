@@ -34,7 +34,7 @@ const Recording: React.FC = () => {
   const isCurrentPromptCompleted = promptParam ? isPromptCompleted(promptParam) : false;
   
   // Get parameters from URL
-  const recordingType = challenge ? 'challenge' : weeklyPrompt ? 'weekly' : 'free';
+  const recordingType = challenge ? 'challenge' : 'weekly';
   
   // Recording states
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
