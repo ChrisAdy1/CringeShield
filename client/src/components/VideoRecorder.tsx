@@ -92,16 +92,24 @@ export default function VideoRecorder({
         return false;
       }
       
-      // First try to just get permission with low constraints for maximum compatibility
-      await navigator.mediaDevices.getUserMedia({
-        // Only request video access if not in audio-only mode
-        video: preferAudioOnly ? false : {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: "user"
-        },
-        audio: true,
-      });
+      // First try to just get permission with constraints based on mode
+      if (preferAudioOnly) {
+        // Audio-only mode - only request microphone permission
+        await navigator.mediaDevices.getUserMedia({
+          video: false,  // Important: explicitly set video to false
+          audio: true,
+        });
+      } else {
+        // Video+audio mode - request both permissions
+        await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: "user"
+          },
+          audio: true,
+        });
+      }
       
       // If we got here, permissions were granted
       setLoading(false);
@@ -572,7 +580,10 @@ export default function VideoRecorder({
               if (!preferAudioOnly) {
                 // If not already in audio-only mode, enable it and start recording
                 setPreferAudioOnly(true);
-                startRecording();
+                // Use setTimeout to ensure state is updated before starting recording
+                setTimeout(() => {
+                  startRecording();
+                }, 10);
               } else {
                 // If already in audio-only mode, disable it
                 setPreferAudioOnly(false);
