@@ -459,86 +459,12 @@ export default function VideoRecorder({
               <RefreshCw className="mr-2 h-4 w-4" /> Try Again
             </Button>
             
-            {/* Allow audio-only fallback */}
+            {/* Audio only button for fallback */}
             <Button 
-              onClick={async () => {
+              onClick={() => {
                 setCameraError(null);
-                setLoading(true);
-                
-                try {
-                  // Try audio-only mode
-                  const audioStream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: false
-                  });
-                  
-                  if (videoRef.current) {
-                    videoRef.current.srcObject = null;
-                  }
-                  
-                  setStream(audioStream);
-                  setAudioOnly(true);
-                  
-                  // Initialize recorder with audio only
-                  const mediaRecorder = new MediaRecorder(audioStream);
-                  mediaRecorderRef.current = mediaRecorder;
-                  
-                  // Setup data handlers
-                  recordedChunks.current = [];
-                  
-                  mediaRecorder.ondataavailable = (event) => {
-                    if (event.data && event.data.size > 0) {
-                      recordedChunks.current.push(event.data);
-                    }
-                  };
-                  
-                  mediaRecorder.onstop = () => {
-                    if (recordedChunks.current.length === 0) {
-                      setCameraError('No audio data was captured. Please try again.');
-                      return;
-                    }
-                    
-                    try {
-                      const blob = new Blob(recordedChunks.current, { type: "audio/webm" });
-                      
-                      // Call the callback if provided
-                      if (onRecordingComplete) {
-                        onRecordingComplete(blob);
-                      }
-                      
-                      // Auto-download if enabled
-                      if (autoDownload) {
-                        const url = URL.createObjectURL(blob);
-                        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-                        
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = `cringeshield-audio-${timestamp}.webm`;
-                        a.click();
-                        
-                        URL.revokeObjectURL(url);
-                      }
-                    } catch (err) {
-                      console.error('Error creating blob:', err);
-                      setCameraError('Failed to process recording. Please try again.');
-                    }
-                  };
-                  
-                  // Start recording
-                  mediaRecorder.start(1000);
-                  setRecording(true);
-                  setLoading(false);
-                  
-                  // Start the timer
-                  timerIntervalRef.current = setInterval(() => {
-                    setRecordingTime(prev => prev + 1);
-                  }, 1000);
-                  
-                } catch (err) {
-                  console.error("Audio-only access error:", err);
-                  setLoading(false);
-                  setCameraError('Unable to access microphone. Please check your browser permissions.');
-                }
+                setPreferAudioOnly(true);
+                startRecording();
               }}
               className="bg-[#2470ff] hover:bg-[#2470ff]/90 text-white"
             >
@@ -636,24 +562,19 @@ export default function VideoRecorder({
         )}
       </div>
       
-      {/* Audio-only toggle - always visible */}
-      <div className="mt-4 flex items-center gap-2">
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="audio-only" 
-            checked={preferAudioOnly}
-            onCheckedChange={setPreferAudioOnly}
-            className="data-[state=checked]:bg-[#2470ff]"
-          />
-          <Label htmlFor="audio-only" className="flex items-center gap-1">
-            <MicIcon className="h-4 w-4" /> 
-            <span>Audio Only Mode</span>
-          </Label>
+      {/* Audio-only button - only shown when not recording */}
+      {!recording && (
+        <div className="mt-4">
+          <Button
+            onClick={() => setPreferAudioOnly(!preferAudioOnly)}
+            variant={preferAudioOnly ? "default" : "outline"}
+            className={preferAudioOnly ? "bg-[#2470ff] text-white hover:bg-[#2470ff]/90" : "border-[#2470ff] text-[#2470ff] hover:bg-[#2470ff]/10"}
+          >
+            <MicIcon className="mr-2 h-4 w-4" /> 
+            Audio Only Mode
+          </Button>
         </div>
-        <p className="text-xs text-gray-500 ml-2">
-          (Record without camera)
-        </p>
-      </div>
+      )}
 
       {/* Prompt display if provided */}
       {prompt && (
