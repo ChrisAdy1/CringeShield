@@ -577,17 +577,13 @@ export default function VideoRecorder({
         <div className="mt-4">
           <Button
             onClick={() => {
-              if (!preferAudioOnly) {
-                // If not already in audio-only mode, enable it and start recording
-                setPreferAudioOnly(true);
-                // Use setTimeout to ensure state is updated before starting recording
-                setTimeout(() => {
-                  startRecording();
-                }, 10);
-              } else {
-                // If already in audio-only mode, disable it
-                setPreferAudioOnly(false);
-              }
+              // Clear any previous errors
+              setCameraError(null);
+              // Set audio-only mode first
+              setPreferAudioOnly(true);
+              // Use setTimeout to ensure the state update is processed 
+              // before starting the recording
+              setTimeout(() => startRecording(), 0);
             }}
             className="bg-[#2470ff] text-white hover:bg-[#2470ff]/90"
           >
