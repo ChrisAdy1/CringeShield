@@ -25,8 +25,7 @@ export default function VideoRecorder({
   const [loading, setLoading] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [audioOnly, setAudioOnly] = useState(false);
-  const [preferAudioOnly, setPreferAudioOnly] = useState(false); // User preference for audio-only mode
+  // Audio-only mode has been removed
   const recordedChunks = useRef<BlobPart[]>([]);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -61,7 +60,6 @@ export default function VideoRecorder({
     setStream(null);
     setRecording(false);
     setRecordingTime(0);
-    setAudioOnly(false);
   };
 
   // Effect to clean up resources when component unmounts
@@ -92,24 +90,15 @@ export default function VideoRecorder({
         return false;
       }
       
-      // First try to just get permission with constraints based on mode
-      if (preferAudioOnly) {
-        // Audio-only mode - only request microphone permission
-        await navigator.mediaDevices.getUserMedia({
-          video: false,  // Important: explicitly set video to false
-          audio: true,
-        });
-      } else {
-        // Video+audio mode - request both permissions
-        await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            facingMode: "user"
-          },
-          audio: true,
-        });
-      }
+      // Request camera and microphone permissions
+      await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "user"
+        },
+        audio: true,
+      });
       
       // If we got here, permissions were granted
       setLoading(false);
@@ -180,21 +169,18 @@ export default function VideoRecorder({
             setStream(mockStream);
             setRecording(true);
           } catch (err) {
-            console.warn('Canvas.captureStream not supported, falling back to audio-only mode', err);
-            setAudioOnly(true);
+            console.warn('Canvas.captureStream not supported, falling back to basic mock mode', err);
             setStream({} as MediaStream);
             setRecording(true);
           }
         } else {
           // Fallback if canvas context fails
-          setAudioOnly(true);
           setStream({} as MediaStream);
           setRecording(true);
         }
       } catch (err) {
         // Final fallback
         console.warn('Canvas operations failed, using basic mock mode', err);
-        setAudioOnly(true);
         setStream({} as MediaStream);
         setRecording(true);
       }
@@ -282,7 +268,6 @@ export default function VideoRecorder({
     
     setRecording(false);
     setStream(null);
-    setAudioOnly(false);
   }
   
   const startRecording = async () => {
@@ -305,10 +290,9 @@ export default function VideoRecorder({
         return;
       }
       
-      // Now actually get the stream - use the same constraints that worked during permission check
+      // Get the stream with camera and microphone
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        // If preferAudioOnly is true, don't request video
-        video: preferAudioOnly ? false : {
+        video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
           facingMode: "user"
@@ -322,11 +306,6 @@ export default function VideoRecorder({
       }
 
       setStream(mediaStream);
-      
-      // If we're in audio-only mode, update the UI state
-      if (preferAudioOnly) {
-        setAudioOnly(true);
-      }
 
       // Try to initialize MediaRecorder with different options
       try {
@@ -457,7 +436,7 @@ export default function VideoRecorder({
             <AlertTitle>Camera Access Error</AlertTitle>
             <AlertDescription>{cameraError}</AlertDescription>
           </Alert>
-          <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
+          <div className="mt-4 flex justify-center">
             <Button 
               onClick={() => {
                 setCameraError(null);
@@ -466,19 +445,6 @@ export default function VideoRecorder({
               className="bg-[#2470ff] hover:bg-[#2470ff]/90 text-white"
             >
               <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-            </Button>
-            
-            {/* Audio only button for fallback */}
-            <Button 
-              onClick={() => {
-                setCameraError(null);
-                setPreferAudioOnly(true);
-                // We need to set this first, then start recording
-                setTimeout(() => startRecording(), 0);
-              }}
-              className="bg-[#2470ff] hover:bg-[#2470ff]/90 text-white"
-            >
-              <MicIcon className="mr-2 h-4 w-4" /> Audio Only Mode
             </Button>
           </div>
         </div>
@@ -509,29 +475,14 @@ export default function VideoRecorder({
             </div>
           )}
           
-          {/* Audio-only mode indicator */}
-          {audioOnly && stream && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100">
-              <div className="p-4 bg-gray-200 rounded-full mb-4">
-                <MicIcon className="w-16 h-16 text-[#2470ff]" />
-              </div>
-              <p className="text-center font-medium">Audio Only Mode</p>
-              <p className="text-sm text-gray-500 mt-2">Your microphone is active, but camera is disabled</p>
-              {recording && (
-                <div className="mt-4 flex items-center">
-                  <div className="w-3 h-3 rounded-full bg-red-500 mr-2 animate-pulse" />
-                  <span className="text-sm font-medium">Recording in progress</span>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Audio Only Mode has been removed */}
           
           {/* Loading indicator */}
           {loading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10">
               <Loader2 className="w-10 h-10 animate-spin text-[#2470ff]" />
               <p className="mt-2 text-gray-700">
-                {preferAudioOnly ? 'Accessing microphone...' : 'Accessing camera...'}
+                Accessing camera...
               </p>
             </div>
           )}
@@ -555,9 +506,9 @@ export default function VideoRecorder({
             size="lg"
           >
             {loading ? (
-              <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {preferAudioOnly ? 'Starting Microphone' : 'Starting Camera'}</>
+              <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Starting Camera</>
             ) : (
-              <>{preferAudioOnly ? <MicIcon className="mr-2 h-5 w-5" /> : <Video className="mr-2 h-5 w-5" />} Start New Practice Session</>
+              <><Video className="mr-2 h-5 w-5" /> Start New Practice Session</>
             )}
           </Button>
         ) : (
@@ -572,26 +523,7 @@ export default function VideoRecorder({
         )}
       </div>
       
-      {/* Audio-only button - only shown when not recording */}
-      {!recording && (
-        <div className="mt-4">
-          <Button
-            onClick={() => {
-              // Clear any previous errors
-              setCameraError(null);
-              // Set audio-only mode first
-              setPreferAudioOnly(true);
-              // Use setTimeout to ensure the state update is processed 
-              // before starting the recording
-              setTimeout(() => startRecording(), 0);
-            }}
-            className="bg-[#2470ff] text-white hover:bg-[#2470ff]/90"
-          >
-            <MicIcon className="mr-2 h-4 w-4" /> 
-            Audio Only Mode
-          </Button>
-        </div>
-      )}
+
 
       {/* Prompt display if provided */}
       {prompt && (
