@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { WeeklyChallengeTier } from '@shared/schema';
 import { Redirect } from 'wouter';
+import { getQueryFn } from '@/lib/queryClient';
 
 // Define types for the API responses
 interface GlobalStats {
@@ -134,6 +135,7 @@ function GlobalStats() {
   const { data: stats, isLoading, error } = useQuery<GlobalStats>({
     queryKey: ['/api/admin/stats'],
     staleTime: 1000 * 60 * 5, // 5 minutes
+    queryFn: getQueryFn({ on401: "throw" }),
   });
   
   // Default empty stats object to handle undefined data safely
@@ -308,6 +310,7 @@ function UserList({ onSelectUser }: UserListProps) {
   const { data: users, isLoading, error } = useQuery<UserListItem[]>({
     queryKey: ['/api/admin/users'],
     staleTime: 1000 * 60 * 5, // 5 minutes
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   const sortedUsers = React.useMemo(() => {
@@ -421,6 +424,7 @@ function UserDetails({ userId }: UserDetailsProps) {
   const { data: userDetails, isLoading, error } = useQuery<UserDetails>({
     queryKey: [`/api/admin/users/${userId}`],
     enabled: !!userId,
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   if (isLoading) {
