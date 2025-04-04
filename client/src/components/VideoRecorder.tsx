@@ -69,7 +69,7 @@ export default function VideoRecorder({
     };
   }, []);
 
-  const requestPermissions = async () => {
+  const requestCameraAndMicAccess = async () => {
     // Reset state first
     setCameraError(null);
     setLoading(true);
@@ -80,18 +80,18 @@ export default function VideoRecorder({
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setCameraError("Your browser doesn't support camera access. Try using Chrome, Firefox, or Safari.");
         setLoading(false);
-        return false;
+        return null;
       }
       
       // Check if we're in a secure context (https or localhost)
       if (!window.isSecureContext) {
         setCameraError("Camera access requires a secure connection (HTTPS). Try opening this site with https:// at the beginning.");
         setLoading(false);
-        return false;
+        return null;
       }
       
       // Request camera and microphone permissions
-      await navigator.mediaDevices.getUserMedia({
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
@@ -101,14 +101,13 @@ export default function VideoRecorder({
       });
       
       // If we got here, permissions were granted
-      setLoading(false);
-      return true;
+      return mediaStream;
     } catch (err: any) {
       console.error("Permission error:", err);
       
-      // Set appropriate error message
+      // Set appropriate error message based on the specific error
       if (err.name === 'NotAllowedError') {
-        setCameraError('Camera or microphone access was denied. Please check your browser permissions and try again.');
+        setCameraError('Please allow camera/microphone access in your browser settings.');
       } else if (err.name === 'NotFoundError') {
         setCameraError('No camera or microphone found. Please check your device connections.');
       } else if (err.name === 'NotReadableError') {
@@ -120,13 +119,13 @@ export default function VideoRecorder({
       } else if (err.name === 'OverconstrainedError') {
         setCameraError('Camera constraints cannot be satisfied. Try on a device with a different camera.');
       } else if (err.name === 'SecurityError') {
-        setCameraError('Camera access blocked due to security restrictions. Try using HTTPS or check site permissions.');
+        setCameraError('Looks like camera permissions were blocked. You can enable them manually.');
       } else {
         setCameraError('Unable to access camera or microphone. Please make sure permissions are granted and try again.');
       }
       
       setLoading(false);
-      return false;
+      return null;
     }
   };
 
@@ -284,21 +283,11 @@ export default function VideoRecorder({
     setLoading(true);
     
     try {
-      // Try to get permissions first
-      const permissionsGranted = await requestPermissions();
-      if (!permissionsGranted) {
-        return;
+      // Request camera and microphone access now (only when recording starts)
+      const mediaStream = await requestCameraAndMicAccess();
+      if (!mediaStream) {
+        return; // Error already handled in requestCameraAndMicAccess
       }
-      
-      // Get the stream with camera and microphone
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: "user"
-        },
-        audio: true,
-      });
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
