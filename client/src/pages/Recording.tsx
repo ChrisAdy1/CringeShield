@@ -195,7 +195,7 @@ const Recording: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="ml-4 text-xl font-semibold">Record Your Practice</h1>
+          <h1 className="ml-4 text-xl font-semibold">Talk to the Camera</h1>
         </div>
       </header>
       
@@ -220,12 +220,7 @@ const Recording: React.FC = () => {
         {!showDownloadOption ? (
           <Card className="border-2 border-primary/20">
             <CardHeader>
-              <CardTitle className="text-center text-primary">Record Your Practice</CardTitle>
-              {(challenge?.description || weeklyPrompt?.text) && (
-                <CardDescription className="text-center p-3 bg-blue-50 border border-blue-100 rounded-md mt-2">
-                  <span className="font-medium">Your Prompt:</span> {challenge?.description || weeklyPrompt?.text}
-                </CardDescription>
-              )}
+              <CardTitle className="text-center text-primary">Talk to the Camera</CardTitle>
             </CardHeader>
             <CardContent>
               <VideoRecorder 
