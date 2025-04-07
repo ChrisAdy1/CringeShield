@@ -42,11 +42,16 @@ const Badges: React.FC = () => {
             <Award className="h-16 w-16 text-muted mb-4" />
             <h3 className="text-xl font-medium mb-2">No Badges Yet</h3>
             <p className="text-muted-foreground max-w-md">
-              Complete weekly challenges to earn badges! Each completed week earns you a badge for that tier.
+              Complete a challenge to earn badges!
             </p>
-            <Link to="/weekly-challenge" className="mt-6">
-              <Button>Start a Weekly Challenge</Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <Link to="/weekly-challenge">
+                <Button className="w-full">Start a Weekly Challenge</Button>
+              </Link>
+              <Link to="/challenge">
+                <Button variant="outline" className="w-full">Start the 30-Day Challenge</Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -57,6 +62,14 @@ const Badges: React.FC = () => {
             </CardHeader>
             <CardContent>
               <BadgeDisplay compact={false} />
+              <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
+                <Link to="/weekly-challenge">
+                  <Button className="w-full">Start a Weekly Challenge</Button>
+                </Link>
+                <Link to="/challenge">
+                  <Button variant="outline" className="w-full">Start the 30-Day Challenge</Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
           
