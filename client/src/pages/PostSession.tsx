@@ -182,7 +182,14 @@ const PostSession: React.FC = () => {
   
   // Trigger badge celebration when a badge is earned
   useEffect(() => {
-    if (user && (earnedBadge || (session?.type === 'prompt' && session?.promptId && getBadgeByPromptId(parseInt(session.promptId))))) {
+    if (user && (
+        // Regular badge earned
+        earnedBadge || 
+        // Prompt badge
+        (session?.type === 'prompt' && session?.promptId && getBadgeByPromptId(parseInt(session.promptId))) ||
+        // Weekly challenge badges
+        (session?.weeklyPromptId && completionSaved && session?.weeklyPromptTier)
+      )) {
       // Show badge celebration with confetti after a short delay
       const timer = setTimeout(() => {
         setShowBadgeCelebration(true);
@@ -190,7 +197,7 @@ const PostSession: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [earnedBadge, user, session]);
+  }, [earnedBadge, user, session, completionSaved]);
   
   // Set up journal entry after badge celebration is closed
   const handleBadgeCelebrationClose = () => {
@@ -496,6 +503,29 @@ const PostSession: React.FC = () => {
               </Badge>
               <p className="text-sm text-muted-foreground">
                 {getBadgeDescription(earnedBadge)}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Weekly challenge badge */}
+        {user && session?.weeklyPromptId && session?.weeklyPromptTier && completionSaved && (
+          <Card className="mb-6 border-primary/30 bg-primary/5">
+            <CardContent className="p-4 text-center">
+              <div className="mb-2 text-3xl">
+                {session.weeklyPromptTier === 'shy_starter' && '🌱'}
+                {session.weeklyPromptTier === 'growing_speaker' && '🌿'}
+                {session.weeklyPromptTier === 'confident_creator' && '🌳'}
+              </div>
+              <h2 className="font-semibold text-lg mb-1">Weekly Challenge Badge!</h2>
+              <Badge 
+                variant="outline"
+                className="bg-primary/20 border-primary/30 mb-2"
+              >
+                {formatTierName(session.weeklyPromptTier)}
+              </Badge>
+              <p className="text-sm text-muted-foreground">
+                Completed a {formatTierName(session.weeklyPromptTier)} challenge prompt!
               </p>
             </CardContent>
           </Card>
