@@ -173,7 +173,8 @@ const WeeklyChallenge = () => {
             <CardContent className="space-y-6">
               {weekPrompts.map((prompt: WeeklyPrompt) => {
                 const completed = isPromptCompleted(prompt.id);
-                const isLocked = selectedWeek > currentWeek;
+                // If the week is unlocked (which it must be to be selected), then the prompts should be available
+                const isLocked = false;
                 
                 return (
                   <Card key={prompt.id} className={`border ${completed ? 'bg-muted' : 'bg-card'}`}>
