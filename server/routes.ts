@@ -608,11 +608,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No weekly progress found" });
       }
       
-      // Get prompts for this week and tier
-      // Directly import the logic for getting weekly prompts
-      const { getWeeklyPrompts } = require('../client/src/lib/weeklyPrompts');
+      // Define the weekly prompts directly on the server
+      // This matches the logic in the client-side weeklyPrompts.ts file
+      const prompts = [
+        // Week 1
+        { id: 'w1_shy_1', week: 1, text: "Introduce yourself in one minute", tier: "shy_starter", order: 1 },
+        { id: 'w1_shy_2', week: 1, text: "Talk about your favorite hobby for 1 minute", tier: "shy_starter", order: 2 },
+        { id: 'w1_shy_3', week: 1, text: "Describe what you had for breakfast today", tier: "shy_starter", order: 3 },
+        { id: 'w1_growing_1', week: 1, text: "Talk about a book or movie you enjoyed recently for 2 minutes", tier: "growing_speaker", order: 1 },
+        { id: 'w1_growing_2', week: 1, text: "Explain how to do something simple (make coffee, tie shoes) for 2 minutes", tier: "growing_speaker", order: 2 },
+        { id: 'w1_confident_1', week: 1, text: "Give a 3-minute improvised talk on a random topic: 'The future of transportation'", tier: "confident_creator", order: 1 },
+        { id: 'w1_confident_2', week: 1, text: "Pretend you're introducing a keynote speaker at a conference for 3 minutes", tier: "confident_creator", order: 2 },
+        
+        // Add more weeks as needed
+        // Week 2
+        { id: 'w2_shy_1', week: 2, text: "Talk about your favorite place to visit", tier: "shy_starter", order: 1 },
+        { id: 'w2_shy_2', week: 2, text: "Describe your morning routine", tier: "shy_starter", order: 2 },
+        { id: 'w2_shy_3', week: 2, text: "Share a simple recipe you know", tier: "shy_starter", order: 3 },
+        { id: 'w2_growing_1', week: 2, text: "Give directions to your favorite restaurant", tier: "growing_speaker", order: 1 },
+        { id: 'w2_growing_2', week: 2, text: "Talk about a skill you want to learn", tier: "growing_speaker", order: 2 },
+        { id: 'w2_confident_1', week: 2, text: "Give a short presentation about a current event", tier: "confident_creator", order: 1 },
+        { id: 'w2_confident_2', week: 2, text: "Persuade the audience about an environmental issue", tier: "confident_creator", order: 2 },
+      ];
       
-      const weekPrompts = getWeeklyPrompts(weekNumber, tier);
+      const weekPrompts = prompts.filter(p => p.week === weekNumber && p.tier === tier);
       
       // Check if all prompts in this week are completed
       const completedPrompts = weeklyProgress.completedPrompts || [];
