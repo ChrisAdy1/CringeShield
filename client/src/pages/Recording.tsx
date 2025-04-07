@@ -219,11 +219,17 @@ const Recording: React.FC = () => {
         {/* Recorder component */}
         {!showDownloadOption ? (
           <Card className="border-2 border-primary/20">
-            <CardContent className="pt-6">
-              <h2 className="text-lg font-semibold text-center mb-3 text-primary">Record Your Practice</h2>
+            <CardHeader>
+              <CardTitle className="text-center text-primary">Record Your Practice</CardTitle>
+              {(challenge?.description || weeklyPrompt?.text) && (
+                <CardDescription className="text-center p-3 bg-blue-50 border border-blue-100 rounded-md mt-2">
+                  <span className="font-medium">Your Prompt:</span> {challenge?.description || weeklyPrompt?.text}
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
               <VideoRecorder 
                 onRecordingComplete={handleRecordingComplete}
-                prompt={challenge?.description || weeklyPrompt?.text}
               />
             </CardContent>
           </Card>

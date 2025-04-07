@@ -456,10 +456,10 @@ export default function VideoRecorder({
                 <MicIcon className="w-10 h-10 text-gray-500 mx-auto" />
               </div>
               <p className="text-base text-gray-700 font-medium text-center max-w-xs">
-                Click "Start New Practice Session" below
+                Press the button below to start recording.
               </p>
               <p className="text-sm text-gray-600 text-center mt-1">
-                to activate your camera and microphone
+                Please enable your camera and microphone.
               </p>
             </div>
           )}
@@ -512,20 +512,14 @@ export default function VideoRecorder({
         )}
         
         <div className="mt-3 text-center text-sm text-gray-600">
-          <p>Please the camera and microphone have to be on so that you can record.</p>
-          <p>Don't worry the recording will be saved on your device. We don't store them anywhere.</p>
+          <p>Your camera and microphone are required to record your practice session.</p>
+          <p>Don't worry, the recording will be saved on your device only. We don't store them anywhere.</p>
         </div>
       </div>
       
 
 
-      {/* Prompt display if provided */}
-      {prompt && (
-        <div className="mt-4 w-full p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <h3 className="font-medium text-blue-800 mb-1">Your Practice Prompt:</h3>
-          <p className="text-blue-700">{prompt}</p>
-        </div>
-      )}
+      {/* Removed duplicate prompt display */}
       
       {/* Mock mode switch for development/testing - only shown when explicitly enabled */}
       {showMockModeToggle && (

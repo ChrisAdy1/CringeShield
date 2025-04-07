@@ -136,9 +136,9 @@ const Help: React.FC = () => {
               <ul className="list-disc pl-5 space-y-1">
                 <li>Camera access required for recording (permissions will be requested)</li>
                 <li>Practice your speaking skills with video recording</li>
-                <li>Toggle camera on/off during recording if needed</li>
-                <li>Set a timer for structured practice sessions</li>
-                <li>After recording, reflect on your performance</li>
+                <li>Recordings are stored locally on your device for privacy</li>
+                <li>After recording, you can download your video or continue to feedback</li>
+                <li>Reflect on your performance to track your progress over time</li>
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -263,7 +263,7 @@ const Help: React.FC = () => {
               <li><strong>Be kind to yourself:</strong> Everyone feels awkward on camera at first</li>
               <li><strong>Focus on progress:</strong> Don't aim for perfection, celebrate small improvements</li>
               <li><strong>Practice in private:</strong> Find a quiet space where you won't be interrupted</li>
-              <li><strong>Use the timer:</strong> Set a short time limit for early sessions to make it less daunting</li>
+              <li><strong>Keep it brief:</strong> Start with short practice sessions and gradually increase your time as you get more comfortable</li>
             </ul>
           </CardContent>
         </Card>
