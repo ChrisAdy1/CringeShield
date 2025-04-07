@@ -458,9 +458,6 @@ export default function VideoRecorder({
               <p className="text-base text-gray-700 font-medium text-center max-w-xs">
                 Press the button below to start recording.
               </p>
-              <p className="text-sm text-gray-600 text-center mt-1">
-                Please enable your camera and microphone.
-              </p>
             </div>
           )}
           

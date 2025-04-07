@@ -23,8 +23,12 @@ import {
   Camera,
   HelpCircle
 } from 'lucide-react';
+import { useTitle } from '@/hooks/useTitle';
 
 const Help: React.FC = () => {
+  // Set the page title
+  useTitle('Help & Information');
+  
   return (
     <Layout currentPath="/help">
       <div className="container max-w-4xl py-8">

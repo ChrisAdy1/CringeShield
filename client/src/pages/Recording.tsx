@@ -8,6 +8,7 @@ import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
 import { getPromptById } from '@/lib/weeklyPrompts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
+import { useTitle } from '@/hooks/useTitle';
 import VideoRecorder from '@/components/VideoRecorder';
 
 const Recording: React.FC = () => {
@@ -35,6 +36,13 @@ const Recording: React.FC = () => {
   
   // Get parameters from URL
   const recordingType = challenge ? 'challenge' : 'weekly';
+  
+  // Set the page title based on challenge or prompt
+  useTitle(
+    challenge 
+      ? `Day ${challenge.day}: ${challenge.title}` 
+      : weeklyPrompt?.title || 'Talk to the Camera'
+  );
   
   // Recording states
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
