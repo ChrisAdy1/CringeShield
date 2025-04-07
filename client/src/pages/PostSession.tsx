@@ -10,6 +10,8 @@ import { useSelfReflections } from '@/hooks/useSelfReflections';
 import { SelfReflectionRating } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { getBadgeByPromptId } from '@/lib/promptBadges';
+import BadgeEarnedCelebration from '@/components/BadgeEarnedCelebration';
+import JournalEntry from '@/components/JournalEntry';
 
 // Helper functions
 function formatDuration(seconds: number) {
@@ -54,6 +56,10 @@ const PostSession: React.FC = () => {
   
   const { addReflection } = useSelfReflections();
   const [earnedBadge, setEarnedBadge] = useState<string | null>(null);
+  const [showBadgeCelebration, setShowBadgeCelebration] = useState(false);
+  const [showJournalEntry, setShowJournalEntry] = useState(false);
+  const [journalText, setJournalText] = useState('');
+  
   // Only use badges if user is logged in
   const { checkSessionForBadges } = useBadges();
   
@@ -173,6 +179,36 @@ const PostSession: React.FC = () => {
       savePromptCompletion();
     }
   }, [session, user]);
+  
+  // Trigger badge celebration when a badge is earned
+  useEffect(() => {
+    if (user && (earnedBadge || (session?.type === 'prompt' && session?.promptId && getBadgeByPromptId(parseInt(session.promptId))))) {
+      // Show badge celebration with confetti after a short delay
+      const timer = setTimeout(() => {
+        setShowBadgeCelebration(true);
+      }, 800);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [earnedBadge, user, session]);
+  
+  // Set up journal entry after badge celebration is closed
+  const handleBadgeCelebrationClose = () => {
+    setShowBadgeCelebration(false);
+    
+    // Show journal entry after badge celebration is closed
+    setShowJournalEntry(true);
+  };
+  
+  // Handle journal entry completion
+  const handleJournalSave = (text: string) => {
+    setJournalText(text);
+    setShowJournalEntry(false);
+  };
+  
+  const handleJournalSkip = () => {
+    setShowJournalEntry(false);
+  };
   
   // Handle saving reflection
   const handleSaveReflection = () => {
@@ -634,6 +670,43 @@ const PostSession: React.FC = () => {
             Home
           </Button>
         </div>
+        
+        {/* Badge Earned Celebration with Confetti */}
+        {showBadgeCelebration && (
+          <BadgeEarnedCelebration 
+            isOpen={showBadgeCelebration}
+            onClose={handleBadgeCelebrationClose}
+            badgeInfo={
+              earnedBadge ? {
+                title: earnedBadge,
+                description: getBadgeDescription(earnedBadge),
+              } : 
+              session?.type === 'prompt' && session?.promptId && getBadgeByPromptId(parseInt(session.promptId)) ? {
+                title: getBadgeByPromptId(parseInt(session.promptId))!.title,
+                description: getBadgeByPromptId(parseInt(session.promptId))!.description,
+                badgeColor: 'text-primary',
+              } : 
+              session?.weeklyPromptId && session?.weeklyPromptTier ? {
+                title: `${formatTierName(session.weeklyPromptTier)} Badge`,
+                description: `Completed a prompt in the ${formatTierName(session.weeklyPromptTier)} tier!`,
+                tier: session.weeklyPromptTier,
+              } : {
+                title: 'New Badge Earned!',
+                description: 'You\'ve unlocked a new achievement!',
+              }
+            }
+          />
+        )}
+        
+        {/* Optional Journaling */}
+        {showJournalEntry && sessionId && (
+          <JournalEntry 
+            sessionId={sessionId}
+            onSave={handleJournalSave}
+            onSkip={handleJournalSkip}
+            initialText={journalText}
+          />
+        )}
       </div>
     </div>
   );
