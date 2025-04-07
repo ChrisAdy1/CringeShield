@@ -281,14 +281,33 @@ export function getProgressPercentage(tier: WeeklyChallengeTier, completedPrompt
 }
 
 // Check if a week is unlocked based on start date
-export function isWeekUnlocked(startDate: Date, weekNumber: number): boolean {
-  // Calculate days since start (accounting for potential time differences)
-  const now = new Date();
-  const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+export function isWeekUnlocked(startDate: Date, weekNumber: number, completedPrompts?: string[]): boolean {
+  // Week 1 is always unlocked
+  if (weekNumber === 1) return true;
   
-  // Each week unlocks after (weekNumber - 1) * 7 days
-  // Week 1 is unlocked immediately
-  const requiredDays = (weekNumber - 1) * 7;
+  // For Week 2-15, if not providing completed prompts, use time-based unlocking
+  if (!completedPrompts) {
+    // Calculate days since start (accounting for potential time differences)
+    const now = new Date();
+    const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Each week unlocks after (weekNumber - 1) * 7 days
+    const requiredDays = (weekNumber - 1) * 7;
+    
+    return daysSinceStart >= requiredDays;
+  }
   
-  return daysSinceStart >= requiredDays;
+  // For testing/development: Allow progressing to next week if previous week is complete
+  // Check if all prompts from the previous week are completed
+  const previousWeek = weekNumber - 1;
+  const tierPrompts = allWeeklyPrompts.filter(p => p.week === previousWeek);
+  
+  // Get all unique tiers from the previous week's prompts
+  const tiers = Array.from(new Set(tierPrompts.map(p => p.tier)));
+  
+  // For each tier, check if at least one has all prompts completed
+  return tiers.some(tier => {
+    const tierWeekPrompts = tierPrompts.filter(p => p.tier === tier);
+    return tierWeekPrompts.every(prompt => completedPrompts.includes(prompt.id));
+  });
 }

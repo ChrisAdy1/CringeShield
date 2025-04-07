@@ -131,7 +131,7 @@ const WeeklyChallenge = () => {
           </CardHeader>
           <CardContent className="flex flex-col space-y-2 pb-6">
             {allWeeks.map(week => {
-              const weekUnlocked = isWeekUnlocked(startDate, week);
+              const weekUnlocked = isWeekUnlocked(startDate, week, completedPrompts);
               const isCurrentWeek = week === currentWeek;
               const weekPrompts = getWeeklyPrompts(week, tier);
               const weekCompletedPrompts = weekPrompts.filter(prompt => 

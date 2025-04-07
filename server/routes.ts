@@ -608,9 +608,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No weekly progress found" });
       }
       
-      // Define the weekly prompts directly on the server
+      // Define the weekly prompts directly on the server with proper typing
       // This matches the logic in the client-side weeklyPrompts.ts file
-      const prompts = [
+      const prompts: Array<{
+        id: string;
+        week: number;
+        text: string;
+        tier: WeeklyChallengeTier;
+        order: number;
+      }> = [
         // Week 1
         { id: 'w1_shy_1', week: 1, text: "Introduce yourself in one minute", tier: "shy_starter", order: 1 },
         { id: 'w1_shy_2', week: 1, text: "Talk about your favorite hobby for 1 minute", tier: "shy_starter", order: 2 },
@@ -635,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if all prompts in this week are completed
       const completedPrompts = weeklyProgress.completedPrompts || [];
-      const allCompleted = weekPrompts.every((prompt: WeeklyPrompt) => 
+      const allCompleted = weekPrompts.every(prompt => 
         completedPrompts.includes(prompt.id)
       );
       
