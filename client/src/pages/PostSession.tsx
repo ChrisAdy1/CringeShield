@@ -211,10 +211,28 @@ const PostSession: React.FC = () => {
   const handleJournalSave = (text: string) => {
     setJournalText(text);
     setShowJournalEntry(false);
+    
+    // Navigate to the appropriate page based on session type
+    if (session?.weeklyPromptId && session?.weeklyPromptTier) {
+      const weekNumber = parseInt(session.weeklyPromptId.split('_')[1].substring(1), 10);
+      navigate(`/weekly-challenge?week=${weekNumber}`);
+    } else {
+      // Default behavior for other session types
+      navigate('/');
+    }
   };
   
   const handleJournalSkip = () => {
     setShowJournalEntry(false);
+    
+    // Navigate to the appropriate page based on session type
+    if (session?.weeklyPromptId && session?.weeklyPromptTier) {
+      const weekNumber = parseInt(session.weeklyPromptId.split('_')[1].substring(1), 10);
+      navigate(`/weekly-challenge?week=${weekNumber}`);
+    } else {
+      // Default behavior for other session types
+      navigate('/');
+    }
   };
   
   // Handle saving reflection

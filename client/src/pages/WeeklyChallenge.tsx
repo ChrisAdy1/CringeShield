@@ -4,7 +4,7 @@ import { useWeeklyChallenge } from '@/hooks/useWeeklyChallenge';
 import { useWeeklyBadges } from '@/hooks/useWeeklyBadges';
 import { queryClient } from '../lib/queryClient';
 import { WeeklyPrompt } from '@/lib/weeklyPrompts';
-import { Redirect, Link } from 'wouter';
+import { Redirect, Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -29,16 +29,23 @@ const WeeklyChallenge = () => {
     checkForBadge, 
     checkAndAwardWeeklyBadge 
   } = useWeeklyBadges();
-  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  // Check for week parameter in URL query (e.g. /weekly-challenge?week=2)
+  const search = typeof window !== 'undefined' ? window.location.search : '';
+  const urlParams = new URLSearchParams(search);
+  const weekParam = urlParams.get('week');
+  
+  const [selectedWeek, setSelectedWeek] = useState<number>(
+    weekParam ? parseInt(weekParam, 10) : 1
+  );
   const [newBadge, setNewBadge] = useState<WeeklyBadge | null>(null);
   
   // Only set the selected week to current week on initial load, not after user selects a different week
   useEffect(() => {
-    if (!isLoading && weeklyChallenge?.status === 'in_progress' && selectedWeek === 1) {
+    if (!isLoading && weeklyChallenge?.status === 'in_progress' && !weekParam && selectedWeek === 1) {
       const currentWeek = getCurrentWeek();
       setSelectedWeek(currentWeek);
     }
-  }, [isLoading, weeklyChallenge, getCurrentWeek]);
+  }, [isLoading, weeklyChallenge, getCurrentWeek, weekParam]);
   
   // Check for week completion and award badges if needed
   useEffect(() => {
@@ -145,7 +152,11 @@ const WeeklyChallenge = () => {
                   variant={selectedWeek === week ? "default" : "outline"}
                   className="justify-between font-normal"
                   disabled={!weekUnlocked}
-                  onClick={() => setSelectedWeek(week)}
+                  onClick={() => {
+                    setSelectedWeek(week);
+                    // Update URL with the selected week
+                    window.history.pushState({}, "", `/weekly-challenge?week=${week}`);
+                  }}
                 >
                   <div className="flex items-center">
                     {!weekUnlocked ? (
