@@ -161,6 +161,11 @@ const PostSession: React.FC = () => {
           
           if (response.ok) {
             setCompletionSaved(true);
+            
+            // Explicitly trigger badge celebration for weekly prompts
+            setTimeout(() => {
+              setShowBadgeCelebration(true);
+            }, 500);
           } else {
             console.error('Failed to save weekly challenge completion');
           }
@@ -182,7 +187,8 @@ const PostSession: React.FC = () => {
   
   // Trigger badge celebration when a badge is earned
   useEffect(() => {
-    if (user && (
+    // Only try to show badge celebration if not already shown and user is logged in
+    if (user && !showBadgeCelebration && (
         // Regular badge earned
         earnedBadge || 
         // Prompt badge
@@ -190,6 +196,11 @@ const PostSession: React.FC = () => {
         // Weekly challenge badges
         (session?.weeklyPromptId && completionSaved && session?.weeklyPromptTier)
       )) {
+      console.log("Showing badge celebration for:", 
+        earnedBadge ? "Regular badge" : 
+        session?.type === 'prompt' ? "Prompt badge" : 
+        "Weekly challenge badge");
+      
       // Show badge celebration with confetti after a short delay
       const timer = setTimeout(() => {
         setShowBadgeCelebration(true);
@@ -197,7 +208,7 @@ const PostSession: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [earnedBadge, user, session, completionSaved]);
+  }, [earnedBadge, user, session, completionSaved, showBadgeCelebration]);
   
   // Set up journal entry after badge celebration is closed
   const handleBadgeCelebrationClose = () => {
@@ -255,9 +266,18 @@ const PostSession: React.FC = () => {
         });
         
         localStorage.setItem('practice-sessions', JSON.stringify(updatedSessions));
+        
+        // Navigate to the appropriate page based on session type
+        if (session?.weeklyPromptId && session?.weeklyPromptTier) {
+          const weekNumber = parseInt(session.weeklyPromptId.split('_')[1].substring(1), 10);
+          navigate(`/weekly-challenge?week=${weekNumber}`);
+        } else {
+          // Default behavior for other session types
+          navigate('/');
+        }
+      } else {
+        navigate('/');
       }
-      
-      navigate('/');
     }
   };
   
