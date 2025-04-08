@@ -47,33 +47,42 @@ const WeeklyChallenge = () => {
     }
   }, [isLoading, weeklyChallenge, getCurrentWeek, weekParam]);
   
+  // Get weekly badges for finding the highest completed week
+  const { badges: existingBadges = [] } = useWeeklyBadges();
+  
   // Check for week completion and award badges if needed
   useEffect(() => {
     if (!isLoading && weeklyChallenge?.status === 'in_progress') {
       const tier = weeklyChallenge.progress?.selectedTier as WeeklyChallengeTier;
       const completedPrompts = weeklyChallenge.progress?.completedPrompts || [];
       
-      // Check for completion in the current week and all previous weeks
-      const currentWeekNum = getCurrentWeek();
+      // Get badges for this specific tier
+      const tierBadges = existingBadges.filter(b => b.tier === tier);
+      const highestCompletedWeek = tierBadges.reduce((highest: number, badge: WeeklyBadge) => 
+        badge.weekNumber > highest ? badge.weekNumber : highest, 0
+      );
       
-      console.log("Checking badge eligibility - Current week:", currentWeekNum, "Selected week:", selectedWeek);
+      console.log("Checking badge eligibility - Highest completed week with badge:", highestCompletedWeek, "Selected week:", selectedWeek);
       
-      // Check the selected week's completion status
+      // Only check the selected week's completion status
       const selectedWeekPrompts = getWeeklyPrompts(selectedWeek, tier);
       const allSelectedWeekPromptsCompleted = selectedWeekPrompts.every(prompt => 
         completedPrompts.includes(prompt.id)
       );
       
-      console.log("Selected week completed?", allSelectedWeekPromptsCompleted, "Already has badge?", !!checkForBadge(tier, selectedWeek));
+      console.log("Selected week completed?", allSelectedWeekPromptsCompleted, 
+                 "Already has badge?", !!checkForBadge(tier, selectedWeek),
+                 "Is higher than previous weeks?", selectedWeek > highestCompletedWeek);
       
-      // Also check the current week (which may be different from selected)
-      const currentWeekPrompts = getWeeklyPrompts(currentWeekNum, tier);
-      const allCurrentWeekPromptsCompleted = currentWeekPrompts.every(prompt => 
-        completedPrompts.includes(prompt.id)
-      );
-      
-      // First check the selected week (what the user is viewing)
-      if (allSelectedWeekPromptsCompleted && !checkForBadge(tier, selectedWeek)) {
+      // Only check and award a badge if:
+      // 1. All prompts in the selected week are completed
+      // 2. No badge exists for this week already
+      // 3. The selected week is greater than the highest completed week with a badge
+      //    (to avoid showing badges for previous weeks when navigating forward)
+      if (allSelectedWeekPromptsCompleted && 
+          !checkForBadge(tier, selectedWeek) && 
+          selectedWeek > highestCompletedWeek) {
+        
         console.log("Awarding badge for selected week:", selectedWeek);
         // Award badge for the selected week
         const checkAndAwardSelected = async () => {
@@ -88,26 +97,9 @@ const WeeklyChallenge = () => {
           }
         };
         checkAndAwardSelected();
-      } 
-      // Then check current week if it's different from selected
-      else if (currentWeekNum !== selectedWeek && allCurrentWeekPromptsCompleted && !checkForBadge(tier, currentWeekNum)) {
-        console.log("Awarding badge for current week:", currentWeekNum);
-        // Award badge for the current week
-        const checkAndAwardCurrent = async () => {
-          try {
-            const badge = await checkAndAwardWeeklyBadge(tier, currentWeekNum);
-            if (badge) {
-              console.log("Badge awarded for current week:", badge);
-              setNewBadge(badge);
-            }
-          } catch (error) {
-            console.error("Error awarding badge for current week:", error);
-          }
-        };
-        checkAndAwardCurrent();
       }
     }
-  }, [isLoading, weeklyChallenge, getCurrentWeek, getWeeklyPrompts, checkForBadge, checkAndAwardWeeklyBadge, selectedWeek]);
+  }, [isLoading, weeklyChallenge, getCurrentWeek, getWeeklyPrompts, checkForBadge, checkAndAwardWeeklyBadge, selectedWeek, existingBadges]);
 
   // If user is not logged in, redirect to login page
   if (!user && !isLoading) {

@@ -188,25 +188,29 @@ const PostSession: React.FC = () => {
   // Trigger badge celebration when a badge is earned
   useEffect(() => {
     // Only try to show badge celebration if not already shown and user is logged in
-    if (user && !showBadgeCelebration && (
-        // Regular badge earned
-        earnedBadge || 
-        // Prompt badge
-        (session?.type === 'prompt' && session?.promptId && getBadgeByPromptId(parseInt(session.promptId))) ||
-        // Weekly challenge badges
-        (session?.weeklyPromptId && completionSaved && session?.weeklyPromptTier)
-      )) {
-      console.log("Showing badge celebration for:", 
-        earnedBadge ? "Regular badge" : 
-        session?.type === 'prompt' ? "Prompt badge" : 
-        "Weekly challenge badge");
+    if (user && !showBadgeCelebration) {
+      // Check which type of badge should be shown
+      const showForRegularBadge = earnedBadge;
+      const showForPromptBadge = session?.type === 'prompt' && 
+                               session?.promptId && 
+                               getBadgeByPromptId(parseInt(session.promptId));
+                               
+      // For weekly challenges, we'll no longer auto-trigger badge celebrations here
+      // since they should only be triggered in the WeeklyChallenge component
+      // after properly checking badge eligibility
+      const showForWeeklyBadge = false; // Disable auto-triggering weekly badges here
       
-      // Show badge celebration with confetti after a short delay
-      const timer = setTimeout(() => {
-        setShowBadgeCelebration(true);
-      }, 800);
-      
-      return () => clearTimeout(timer);
+      if (showForRegularBadge || showForPromptBadge) {
+        console.log("Showing badge celebration for:", 
+          earnedBadge ? "Regular badge" : "Prompt badge");
+        
+        // Show badge celebration with confetti after a short delay
+        const timer = setTimeout(() => {
+          setShowBadgeCelebration(true);
+        }, 800);
+        
+        return () => clearTimeout(timer);
+      }
     }
   }, [earnedBadge, user, session, completionSaved, showBadgeCelebration]);
   
