@@ -25,65 +25,94 @@ const BadgeEarnedCelebration: React.FC<BadgeEarnedCelebrationProps> = ({
   
   // Trigger confetti when the dialog opens
   useEffect(() => {
-    if (isOpen && !confettiTriggered) {
-      // Trigger the confetti animation
-      const duration = 3000;
-      const animationEnd = Date.now() + duration;
+    // Force reset confetti trigger when dialog opens to ensure it always runs
+    if (isOpen) {
+      console.log("Badge celebration opened, triggering confetti");
       
-      const randomInRange = (min: number, max: number) => {
-        return Math.random() * (max - min) + min;
-      };
+      // Force reset the confetti trigger if it was somehow already set
+      if (confettiTriggered) {
+        setConfettiTriggered(false);
+      }
       
-      const confettiColors = ['#2470ff', '#4488ff', '#6ba6ff', '#C7F9CC', '#FFD6A5'];
-      
-      const confettiAnimation = () => {
-        const timeLeft = animationEnd - Date.now();
-        
-        if (timeLeft <= 0) {
-          return;
-        }
-        
-        // Since it's a circular burst, make it respond to the party vibe
-        confetti({
-          particleCount: 3,
-          angle: randomInRange(55, 125), // Mostly upward
-          spread: randomInRange(50, 70),
-          origin: { x: randomInRange(0.4, 0.6), y: randomInRange(0.5, 0.6) },
-          colors: confettiColors,
-          zIndex: 1500,
-          gravity: 0.8, // Lower gravity for floating effect
-          shapes: ['circle', 'square'],
-          scalar: randomInRange(0.8, 1.2) // Bigger confetti
-        });
-        
-        // Create some smaller, quick-falling particles too
-        if (Math.random() > 0.5) {
+      // Small delay to ensure state update happens before the next check
+      setTimeout(() => {
+        if (isOpen && !confettiTriggered) {
+          // Trigger the confetti animation
+          const duration = 3000;
+          const animationEnd = Date.now() + duration;
+          
+          const randomInRange = (min: number, max: number) => {
+            return Math.random() * (max - min) + min;
+          };
+          
+          const confettiColors = ['#2470ff', '#4488ff', '#6ba6ff', '#C7F9CC', '#FFD6A5'];
+          
+          // More impressive confetti burst with multiple origins
           confetti({
-            particleCount: 2,
-            angle: randomInRange(45, 135),
-            spread: randomInRange(40, 60),
-            origin: { x: randomInRange(0.3, 0.7), y: 0.5 },
+            particleCount: 80,
+            spread: 100,
+            origin: { x: 0.5, y: 0.5 },
             colors: confettiColors,
+            gravity: 0.8,
+            scalar: 1.2,
             zIndex: 1500,
-            gravity: 1.5, // Higher gravity for quicker fall
-            scalar: randomInRange(0.4, 0.8) // Smaller confetti
+            shapes: ['circle', 'square']
           });
+          
+          // Continuous confetti animation
+          const confettiAnimation = () => {
+            const timeLeft = animationEnd - Date.now();
+            
+            if (timeLeft <= 0) {
+              return;
+            }
+            
+            // Add continuous confetti from the sides and top
+            if (Math.random() > 0.6) {
+              confetti({
+                particleCount: 2,
+                angle: randomInRange(55, 125), // Mostly upward
+                spread: randomInRange(50, 70),
+                origin: { x: randomInRange(0.4, 0.6), y: randomInRange(0.5, 0.6) },
+                colors: confettiColors,
+                zIndex: 1500,
+                gravity: 0.8, // Lower gravity for floating effect
+                shapes: ['circle', 'square'],
+                scalar: randomInRange(0.8, 1.2) // Bigger confetti
+              });
+            }
+            
+            // Create some smaller, quick-falling particles too
+            if (Math.random() > 0.7) {
+              confetti({
+                particleCount: 2,
+                angle: randomInRange(45, 135),
+                spread: randomInRange(40, 60),
+                origin: { x: randomInRange(0.3, 0.7), y: 0.5 },
+                colors: confettiColors,
+                zIndex: 1500,
+                gravity: 1.5, // Higher gravity for quicker fall
+                scalar: randomInRange(0.4, 0.8) // Smaller confetti
+              });
+            }
+            
+            // Schedule next frame
+            requestAnimationFrame(confettiAnimation);
+          };
+          
+          // Start the animation
+          confettiAnimation();
+          setConfettiTriggered(true);
+          console.log("Confetti animation triggered");
         }
-        
-        // Schedule next frame
-        requestAnimationFrame(confettiAnimation);
-      };
-      
-      // Start the animation
-      confettiAnimation();
-      setConfettiTriggered(true);
+      }, 50);
     }
     
     // Reset the trigger when dialog closes
     if (!isOpen) {
       setConfettiTriggered(false);
     }
-  }, [isOpen, confettiTriggered]);
+  }, [isOpen]);
   
   // Get badge icon based on tier or milestone
   const getBadgeIcon = () => {

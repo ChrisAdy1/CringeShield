@@ -755,8 +755,8 @@ const PostSession: React.FC = () => {
                 badgeColor: 'text-primary',
               } : 
               session?.weeklyPromptId && session?.weeklyPromptTier ? {
-                title: `${formatTierName(session.weeklyPromptTier)} Badge`,
-                description: `Completed a prompt in the ${formatTierName(session.weeklyPromptTier)} tier!`,
+                title: `${formatTierName(session.weeklyPromptTier)} Week ${session.weeklyPromptId.split('_')[1].substring(1)} Badge`,
+                description: `Completed all prompts for Week ${session.weeklyPromptId.split('_')[1].substring(1)} in the ${formatTierName(session.weeklyPromptTier)} tier!`,
                 tier: session.weeklyPromptTier,
               } : {
                 title: 'New Badge Earned!',

@@ -216,6 +216,20 @@ const WeeklyBadgesDisplay: React.FC<{ badges: WeeklyBadge[] }> = ({ badges }) =>
   );
 };
 
+// Get appropriate emoji based on tier
+const getTierEmoji = (tier: string): string => {
+  switch (tier) {
+    case 'shy_starter':
+      return '🌱';
+    case 'growing_speaker':
+      return '🌿';
+    case 'confident_creator':
+      return '🌳';
+    default:
+      return '🏆';
+  }
+};
+
 // Weekly badge item
 interface WeeklyBadgeItemProps {
   badge: WeeklyBadge;
@@ -224,6 +238,13 @@ interface WeeklyBadgeItemProps {
 
 const WeeklyBadgeItem: React.FC<WeeklyBadgeItemProps> = ({ badge, compact }) => {
   const formattedDate = new Date(badge.earnedAt).toLocaleDateString();
+  const tierEmoji = getTierEmoji(badge.tier);
+  
+  // Generate a proper badge name based on tier and week number
+  const getBadgeName = () => {
+    const tierName = formatTierName(badge.tier);
+    return `${tierName} Week ${badge.weekNumber} Badge`;
+  };
   
   return (
     <TooltipProvider>
@@ -246,7 +267,8 @@ const WeeklyBadgeItem: React.FC<WeeklyBadgeItemProps> = ({ badge, compact }) => 
         </TooltipTrigger>
         <TooltipContent>
           <div className="text-sm">
-            <p className="font-medium">{formatTierName(badge.tier)}: Week {badge.weekNumber}</p>
+            <p className="font-medium">{getBadgeName()} {tierEmoji}</p>
+            <p className="text-xs">Completed all Week {badge.weekNumber} challenges</p>
             <p className="text-xs text-muted-foreground">Earned on {formattedDate}</p>
           </div>
         </TooltipContent>

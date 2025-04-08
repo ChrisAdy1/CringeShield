@@ -53,33 +53,61 @@ const WeeklyChallenge = () => {
       const tier = weeklyChallenge.progress?.selectedTier as WeeklyChallengeTier;
       const completedPrompts = weeklyChallenge.progress?.completedPrompts || [];
       
-      // Check each unlocked week for completion
+      // Check for completion in the current week and all previous weeks
       const currentWeekNum = getCurrentWeek();
       
-      // Use a simpler approach - just check if the current week is complete
-      const currentWeekPrompts = getWeeklyPrompts(currentWeekNum, tier);
-      const allWeekPromptsCompleted = currentWeekPrompts.every(prompt => 
+      console.log("Checking badge eligibility - Current week:", currentWeekNum, "Selected week:", selectedWeek);
+      
+      // Check the selected week's completion status
+      const selectedWeekPrompts = getWeeklyPrompts(selectedWeek, tier);
+      const allSelectedWeekPromptsCompleted = selectedWeekPrompts.every(prompt => 
         completedPrompts.includes(prompt.id)
       );
       
-      // If all prompts in current week are completed and badge doesn't exist yet
-      if (allWeekPromptsCompleted && !checkForBadge(tier, currentWeekNum)) {
-        // Use our combined check and award function
-        const checkAndAward = async () => {
+      console.log("Selected week completed?", allSelectedWeekPromptsCompleted, "Already has badge?", !!checkForBadge(tier, selectedWeek));
+      
+      // Also check the current week (which may be different from selected)
+      const currentWeekPrompts = getWeeklyPrompts(currentWeekNum, tier);
+      const allCurrentWeekPromptsCompleted = currentWeekPrompts.every(prompt => 
+        completedPrompts.includes(prompt.id)
+      );
+      
+      // First check the selected week (what the user is viewing)
+      if (allSelectedWeekPromptsCompleted && !checkForBadge(tier, selectedWeek)) {
+        console.log("Awarding badge for selected week:", selectedWeek);
+        // Award badge for the selected week
+        const checkAndAwardSelected = async () => {
           try {
-            const badge = await checkAndAwardWeeklyBadge(tier, currentWeekNum);
+            const badge = await checkAndAwardWeeklyBadge(tier, selectedWeek);
             if (badge) {
+              console.log("Badge awarded for selected week:", badge);
               setNewBadge(badge);
             }
           } catch (error) {
-            console.error("Error awarding badge:", error);
+            console.error("Error awarding badge for selected week:", error);
           }
         };
-        
-        checkAndAward();
+        checkAndAwardSelected();
+      } 
+      // Then check current week if it's different from selected
+      else if (currentWeekNum !== selectedWeek && allCurrentWeekPromptsCompleted && !checkForBadge(tier, currentWeekNum)) {
+        console.log("Awarding badge for current week:", currentWeekNum);
+        // Award badge for the current week
+        const checkAndAwardCurrent = async () => {
+          try {
+            const badge = await checkAndAwardWeeklyBadge(tier, currentWeekNum);
+            if (badge) {
+              console.log("Badge awarded for current week:", badge);
+              setNewBadge(badge);
+            }
+          } catch (error) {
+            console.error("Error awarding badge for current week:", error);
+          }
+        };
+        checkAndAwardCurrent();
       }
     }
-  }, [isLoading, weeklyChallenge, getCurrentWeek, getWeeklyPrompts, checkForBadge, checkAndAwardWeeklyBadge]);
+  }, [isLoading, weeklyChallenge, getCurrentWeek, getWeeklyPrompts, checkForBadge, checkAndAwardWeeklyBadge, selectedWeek]);
 
   // If user is not logged in, redirect to login page
   if (!user && !isLoading) {
