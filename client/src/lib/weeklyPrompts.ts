@@ -286,7 +286,7 @@ export function isWeekUnlocked(startDate: Date, weekNumber: number, completedPro
   if (weekNumber === 1) return true;
   
   // For Week 2-15, if not providing completed prompts, use time-based unlocking
-  if (!completedPrompts) {
+  if (!completedPrompts || completedPrompts.length === 0) {
     // Calculate days since start (accounting for potential time differences)
     const now = new Date();
     const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -297,17 +297,41 @@ export function isWeekUnlocked(startDate: Date, weekNumber: number, completedPro
     return daysSinceStart >= requiredDays;
   }
   
-  // For testing/development: Allow progressing to next week if previous week is complete
-  // Check if all prompts from the previous week are completed
-  const previousWeek = weekNumber - 1;
-  const tierPrompts = allWeeklyPrompts.filter(p => p.week === previousWeek);
+  // For progression based on completion:
+  // If it's the immediate next week, check if previous week is complete
+  if (weekNumber === 2) {
+    // For week 2, check if ANY tier's week 1 is fully completed
+    const week1Prompts = allWeeklyPrompts.filter(p => p.week === 1);
+    const uniqueTiers = Array.from(new Set(week1Prompts.map(p => p.tier)));
+    
+    return uniqueTiers.some(tier => {
+      const tierWeek1Prompts = week1Prompts.filter(p => p.tier === tier);
+      // Check if ALL prompts for this tier's week 1 are completed
+      return tierWeek1Prompts.every(prompt => completedPrompts.includes(prompt.id));
+    });
+  }
   
-  // Get all unique tiers from the previous week's prompts
-  const tiers = Array.from(new Set(tierPrompts.map(p => p.tier)));
+  // For Week 3+, allow unlocking if any previous week is complete
+  // This helps users who might join late or skip weeks
+  for (let prevWeek = weekNumber - 1; prevWeek >= 1; prevWeek--) {
+    const prevWeekPrompts = allWeeklyPrompts.filter(p => p.week === prevWeek);
+    const uniqueTiers = Array.from(new Set(prevWeekPrompts.map(p => p.tier)));
+    
+    // Check if ANY tier's prompts for this previous week are ALL completed
+    const anyTierComplete = uniqueTiers.some(tier => {
+      const tierPrevWeekPrompts = prevWeekPrompts.filter(p => p.tier === tier);
+      return tierPrevWeekPrompts.every(prompt => completedPrompts.includes(prompt.id));
+    });
+    
+    if (anyTierComplete) {
+      return true;
+    }
+  }
   
-  // For each tier, check if at least one has all prompts completed
-  return tiers.some(tier => {
-    const tierWeekPrompts = tierPrompts.filter(p => p.tier === tier);
-    return tierWeekPrompts.every(prompt => completedPrompts.includes(prompt.id));
-  });
+  // If no previous week is complete, use time-based unlocking as fallback
+  const now = new Date();
+  const daysSinceStart = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const requiredDays = (weekNumber - 1) * 7;
+  
+  return daysSinceStart >= requiredDays;
 }

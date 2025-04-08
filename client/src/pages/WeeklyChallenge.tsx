@@ -32,9 +32,9 @@ const WeeklyChallenge = () => {
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [newBadge, setNewBadge] = useState<WeeklyBadge | null>(null);
   
-  // Set selected week to current week when data is loaded
+  // Only set the selected week to current week on initial load, not after user selects a different week
   useEffect(() => {
-    if (!isLoading && weeklyChallenge?.status === 'in_progress') {
+    if (!isLoading && weeklyChallenge?.status === 'in_progress' && selectedWeek === 1) {
       const currentWeek = getCurrentWeek();
       setSelectedWeek(currentWeek);
     }

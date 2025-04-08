@@ -609,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Define the weekly prompts directly on the server with proper typing
-      // This matches the logic in the client-side weeklyPrompts.ts file
+      // This MUST match the exact prompt IDs used in client/src/lib/weeklyPrompts.ts
       const prompts: Array<{
         id: string;
         week: number;
@@ -617,24 +617,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tier: WeeklyChallengeTier;
         order: number;
       }> = [
-        // Week 1
-        { id: 'w1_shy_1', week: 1, text: "Introduce yourself in one minute", tier: "shy_starter", order: 1 },
-        { id: 'w1_shy_2', week: 1, text: "Talk about your favorite hobby for 1 minute", tier: "shy_starter", order: 2 },
-        { id: 'w1_shy_3', week: 1, text: "Describe what you had for breakfast today", tier: "shy_starter", order: 3 },
-        { id: 'w1_growing_1', week: 1, text: "Talk about a book or movie you enjoyed recently for 2 minutes", tier: "growing_speaker", order: 1 },
-        { id: 'w1_growing_2', week: 1, text: "Explain how to do something simple (make coffee, tie shoes) for 2 minutes", tier: "growing_speaker", order: 2 },
-        { id: 'w1_confident_1', week: 1, text: "Give a 3-minute improvised talk on a random topic: 'The future of transportation'", tier: "confident_creator", order: 1 },
-        { id: 'w1_confident_2', week: 1, text: "Pretend you're introducing a keynote speaker at a conference for 3 minutes", tier: "confident_creator", order: 2 },
+        // Week 1 - Shy Starter
+        { id: 'shy_w1_p1', week: 1, text: "Introduce Yourself", tier: "shy_starter", order: 1 },
+        { id: 'shy_w1_p2', week: 1, text: "Describe What You See", tier: "shy_starter", order: 2 },
+        { id: 'shy_w1_p3', week: 1, text: "My Favorite Thing", tier: "shy_starter", order: 3 },
         
-        // Add more weeks as needed
-        // Week 2
-        { id: 'w2_shy_1', week: 2, text: "Talk about your favorite place to visit", tier: "shy_starter", order: 1 },
-        { id: 'w2_shy_2', week: 2, text: "Describe your morning routine", tier: "shy_starter", order: 2 },
-        { id: 'w2_shy_3', week: 2, text: "Share a simple recipe you know", tier: "shy_starter", order: 3 },
-        { id: 'w2_growing_1', week: 2, text: "Give directions to your favorite restaurant", tier: "growing_speaker", order: 1 },
-        { id: 'w2_growing_2', week: 2, text: "Talk about a skill you want to learn", tier: "growing_speaker", order: 2 },
-        { id: 'w2_confident_1', week: 2, text: "Give a short presentation about a current event", tier: "confident_creator", order: 1 },
-        { id: 'w2_confident_2', week: 2, text: "Persuade the audience about an environmental issue", tier: "confident_creator", order: 2 },
+        // Week 1 - Growing Speaker
+        { id: 'growing_w1_p1', week: 1, text: "Introduce yourself and talk about what you hope to gain from this speaking challenge", tier: "growing_speaker", order: 1 },
+        { id: 'growing_w1_p2', week: 1, text: "Describe your ideal day from morning to evening", tier: "growing_speaker", order: 2 },
+        { id: 'growing_w1_p3', week: 1, text: "Talk about a skill you've developed over time", tier: "growing_speaker", order: 3 },
+        
+        // Week 1 - Confident Creator
+        { id: 'confident_w1_p1', week: 1, text: "Give a comprehensive introduction of yourself", tier: "confident_creator", order: 1 },
+        { id: 'confident_w1_p2', week: 1, text: "Discuss a transformative experience that shaped your perspective", tier: "confident_creator", order: 2 },
+        { id: 'confident_w1_p3', week: 1, text: "Present your thoughts on the importance of effective communication", tier: "confident_creator", order: 3 },
+        
+        // Week 2 - Shy Starter
+        { id: 'shy_w2_p1', week: 2, text: "Name three things you're grateful for", tier: "shy_starter", order: 1 },
+        { id: 'shy_w2_p2', week: 2, text: "Describe the weather today", tier: "shy_starter", order: 2 },
+        { id: 'shy_w2_p3', week: 2, text: "Talk about a simple meal you enjoy", tier: "shy_starter", order: 3 },
+        
+        // Week 2 - Growing Speaker
+        { id: 'growing_w2_p1', week: 2, text: "Describe a place that means a lot to you", tier: "growing_speaker", order: 1 },
+        { id: 'growing_w2_p2', week: 2, text: "Talk about a hobby or interest you have", tier: "growing_speaker", order: 2 },
+        { id: 'growing_w2_p3', week: 2, text: "Describe a challenging situation you overcame", tier: "growing_speaker", order: 3 },
+        
+        // Week 2 - Confident Creator
+        { id: 'confident_w2_p1', week: 2, text: "Analyze a significant trend or change", tier: "confident_creator", order: 1 },
+        { id: 'confident_w2_p2', week: 2, text: "Present a mini lecture on a topic you're knowledgeable about", tier: "confident_creator", order: 2 },
+        { id: 'confident_w2_p3', week: 2, text: "Discuss a complex problem in your field", tier: "confident_creator", order: 3 },
       ];
       
       const weekPrompts = prompts.filter(p => p.week === weekNumber && p.tier === tier);
