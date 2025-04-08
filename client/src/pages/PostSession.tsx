@@ -162,10 +162,11 @@ const PostSession: React.FC = () => {
           if (response.ok) {
             setCompletionSaved(true);
             
-            // Explicitly trigger badge celebration for weekly prompts
-            setTimeout(() => {
-              setShowBadgeCelebration(true);
-            }, 500);
+            // Set flag to indicate user interaction for badge celebration purposes
+            sessionStorage.setItem('has_interacted_with_weekly_challenge', 'true');
+            
+            // No longer explicitly trigger badge celebrations here
+            // Badges will be shown on the WeeklyChallenge page instead
           } else {
             console.error('Failed to save weekly challenge completion');
           }

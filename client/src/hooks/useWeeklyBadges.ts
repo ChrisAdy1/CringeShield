@@ -68,19 +68,14 @@ export function useWeeklyBadges(): UseWeeklyBadgesReturn {
       
       const newBadge = await response.json();
       
-      // If a new badge was awarded, update the cache and show a toast
+      // If a new badge was awarded, update the cache (no toast - we'll show a modal instead)
       if (newBadge) {
         // Update the badges cache
         queryClient.setQueryData<WeeklyBadge[]>(['/api/weekly-badges'], (oldBadges = []) => {
           return [...oldBadges, newBadge];
         });
         
-        toast({
-          title: 'Badge Earned!',
-          description: `You earned a new badge for completing Week ${weekNumber}!`,
-          variant: 'default',
-        });
-        
+        // No toast notification as the modal will handle the celebration
         return newBadge;
       }
       

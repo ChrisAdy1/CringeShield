@@ -77,20 +77,31 @@ const WeeklyChallenge = () => {
       // Only check and award a badge if:
       // 1. All prompts in the selected week are completed
       // 2. No badge exists for this week already
-      // 3. The selected week is greater than the highest completed week with a badge
-      //    (to avoid showing badges for previous weeks when navigating forward)
+      // 3. We're not just browsing an old completed week
+      // 4. We have user interaction (page didn't just load)
+      
+      // Store the interaction state in session storage to track if this is a page load or user interaction
+      const hasUserInteraction = sessionStorage.getItem('has_interacted_with_weekly_challenge') === 'true';
+      
       if (allSelectedWeekPromptsCompleted && 
           !checkForBadge(tier, selectedWeek) && 
-          selectedWeek > highestCompletedWeek) {
+          // Only show badge celebrations for the highest week or if user explicitly completes a week
+          (selectedWeek > highestCompletedWeek || hasUserInteraction)) {
         
-        console.log("Awarding badge for selected week:", selectedWeek);
+        console.log("Awarding badge for selected week:", selectedWeek, "User interaction:", hasUserInteraction);
+        
         // Award badge for the selected week
         const checkAndAwardSelected = async () => {
           try {
             const badge = await checkAndAwardWeeklyBadge(tier, selectedWeek);
             if (badge) {
               console.log("Badge awarded for selected week:", badge);
-              setNewBadge(badge);
+              // Only show the modal if this is from user interaction
+              if (hasUserInteraction) {
+                setNewBadge(badge);
+              }
+              // Reset the interaction flag
+              sessionStorage.removeItem('has_interacted_with_weekly_challenge');
             }
           } catch (error) {
             console.error("Error awarding badge for selected week:", error);
