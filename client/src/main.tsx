@@ -1,12 +1,10 @@
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
-import { Toaster } from "@/components/ui/toaster";
-import { ThemeProvider } from "@/hooks/use-theme";
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css' // or style.css if you're using that
 
-createRoot(document.getElementById("root")!).render(
-  <ThemeProvider>
+ReactDOM.createRoot(document.getElementById('app')!).render(
+  <React.StrictMode>
     <App />
-    <Toaster />
-  </ThemeProvider>
-);
+  </React.StrictMode>
+)
