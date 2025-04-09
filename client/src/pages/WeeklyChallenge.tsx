@@ -14,8 +14,21 @@ import { getProgressPercentage, isWeekUnlocked } from '@/lib/weeklyPrompts';
 import { Loader2, LockIcon, CheckIcon, ArrowRightIcon, Award } from 'lucide-react';
 import type { WeeklyChallengeTier, WeeklyBadge } from '@shared/schema';
 import BadgeModal from '@/components/BadgeModal';
+import { useToast } from '@/hooks/use-toast';
+
+// Helper function to assign emoji to each week for visual cues
+const getWeekEmoji = (weekNumber: number): string => {
+  const emojis = [
+    '👋', '🗣️', '📝', '🎯', '💭', 
+    '🔄', '💪', '🧠', '🌟', '🔍', 
+    '📈', '🎙️', '🤝', '🎬', '🏆'
+  ];
+  
+  return emojis[weekNumber - 1] || '📅';
+};
 
 const WeeklyChallenge = () => {
+  const { toast } = useToast();
   const { user } = useAuth();
   const { 
     weeklyChallenge, 
@@ -49,6 +62,42 @@ const WeeklyChallenge = () => {
   
   // Get weekly badges for finding the highest completed week
   const { badges: existingBadges = [] } = useWeeklyBadges();
+  
+  // Track weekly prompt completions for celebration toast
+  const [weekCompletedStatus, setWeekCompletedStatus] = useState<Record<number, boolean>>({});
+  
+  // Show toast when all prompts in a week are completed
+  useEffect(() => {
+    if (!isLoading && weeklyChallenge?.status === 'in_progress') {
+      const tier = weeklyChallenge.progress?.selectedTier as WeeklyChallengeTier;
+      const completedPrompts = weeklyChallenge.progress?.completedPrompts || [];
+      
+      // Check the selected week for all prompts completed
+      const weekPrompts = getWeeklyPrompts(selectedWeek, tier);
+      const allPromptsCompleted = weekPrompts.every(p => completedPrompts.includes(p.id));
+      
+      // Store previous completion status to compare
+      const wasCompletedBefore = weekCompletedStatus[selectedWeek] || false;
+      
+      // Update the completion status map
+      if (allPromptsCompleted !== wasCompletedBefore) {
+        setWeekCompletedStatus(prev => ({...prev, [selectedWeek]: allPromptsCompleted}));
+        
+        // Only show toast if transitioning from incomplete to complete
+        if (allPromptsCompleted && !wasCompletedBefore) {
+          const hasUserInteraction = sessionStorage.getItem('has_interacted_with_weekly_challenge') === 'true';
+          // Only show toast for user interactions, not for page loads
+          if (hasUserInteraction) {
+            toast({
+              title: `Week ${selectedWeek} Completed! 🎉`,
+              description: "You've finished all the prompts for this week. Great progress!",
+              variant: "default",
+            });
+          }
+        }
+      }
+    }
+  }, [isLoading, weeklyChallenge, selectedWeek, weekCompletedStatus, toast, getWeeklyPrompts]);
   
   // Check for week completion and award badges if needed
   useEffect(() => {
@@ -187,6 +236,8 @@ const WeeklyChallenge = () => {
                     setSelectedWeek(week);
                     // Update URL with the selected week
                     window.history.pushState({}, "", `/weekly-challenge?week=${week}`);
+                    // Set interaction flag for badge celebration logic
+                    sessionStorage.setItem('has_interacted_with_weekly_challenge', 'true');
                   }}
                 >
                   <div className="flex items-center">
@@ -194,11 +245,21 @@ const WeeklyChallenge = () => {
                       <LockIcon className="h-4 w-4 mr-2" />
                     ) : weekCompletionPercent === 100 ? (
                       <CheckIcon className="h-4 w-4 mr-2 text-green-500" />
-                    ) : null}
-                    Week {week}
+                    ) : isCurrentWeek ? (
+                      <span className="text-xs mr-1 text-primary">📌</span>
+                    ) : (
+                      <span className="text-xs mr-1 opacity-70">{getWeekEmoji(week)}</span>
+                    )}
+                    <span>Week {week}</span>
+                    {selectedWeek === week && isCurrentWeek && (
+                      <span className="text-xs ml-1 text-primary/70 animate-pulse">👈</span>
+                    )}
                   </div>
                   {weekUnlocked && (
-                    <Badge variant="outline">{weekCompletedPrompts}/3</Badge>
+                    <Badge variant="outline" className={weekCompletionPercent === 100 ? "bg-green-50" : ""}>
+                      {weekCompletedPrompts}/3
+                      {weekCompletionPercent === 100 && <span className="ml-1">✓</span>}
+                    </Badge>
                   )}
                 </Button>
               );
@@ -210,9 +271,25 @@ const WeeklyChallenge = () => {
         <div className="md:col-span-3 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Week {selectedWeek} Prompts</CardTitle>
+              <CardTitle className="flex items-center">
+                <span>Week {selectedWeek} Prompts</span>
+                {selectedWeek === currentWeek && (
+                  <Badge variant="outline" className="ml-2 bg-primary/10 text-primary">Current Week</Badge>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Week completion message */}
+              {weekPrompts.length > 0 && weekPrompts.every(prompt => isPromptCompleted(prompt.id)) && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                  <div className="flex items-center mb-2">
+                    <span className="text-lg mr-2">🎉</span>
+                    <span className="font-medium">You've completed all prompts for Week {selectedWeek}!</span>
+                  </div>
+                  <p>Great job tackling this week's challenges. You're making excellent progress on your speaking journey!</p>
+                </div>
+              )}
+              
               {weekPrompts.map((prompt: WeeklyPrompt) => {
                 const completed = isPromptCompleted(prompt.id);
                 // If the week is unlocked (which it must be to be selected), then the prompts should be available
@@ -237,7 +314,7 @@ const WeeklyChallenge = () => {
                           disabled={isLocked} 
                           className="w-full md:w-auto"
                         >
-                          {completed ? 'Practice Again' : 'Record Response'}
+                          {completed ? 'Try Again' : 'Record Response'}
                           <ArrowRightIcon className="ml-2 h-4 w-4" />
                         </Button>
                       </Link>
@@ -250,37 +327,50 @@ const WeeklyChallenge = () => {
 
           {/* Week guidelines based on tier */}
           <Card>
-            <CardHeader>
-              <CardTitle>Guidelines for {tier === 'shy_starter' ? 'Shy Starter' : tier === 'growing_speaker' ? 'Growing Speaker' : 'Confident Creator'}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center">
+                {tier === 'shy_starter' && <span className="mr-2 text-lg">🌱</span>}
+                {tier === 'growing_speaker' && <span className="mr-2 text-lg">🌿</span>}
+                {tier === 'confident_creator' && <span className="mr-2 text-lg">🌳</span>}
+                Guidelines for {tier === 'shy_starter' ? 'Shy Starter' : tier === 'growing_speaker' ? 'Growing Speaker' : 'Confident Creator'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {tier === 'shy_starter' && (
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Aim for 30-45 seconds per prompt</li>
-                  <li>Focus on clarity rather than complexity</li>
-                  <li>Use simple language and stick to the main points</li>
-                  <li>It's okay to restart if you need to</li>
-                  <li>Practice looking at the camera for brief periods</li>
-                </ul>
-              )}
-              {tier === 'growing_speaker' && (
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Aim for 1-2 minutes per prompt</li>
-                  <li>Include specific examples or stories</li>
-                  <li>Vary your pace and tone</li>
-                  <li>Practice maintaining eye contact with the camera</li>
-                  <li>Try to minimize filler words (um, uh, like)</li>
-                </ul>
-              )}
-              {tier === 'confident_creator' && (
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Aim for 2-3 minutes per prompt</li>
-                  <li>Structure your response with a clear beginning, middle, and end</li>
-                  <li>Incorporate persuasive elements and thoughtful analysis</li>
-                  <li>Use hand gestures and facial expressions to enhance delivery</li>
-                  <li>Challenge yourself to speak without notes or preparation</li>
-                </ul>
-              )}
+              <div className={`rounded-lg p-4 ${
+                tier === 'shy_starter' 
+                  ? 'bg-purple-50 border border-purple-100' 
+                  : tier === 'growing_speaker' 
+                    ? 'bg-blue-50 border border-blue-100' 
+                    : 'bg-green-50 border border-green-100'
+              }`}>
+                {tier === 'shy_starter' && (
+                  <ul className="list-disc pl-6 space-y-3 leading-relaxed">
+                    <li>Aim for 30-45 seconds per prompt</li>
+                    <li>Focus on clarity rather than complexity</li>
+                    <li>Use simple language and stick to the main points</li>
+                    <li>It's okay to restart if you need to</li>
+                    <li>Practice looking at the camera for brief periods</li>
+                  </ul>
+                )}
+                {tier === 'growing_speaker' && (
+                  <ul className="list-disc pl-6 space-y-3 leading-relaxed">
+                    <li>Aim for 1-2 minutes per prompt</li>
+                    <li>Include specific examples or stories</li>
+                    <li>Vary your pace and tone</li>
+                    <li>Practice maintaining eye contact with the camera</li>
+                    <li>Try to minimize filler words (um, uh, like)</li>
+                  </ul>
+                )}
+                {tier === 'confident_creator' && (
+                  <ul className="list-disc pl-6 space-y-3 leading-relaxed">
+                    <li>Aim for 2-3 minutes per prompt</li>
+                    <li>Structure your response with a clear beginning, middle, and end</li>
+                    <li>Incorporate persuasive elements and thoughtful analysis</li>
+                    <li>Use hand gestures and facial expressions to enhance delivery</li>
+                    <li>Challenge yourself to speak without notes or preparation</li>
+                  </ul>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
