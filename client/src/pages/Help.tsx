@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '@/components/Layout';
 import {
   Card,
   CardContent,
@@ -37,291 +36,289 @@ const Help: React.FC = () => {
   useTitle('Help & Information');
   
   return (
-    <Layout currentPath="/help">
-      <div className="container max-w-4xl py-8">
-        <h1 className="text-2xl font-bold mb-2">Help & Information</h1>
-        <p className="text-muted-foreground mb-8">
-          Your guide to building camera confidence and becoming a better speaker
-        </p>
+    <div className="container max-w-4xl py-8">
+      <h1 className="text-2xl font-bold mb-2">Help & Information</h1>
+      <p className="text-muted-foreground mb-8">
+        Your guide to building camera confidence and becoming a better speaker
+      </p>
 
-        {/* App Overview */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+      {/* App Overview */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <UserCircle className="h-5 w-5 text-primary" />
+            Welcome to CringeShield
+          </CardTitle>
+          <CardDescription>
+            Your personal camera confidence builder
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4">
+            CringeShield helps you overcome camera anxiety through regular practice and structured challenges. 
+            Our app provides two main ways to improve your speaking confidence:
+          </p>
+          <ul className="list-disc pl-5 space-y-2 mb-4">
+            <li><strong>30-Day Challenge:</strong> Complete daily speaking exercises to build a consistent practice habit</li>
+            <li><strong>Weekly Challenge:</strong> Choose your comfort level and tackle new prompts each week</li>
+          </ul>
+          <p>
+            Track your progress, earn badges, and watch yourself transform into a confident speaker!
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Features Guide */}
+      <h2 className="text-xl font-semibold mb-4">Features Guide</h2>
+      <Accordion type="single" collapsible className="mb-8">
+        <AccordionItem value="dashboard">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
               <UserCircle className="h-5 w-5 text-primary" />
-              Welcome to CringeShield
-            </CardTitle>
-            <CardDescription>
-              Your personal camera confidence builder
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4">
-              CringeShield helps you overcome camera anxiety through regular practice and structured challenges. 
-              Our app provides two main ways to improve your speaking confidence:
+              <span>Dashboard Overview</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="mb-2">
+              Your personal dashboard displays your progress and achievements at a glance.
             </p>
-            <ul className="list-disc pl-5 space-y-2 mb-4">
-              <li><strong>30-Day Challenge:</strong> Complete daily speaking exercises to build a consistent practice habit</li>
-              <li><strong>Weekly Challenge:</strong> Choose your comfort level and tackle new prompts each week</li>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>See your completion stats for both challenge types</li>
+              <li>View your recently earned badges</li>
+              <li>Access quick links to start practicing</li>
             </ul>
-            <p>
-              Track your progress, earn badges, and watch yourself transform into a confident speaker!
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="30day">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              <span>30-Day Challenge</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="mb-2">
+              Build your speaking confidence with structured daily practice:
             </p>
-          </CardContent>
-        </Card>
-
-        {/* Features Guide */}
-        <h2 className="text-xl font-semibold mb-4">Features Guide</h2>
-        <Accordion type="single" collapsible className="mb-8">
-          <AccordionItem value="dashboard">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <UserCircle className="h-5 w-5 text-primary" />
-                <span>Dashboard Overview</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="mb-2">
-                Your personal dashboard displays your progress and achievements at a glance.
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>See your completion stats for both challenge types</li>
-                <li>View your recently earned badges</li>
-                <li>Access quick links to start practicing</li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="30day">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                <span>30-Day Challenge</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="mb-2">
-                Build your speaking confidence with structured daily practice:
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>30 unique speaking prompts to complete at your own pace</li>
-                <li>Track your progress with a visual completion indicator</li>
-                <li>Earn milestone badges at 7, 15, and 30 days</li>
-                <li>Days are only marked complete when you actually record a practice video</li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="weekly">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-indigo-500" />
-                <span>Weekly Challenge</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="mb-2">
-                Choose your comfort level with three tiers of weekly challenges:
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li><strong>Shy Starter:</strong> Simple prompts for beginners</li>
-                <li><strong>Growing Speaker:</strong> Moderate difficulty for those with some experience</li>
-                <li><strong>Confident Creator:</strong> Advanced prompts for those ready to push their limits</li>
-                <li>New prompts unlock each week for a total of 15 weeks of content</li>
-                <li>Earn badges for completing each week's challenges</li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="practice">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Video className="h-5 w-5 text-red-500" />
-                <span>Recording Videos</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="mb-2">
-                The recording feature lets you practice speaking on camera:
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>Camera access required for recording (permissions will be requested)</li>
-                <li>Practice your speaking skills with video recording</li>
-                <li>Recordings are stored locally on your device for privacy</li>
-                <li>After recording, you can download your video or continue to feedback</li>
-                <li>Reflect on your performance to track your progress over time</li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="badges">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-amber-500" />
-                <span>Earning Badges</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="mb-2">
-                Badges track your progress and celebrate your achievements:
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li><strong>30-Day Challenge Badges:</strong> Earned at 7, 15, and 30 days</li>
-                <li><strong>Weekly Challenge Badges:</strong> Earned for completing each week's prompts</li>
-                <li>View all your badges in the Badges section</li>
-                <li>Badges are permanently tied to your account</li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="settings">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-gray-500" />
-                <span>Settings & Preferences</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p className="mb-2">
-                Customize your experience in the Settings section:
-              </p>
-              <ul className="list-disc pl-5 space-y-1">
-                <li>Update your account information</li>
-                <li>Change your password</li>
-                <li>Adjust application preferences</li>
-                <li>Manage your account</li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-
-        {/* Troubleshooting */}
-        <h2 className="text-xl font-semibold mb-4">Troubleshooting</h2>
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <HelpCircle className="h-5 w-5 text-orange-500" />
-              Common Issues
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible>
-              <AccordionItem value="camera">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Camera className="h-4 w-4" />
-                    <span>Camera not working</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Make sure you've granted camera permissions in your browser</li>
-                    <li>Check if another application is using your camera</li>
-                    <li>Try refreshing the page</li>
-                    <li>Ensure your camera is properly connected and working</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="audio">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Mic className="h-4 w-4" />
-                    <span>Microphone not working</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Check if you've granted microphone permissions in your browser</li>
-                    <li>Make sure your microphone isn't muted</li>
-                    <li>Try a different microphone if available</li>
-                    <li>Restart the browser if problems persist</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="challenges">
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Challenge progress not updating</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ul className="list-disc pl-5 space-y-1">
-                    <li>Make sure you've completed a recording session</li>
-                    <li>Check your internet connection</li>
-                    <li>Try logging out and back in</li>
-                    <li>Contact support if the issue persists</li>
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-        </Card>
-
-        {/* Tips for Success */}
-        <h2 className="text-xl font-semibold mb-4">Tips for Success</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Overcoming Camera Anxiety</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <Clock className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                <div>
-                  <strong className="text-primary">Consistency is key:</strong> 
-                  <p className="text-gray-600">Practice regularly, even if just for a few minutes each day. Small steps add up over time.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <Leaf className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                <div>
-                  <strong className="text-green-600">Start small:</strong> 
-                  <p className="text-gray-600">Begin with the Shy Starter challenges if you're feeling nervous. Everyone has to start somewhere.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <Eye className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
-                <div>
-                  <strong className="text-blue-600">Watch your recordings:</strong> 
-                  <p className="text-gray-600">Review your videos to see your improvement over time. You'll be surprised by your progress!</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <Heart className="h-5 w-5 text-rose-500 mt-1 flex-shrink-0" />
-                <div>
-                  <strong className="text-rose-600">Be kind to yourself:</strong> 
-                  <p className="text-gray-600">Everyone feels awkward on camera at first. Self-compassion is essential for growth.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <Target className="h-5 w-5 text-amber-500 mt-1 flex-shrink-0" />
-                <div>
-                  <strong className="text-amber-600">Focus on progress:</strong> 
-                  <p className="text-gray-600">Don't aim for perfection, celebrate small improvements. Each step forward is meaningful.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <Home className="h-5 w-5 text-violet-500 mt-1 flex-shrink-0" />
-                <div>
-                  <strong className="text-violet-600">Practice in private:</strong> 
-                  <p className="text-gray-600">Find a quiet space where you won't be interrupted. Create a comfortable environment.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <TimerOff className="h-5 w-5 text-orange-500 mt-1 flex-shrink-0" />
-                <div>
-                  <strong className="text-orange-600">Keep it brief:</strong> 
-                  <p className="text-gray-600">Start with short practice sessions and gradually increase your time as you get more comfortable.</p>
-                </div>
-              </li>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>30 unique speaking prompts to complete at your own pace</li>
+              <li>Track your progress with a visual completion indicator</li>
+              <li>Earn milestone badges at 7, 15, and 30 days</li>
+              <li>Days are only marked complete when you actually record a practice video</li>
             </ul>
-          </CardContent>
-        </Card>
-      </div>
-    </Layout>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="weekly">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-indigo-500" />
+              <span>Weekly Challenge</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="mb-2">
+              Choose your comfort level with three tiers of weekly challenges:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Shy Starter:</strong> Simple prompts for beginners</li>
+              <li><strong>Growing Speaker:</strong> Moderate difficulty for those with some experience</li>
+              <li><strong>Confident Creator:</strong> Advanced prompts for those ready to push their limits</li>
+              <li>New prompts unlock each week for a total of 15 weeks of content</li>
+              <li>Earn badges for completing each week's challenges</li>
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="practice">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-red-500" />
+              <span>Recording Videos</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="mb-2">
+              The recording feature lets you practice speaking on camera:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Camera access required for recording (permissions will be requested)</li>
+              <li>Practice your speaking skills with video recording</li>
+              <li>Recordings are stored locally on your device for privacy</li>
+              <li>After recording, you can download your video or continue to feedback</li>
+              <li>Reflect on your performance to track your progress over time</li>
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="badges">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-amber-500" />
+              <span>Earning Badges</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="mb-2">
+              Badges track your progress and celebrate your achievements:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>30-Day Challenge Badges:</strong> Earned at 7, 15, and 30 days</li>
+              <li><strong>Weekly Challenge Badges:</strong> Earned for completing each week's prompts</li>
+              <li>View all your badges in the Badges section</li>
+              <li>Badges are permanently tied to your account</li>
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="settings">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-gray-500" />
+              <span>Settings & Preferences</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <p className="mb-2">
+              Customize your experience in the Settings section:
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Update your account information</li>
+              <li>Change your password</li>
+              <li>Adjust application preferences</li>
+              <li>Manage your account</li>
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* Troubleshooting */}
+      <h2 className="text-xl font-semibold mb-4">Troubleshooting</h2>
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <HelpCircle className="h-5 w-5 text-orange-500" />
+            Common Issues
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible>
+            <AccordionItem value="camera">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-4 w-4" />
+                  <span>Camera not working</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Make sure you've granted camera permissions in your browser</li>
+                  <li>Check if another application is using your camera</li>
+                  <li>Try refreshing the page</li>
+                  <li>Ensure your camera is properly connected and working</li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="audio">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Mic className="h-4 w-4" />
+                  <span>Microphone not working</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Check if you've granted microphone permissions in your browser</li>
+                  <li>Make sure your microphone isn't muted</li>
+                  <li>Try a different microphone if available</li>
+                  <li>Restart the browser if problems persist</li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="challenges">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Challenge progress not updating</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ul className="list-disc pl-5 space-y-1">
+                  <li>Make sure you've completed a recording session</li>
+                  <li>Check your internet connection</li>
+                  <li>Try logging out and back in</li>
+                  <li>Contact support if the issue persists</li>
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      {/* Tips for Success */}
+      <h2 className="text-xl font-semibold mb-4">Tips for Success</h2>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Overcoming Camera Anxiety</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-4">
+            <li className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+              <div>
+                <strong className="text-primary">Consistency is key:</strong> 
+                <p className="text-gray-600">Practice regularly, even if just for a few minutes each day. Small steps add up over time.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <Leaf className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
+              <div>
+                <strong className="text-green-600">Start small:</strong> 
+                <p className="text-gray-600">Begin with the Shy Starter challenges if you're feeling nervous. Everyone has to start somewhere.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <Eye className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
+              <div>
+                <strong className="text-blue-600">Watch your recordings:</strong> 
+                <p className="text-gray-600">Review your videos to see your improvement over time. You'll be surprised by your progress!</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <Heart className="h-5 w-5 text-rose-500 mt-1 flex-shrink-0" />
+              <div>
+                <strong className="text-rose-600">Be kind to yourself:</strong> 
+                <p className="text-gray-600">Everyone feels awkward on camera at first. Self-compassion is essential for growth.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <Target className="h-5 w-5 text-amber-500 mt-1 flex-shrink-0" />
+              <div>
+                <strong className="text-amber-600">Focus on progress:</strong> 
+                <p className="text-gray-600">Don't aim for perfection, celebrate small improvements. Each step forward is meaningful.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <Home className="h-5 w-5 text-violet-500 mt-1 flex-shrink-0" />
+              <div>
+                <strong className="text-violet-600">Practice in private:</strong> 
+                <p className="text-gray-600">Find a quiet space where you won't be interrupted. Create a comfortable environment.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <TimerOff className="h-5 w-5 text-orange-500 mt-1 flex-shrink-0" />
+              <div>
+                <strong className="text-orange-600">Keep it brief:</strong> 
+                <p className="text-gray-600">Start with short practice sessions and gradually increase your time as you get more comfortable.</p>
+              </div>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
