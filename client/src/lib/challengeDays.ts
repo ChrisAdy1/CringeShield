@@ -1,182 +1,153 @@
+// Define the 30-day challenge data
 export const challengeDays = [
   {
     day: 1,
-    title: "Record a 1-min intro video just for you",
-    note: "Say who you are and what your vibe is",
-    description: "This is your first step—no need to be polished. Just get used to being in front of the camera and speaking as yourself.",
+    title: "Record a 1-min intro video just for yourself",
+    description: "Introduce yourself, where you're from, and one interesting fact about you."
   },
   {
     day: 2,
-    title: "Talk about why you're doing this",
-    note: "Keep it chill, no pressure",
-    description: "Give yourself space to say your 'why' out loud. It doesn't have to be deep—just honest.",
+    title: "Share a goal you have for improving your speaking",
+    description: "What specific area would you like to improve most? Why is it important to you?"
   },
   {
     day: 3,
-    title: "Speak on a mindset idea casually (2 mins)",
-    note: "Don't teach it yet, just express it",
-    description: "Try sharing an idea that motivates you. Talk like you're in a casual conversation—not giving a lecture.",
+    title: "Explain something you're knowledgeable about",
+    description: "Choose a topic you know well and explain it in simple terms as if teaching someone."
   },
   {
     day: 4,
-    title: "Record same message sitting vs standing",
-    note: "Feel the difference in energy",
-    description: "See how posture and body language affect how you come across. No need to pick a favorite—just explore the shift.",
+    title: "Talk about your favorite place",
+    description: "Describe a place you love visiting - what makes it special to you?"
   },
   {
     day: 5,
-    title: "Smile once during your video",
-    note: "Only where it feels natural",
-    description: "Smiling can shift your tone and presence. Don't force it—just notice what happens when it shows up naturally.",
+    title: "Share a memorable experience",
+    description: "Talk about something memorable that happened to you and what you learned from it."
   },
   {
     day: 6,
-    title: "Watch a video and list 3 things you like",
-    note: "Focus on positives only",
-    description: "Instead of critiquing, look for what's working. Train yourself to spot progress instead of flaws.",
+    title: "Give yourself a pep talk",
+    description: "Record yourself giving an encouraging pep talk as if you were motivating yourself."
   },
   {
     day: 7,
-    title: "Record a 1-min 'one take only' video",
-    note: "Topic doesn't matter—just don't re-record",
-    description: "Challenge yourself to let go of perfection. One take, no pressure, just practice pressing through.",
+    title: "Reflect on week 1 progress",
+    description: "Share how you've felt about the first week of challenges and what you've noticed."
   },
   {
     day: 8,
-    title: "Pretend you're FaceTiming a friend",
-    note: "Record a personal mindset share",
-    description: "Lower the stakes—talk to the camera like it's a familiar face. Your tone will shift automatically.",
+    title: "Tell a short story",
+    description: "Share a brief story - can be something that happened to you or made up!"
   },
   {
     day: 9,
-    title: "Practice pausing after key lines",
-    note: "Watch how it adds clarity",
-    description: "Pauses make your message breathe. Try adding intentional space after strong statements.",
+    title: "Practice answering an interview question",
+    description: "What are your greatest strengths? Answer as if in a job interview."
   },
   {
     day: 10,
-    title: "Emphasize one word per sentence",
-    note: "Start playing with tone",
-    description: "Play with vocal emphasis to add emotion and rhythm. Start small—just one word per sentence.",
+    title: "Explain your morning routine",
+    description: "Walk through your typical morning routine step by step."
   },
   {
     day: 11,
-    title: "Tell a personal story (under 3 mins)",
-    note: "Let it be honest and real",
-    description: "Storytelling is powerful—this is about being real, not perfect. Let your voice carry the moment.",
+    title: "Share a skill you'd like to learn",
+    description: "Talk about something you'd like to learn and why it interests you."
   },
   {
     day: 12,
-    title: "Add one hand gesture per idea",
-    note: "Let gestures flow naturally",
-    description: "Using your hands can help you feel more expressive and grounded. Don't overthink it—just be you.",
+    title: "Describe your ideal day",
+    description: "From morning to night, describe what your perfect day would look like."
   },
   {
     day: 13,
-    title: "Record standing with stronger voice",
-    note: "Just a slight energy bump",
-    description: "Standing helps you breathe better and speak with more intention. Try it and feel the difference.",
+    title: "Give a recommendation",
+    description: "Recommend a book, movie, podcast or product and why you like it."
   },
   {
     day: 14,
-    title: "Review 2 vids – what felt you?",
-    note: "Notice forced vs. authentic",
-    description: "Watch yourself with kindness. What felt natural? What felt like a performance? Keep what feels true.",
+    title: "Reflect on week 2 progress",
+    description: "What have you improved on since starting this challenge? What still feels difficult?"
   },
   {
     day: 15,
-    title: "Teach 1 idea in 2 mins (to younger self)",
-    note: "Keep the tone personal",
-    description: "Teach something you care about as if speaking to a younger version of you. Kind, simple, personal.",
+    title: "Share your opinion on a topic",
+    description: "Pick a non-controversial topic and share your thoughts about it."
   },
   {
     day: 16,
-    title: "Record a mindset myth-busting video",
-    note: "'They say X, but here's my view'",
-    description: "Push back on a belief that doesn't work for you. Share your take, your way.",
+    title: "Teach a simple exercise or stretch",
+    description: "Demonstrate and explain a simple exercise or stretch anyone can do."
   },
   {
     day: 17,
-    title: "Give advice to someone stuck",
-    note: "Speak to one person",
-    description: "Picture one friend who needs encouragement. Speak to them directly, not to 'an audience.'",
+    title: "Explain how to make something",
+    description: "Walk through how to make something simple (a sandwich, a paper airplane, etc.)"
   },
   {
     day: 18,
-    title: "End your vid with a question",
-    note: "Encourage engagement",
-    description: "Practice inviting curiosity. Ask something open-ended to keep the conversation alive.",
+    title: "Record yourself reading a paragraph",
+    description: "Find a paragraph from a book or article and read it with expression."
   },
   {
     day: 19,
-    title: "Use 1 smile, 1 nod, 1 gesture, 1 pause",
-    note: "Basic dynamic delivery practice",
-    description: "Mix in non-verbal expression—naturally. No performance, just presence."
+    title: "Share what motivates you",
+    description: "Talk about what drives you and keeps you motivated in life."
   },
   {
     day: 20,
-    title: "Record in a new setting",
-    note: "Shake up your vibe",
-    description: "Changing your environment can reset your energy. Find a fresh place and record something light."
+    title: "Give advice to your younger self",
+    description: "What wisdom would you share with your younger self if you could?"
   },
   {
     day: 21,
-    title: "Watch Day 1 vs. Day 21 video",
-    note: "Reflect + celebrate progress",
-    description: "Look back at how far you've come. Celebrate effort, not perfection."
+    title: "Reflect on week 3 progress",
+    description: "You're 3 weeks in! Reflect on how your confidence has changed since starting."
   },
   {
     day: 22,
-    title: "Record a 3-min 'tip of the day'",
-    note: "Usable content, no overthinking",
-    description: "Share a simple tip like you're chatting with someone in a DM. Keep it helpful, not perfect."
+    title: "Practice introducing yourself professionally",
+    description: "Give a professional introduction as if meeting someone at a networking event."
   },
   {
     day: 23,
-    title: "Break down 1 idea into 3 parts",
-    note: "1) Problem 2) Your take 3) Action step",
-    description: "Structure adds clarity. Try breaking down your idea into a clean 3-part message."
+    title: "Share something you've learned recently",
+    description: "Talk about something new you've learned in the past month."
   },
   {
     day: 24,
-    title: "Talk to a specific person type",
-    note: "E.g., 'If you're someone who…'",
-    description: "Direct your message to one kind of person—it makes your voice feel focused and real."
+    title: "Explain a concept you understand well",
+    description: "Pick a concept or idea and explain it clearly to someone who's never heard of it."
   },
   {
     day: 25,
-    title: "Record 2 energy levels: chill + +10%",
-    note: "Feel the shift without being fake",
-    description: "Try bumping your delivery just 10%. More energy doesn't mean being someone else—just being intentional."
+    title: "Talk about a small win",
+    description: "Share a recent accomplishment, no matter how small, and why it matters to you."
   },
   {
     day: 26,
-    title: "Batch 3 short vids, no editing",
-    note: "Build reps, fast and loose",
-    description: "Don't aim for perfect—aim for momentum. Shoot quick, messy, and done."
+    title: "Share a travel experience or dream destination",
+    description: "Talk about a memorable trip or somewhere you'd love to visit someday."
   },
   {
     day: 27,
-    title: "Identify your signature style",
-    note: "What feels unique to you?",
-    description: "After all these videos, what's starting to feel like *you*? Voice? Vibe? That's your signature."
+    title: "Give a brief 'how-to' tutorial",
+    description: "Teach a simple skill or process that others might find useful."
   },
   {
     day: 28,
-    title: "Open with a bold line or question",
-    note: "Hook the viewer early",
-    description: "Start strong. Catch attention with a bold statement or honest question—and then follow through."
+    title: "Reflect on week 4 progress",
+    description: "You're almost done! Reflect on your journey over the past 4 weeks."
   },
   {
     day: 29,
-    title: "Get feedback from someone",
-    note: "Ask what feels you vs. off",
-    description: "Let someone else watch a video and tell you what feels genuine. External reflection helps shape your style."
+    title: "Record a creative monologue",
+    description: "Be creative! Try a short monologue as if you were in a play or movie."
   },
   {
     day: 30,
-    title: "Record a video you'd be proud to post",
-    note: "No perfect—just real",
-    description: "Bring it all together. Record something you'd share—not because it's flawless, but because it's true."
+    title: "Share your 30-day challenge experience",
+    description: "Reflect on the full 30 days - how has your speaking confidence changed?"
   }
 ];

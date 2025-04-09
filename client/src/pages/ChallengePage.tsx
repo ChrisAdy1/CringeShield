@@ -10,160 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 import BadgeModal from '@/components/BadgeModal';
 import { ChallengeBadge } from '@shared/schema';
-
-// Define the 30-day challenge data
-export const challengeDays = [
-  {
-    day: 1,
-    title: "Record a 1-min intro video just for yourself",
-    description: "Introduce yourself, where you're from, and one interesting fact about you."
-  },
-  {
-    day: 2,
-    title: "Share a goal you have for improving your speaking",
-    description: "What specific area would you like to improve most? Why is it important to you?"
-  },
-  {
-    day: 3,
-    title: "Explain something you're knowledgeable about",
-    description: "Choose a topic you know well and explain it in simple terms as if teaching someone."
-  },
-  {
-    day: 4,
-    title: "Talk about your favorite place",
-    description: "Describe a place you love visiting - what makes it special to you?"
-  },
-  {
-    day: 5,
-    title: "Share a memorable experience",
-    description: "Talk about something memorable that happened to you and what you learned from it."
-  },
-  {
-    day: 6,
-    title: "Give yourself a pep talk",
-    description: "Record yourself giving an encouraging pep talk as if you were motivating yourself."
-  },
-  {
-    day: 7,
-    title: "Reflect on week 1 progress",
-    description: "Share how you've felt about the first week of challenges and what you've noticed."
-  },
-  {
-    day: 8,
-    title: "Tell a short story",
-    description: "Share a brief story - can be something that happened to you or made up!"
-  },
-  {
-    day: 9,
-    title: "Practice answering an interview question",
-    description: "What are your greatest strengths? Answer as if in a job interview."
-  },
-  {
-    day: 10,
-    title: "Explain your morning routine",
-    description: "Walk through your typical morning routine step by step."
-  },
-  {
-    day: 11,
-    title: "Share a skill you'd like to learn",
-    description: "Talk about something you'd like to learn and why it interests you."
-  },
-  {
-    day: 12,
-    title: "Describe your ideal day",
-    description: "From morning to night, describe what your perfect day would look like."
-  },
-  {
-    day: 13,
-    title: "Give a recommendation",
-    description: "Recommend a book, movie, podcast or product and why you like it."
-  },
-  {
-    day: 14,
-    title: "Reflect on week 2 progress",
-    description: "What have you improved on since starting this challenge? What still feels difficult?"
-  },
-  {
-    day: 15,
-    title: "Share your opinion on a topic",
-    description: "Pick a non-controversial topic and share your thoughts about it."
-  },
-  {
-    day: 16,
-    title: "Teach a simple exercise or stretch",
-    description: "Demonstrate and explain a simple exercise or stretch anyone can do."
-  },
-  {
-    day: 17,
-    title: "Explain how to make something",
-    description: "Walk through how to make something simple (a sandwich, a paper airplane, etc.)"
-  },
-  {
-    day: 18,
-    title: "Record yourself reading a paragraph",
-    description: "Find a paragraph from a book or article and read it with expression."
-  },
-  {
-    day: 19,
-    title: "Share what motivates you",
-    description: "Talk about what drives you and keeps you motivated in life."
-  },
-  {
-    day: 20,
-    title: "Give advice to your younger self",
-    description: "What wisdom would you share with your younger self if you could?"
-  },
-  {
-    day: 21,
-    title: "Reflect on week 3 progress",
-    description: "You're 3 weeks in! Reflect on how your confidence has changed since starting."
-  },
-  {
-    day: 22,
-    title: "Practice introducing yourself professionally",
-    description: "Give a professional introduction as if meeting someone at a networking event."
-  },
-  {
-    day: 23,
-    title: "Share something you've learned recently",
-    description: "Talk about something new you've learned in the past month."
-  },
-  {
-    day: 24,
-    title: "Explain a concept you understand well",
-    description: "Pick a concept or idea and explain it clearly to someone who's never heard of it."
-  },
-  {
-    day: 25,
-    title: "Talk about a small win",
-    description: "Share a recent accomplishment, no matter how small, and why it matters to you."
-  },
-  {
-    day: 26,
-    title: "Share a travel experience or dream destination",
-    description: "Talk about a memorable trip or somewhere you'd love to visit someday."
-  },
-  {
-    day: 27,
-    title: "Give a brief 'how-to' tutorial",
-    description: "Teach a simple skill or process that others might find useful."
-  },
-  {
-    day: 28,
-    title: "Reflect on week 4 progress",
-    description: "You're almost done! Reflect on your journey over the past 4 weeks."
-  },
-  {
-    day: 29,
-    title: "Record a creative monologue",
-    description: "Be creative! Try a short monologue as if you were in a play or movie."
-  },
-  {
-    day: 30,
-    title: "Share your 30-day challenge experience",
-    description: "Reflect on the full 30 days - how has your speaking confidence changed?"
-  }
-];
+import { challengeDays } from '@/lib/challengeDays';
 
 const ChallengePage: React.FC = () => {
   const [location, setLocation] = useLocation();
@@ -222,11 +69,43 @@ const ChallengePage: React.FC = () => {
   const completeDay = async (dayNumber: number) => {
     try {
       await completeDayMutation.mutateAsync(dayNumber);
+      
+      // Basic completion toast
       toast({
         title: "Day completed!",
         description: `Day ${dayNumber} has been marked as complete.`,
         variant: "default",
       });
+      
+      // Check for milestone days and show special celebration toast
+      if (dayNumber === 7) {
+        setTimeout(() => {
+          toast({
+            title: "🎉 First Week Complete!",
+            description: "You've finished your first week! Keep the momentum going!",
+            variant: "default",
+            duration: 5000,
+          });
+        }, 1000);
+      } else if (dayNumber === 15) {
+        setTimeout(() => {
+          toast({
+            title: "🎉 Halfway There!",
+            description: "You've reached the halfway point! You're making amazing progress!",
+            variant: "default",
+            duration: 5000,
+          });
+        }, 1000);
+      } else if (dayNumber === 30) {
+        setTimeout(() => {
+          toast({
+            title: "🏆 Challenge Complete!",
+            description: "Congratulations! You've completed the entire 30-day challenge!",
+            variant: "default",
+            duration: 5000,
+          });
+        }, 1000);
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -302,6 +181,14 @@ const ChallengePage: React.FC = () => {
           <CardTitle>Your Progress</CardTitle>
           <CardDescription>
             You've completed {completedCount} out of {totalDays} days
+            {completedCount > 0 && (
+              <span> — {
+                completedCount < 7 ? "Keep going! You're building momentum." :
+                completedCount < 15 ? "You're making great progress!" :
+                completedCount < 30 ? "Getting closer to the finish line!" :
+                "Amazing! You've completed the challenge! 🏆"
+              }</span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -319,53 +206,228 @@ const ChallengePage: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Challenge days */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {challengeDays.map((challenge) => (
-          <Card 
-            key={challenge.day} 
-            className={`overflow-hidden ${
-              isDayCompleted(challenge.day) 
-                ? 'border-green-200 bg-green-50' 
-                : ''
-            }`}
+      {/* Sticky CTA for next challenge */}
+      {completedCount < totalDays && (
+        <div className="sticky top-0 z-10 py-2 bg-background/95 backdrop-blur mb-4 border-b">
+          <Button 
+            className="w-full" 
+            size="lg"
+            onClick={() => {
+              // Find the next uncompleted day
+              const nextDay = challengeDays.find(day => !isDayCompleted(day.day));
+              if (nextDay) {
+                startRecording(nextDay.day);
+              }
+            }}
           >
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg font-semibold">
-                  Day {challenge.day}
-                </CardTitle>
-                {isDayCompleted(challenge.day) && (
-                  <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
-                    Completed
-                  </Badge>
+            <PlusCircle className="mr-2 h-5 w-5" />
+            Continue with Day {challengeDays.find(day => !isDayCompleted(day.day))?.day || 1}
+          </Button>
+        </div>
+      )}
+
+      {/* Week 1: Warming Up */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
+          <span className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-primary">1</span>
+          Week 1: Warming Up
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {challengeDays.slice(0, 7).map((challenge) => (
+            <Card 
+              key={challenge.day} 
+              className={`overflow-hidden ${
+                isDayCompleted(challenge.day) 
+                  ? 'border-green-200 bg-green-50' 
+                  : ''
+              }`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg font-semibold">
+                    Day {challenge.day}
+                  </CardTitle>
+                  {isDayCompleted(challenge.day) && (
+                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                      Completed
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription className="font-medium text-base">
+                  {challenge.title}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm pb-3">
+                <p>{challenge.description}</p>
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2 pt-0">
+                {!isDayCompleted(challenge.day) && (
+                  <Button 
+                    variant="default" 
+                    className="gap-1"
+                    onClick={() => startRecording(challenge.day)}
+                  >
+                    <span className="mr-1">🎙️</span>
+                    Practice Now
+                  </Button>
                 )}
-              </div>
-              <CardDescription className="font-medium text-base">
-                {challenge.title}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm pb-3">
-              <p>{challenge.description}</p>
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2 pt-0">
-              {isDayCompleted(challenge.day) ? (
-                <Button variant="outline" className="gap-1" disabled>
-                  <CheckCircle2 className="h-4 w-4 mr-1" />
-                  Completed
-                </Button>
-              ) : (
-                <Button 
-                  variant="default" 
-                  className="gap-1"
-                  onClick={() => startRecording(challenge.day)}
-                >
-                  Practice Now
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Week 2: Finding Your Voice */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
+          <span className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-primary">2</span>
+          Week 2: Finding Your Voice
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {challengeDays.slice(7, 14).map((challenge) => (
+            <Card 
+              key={challenge.day} 
+              className={`overflow-hidden ${
+                isDayCompleted(challenge.day) 
+                  ? 'border-green-200 bg-green-50' 
+                  : ''
+              }`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg font-semibold">
+                    Day {challenge.day}
+                  </CardTitle>
+                  {isDayCompleted(challenge.day) && (
+                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                      Completed
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription className="font-medium text-base">
+                  {challenge.title}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm pb-3">
+                <p>{challenge.description}</p>
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2 pt-0">
+                {!isDayCompleted(challenge.day) && (
+                  <Button 
+                    variant="default" 
+                    className="gap-1"
+                    onClick={() => startRecording(challenge.day)}
+                  >
+                    <span className="mr-1">🎙️</span>
+                    Practice Now
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Week 3: Express Yourself */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
+          <span className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-primary">3</span>
+          Week 3: Express Yourself
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {challengeDays.slice(14, 21).map((challenge) => (
+            <Card 
+              key={challenge.day} 
+              className={`overflow-hidden ${
+                isDayCompleted(challenge.day) 
+                  ? 'border-green-200 bg-green-50' 
+                  : ''
+              }`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg font-semibold">
+                    Day {challenge.day}
+                  </CardTitle>
+                  {isDayCompleted(challenge.day) && (
+                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                      Completed
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription className="font-medium text-base">
+                  {challenge.title}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm pb-3">
+                <p>{challenge.description}</p>
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2 pt-0">
+                {!isDayCompleted(challenge.day) && (
+                  <Button 
+                    variant="default" 
+                    className="gap-1"
+                    onClick={() => startRecording(challenge.day)}
+                  >
+                    <span className="mr-1">🎙️</span>
+                    Practice Now
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Week 4: Bold & Real */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center border-b pb-2">
+          <span className="bg-primary/10 w-8 h-8 rounded-full flex items-center justify-center mr-2 text-primary">4</span>
+          Week 4: Bold & Real
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          {challengeDays.slice(21, 30).map((challenge) => (
+            <Card 
+              key={challenge.day} 
+              className={`overflow-hidden ${
+                isDayCompleted(challenge.day) 
+                  ? 'border-green-200 bg-green-50' 
+                  : ''
+              }`}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg font-semibold">
+                    Day {challenge.day}
+                  </CardTitle>
+                  {isDayCompleted(challenge.day) && (
+                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                      Completed
+                    </Badge>
+                  )}
+                </div>
+                <CardDescription className="font-medium text-base">
+                  {challenge.title}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm pb-3">
+                <p>{challenge.description}</p>
+              </CardContent>
+              <CardFooter className="flex justify-end gap-2 pt-0">
+                {!isDayCompleted(challenge.day) && (
+                  <Button 
+                    variant="default" 
+                    className="gap-1"
+                    onClick={() => startRecording(challenge.day)}
+                  >
+                    <span className="mr-1">🎙️</span>
+                    Practice Now
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
       
       {/* Badge award modal */}
