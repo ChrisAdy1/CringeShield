@@ -12,7 +12,17 @@ import {
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, LogOut, User, Calendar, Award, Trash2 } from 'lucide-react';
+import { 
+  Loader2, 
+  LogOut, 
+  User, 
+  Calendar, 
+  Award, 
+  Trash2, 
+  BarChart4, 
+  ChevronDown, 
+  ChevronUp 
+} from 'lucide-react';
 import { formatDate } from '../lib/utils';
 import {
   Dialog,
@@ -23,7 +33,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
+import { useUserStats } from '@/hooks/useUserStats';
+import LifetimeStats from '@/components/LifetimeStats';
+import SessionHistory from '@/components/SessionHistory';
+import ProgressChart from '@/components/ProgressChart';
+import DataExport from '@/components/DataExport';
 
 interface User {
   id: number;
@@ -36,6 +52,7 @@ export default function Account() {
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showProgress, setShowProgress] = useState(true);
   const { toast } = useToast();
 
   // Fetch current user
@@ -49,6 +66,14 @@ export default function Account() {
     queryKey: ['/api/prompt-completions'],
     enabled: !!user,
   });
+  
+  // Fetch user stats for My Progress section
+  const { 
+    stats, 
+    sessions, 
+    timelineData, 
+    isLoading: isStatsLoading 
+  } = useUserStats();
 
   // Handle logout
   const handleLogout = async () => {
@@ -116,7 +141,7 @@ export default function Account() {
   const isLoading = isUserLoading || isCompletionsLoading;
 
   return (
-    <div className="container max-w-xl mx-auto py-6 px-4">
+    <div className="container max-w-4xl mx-auto py-6 px-4">
       <h1 className="text-2xl font-bold mb-6 text-center">My Account</h1>
       
       {isLoading ? (
@@ -125,50 +150,113 @@ export default function Account() {
         </div>
       ) : user ? (
         <>
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                <span>Profile</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="text-sm text-muted-foreground">Email</div>
-                <div className="font-medium">{user.email}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Account Created</div>
-                <div className="font-medium">{formatDate(new Date(user.createdAt))}</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <Card className="lg:col-span-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  <span>Profile</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="text-sm text-muted-foreground">Email</div>
+                  <div className="font-medium">{user.email}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-muted-foreground">Account Created</div>
+                  <div className="font-medium">{formatDate(new Date(user.createdAt))}</div>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5" />
-                <span>Stats</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">Total Prompts Completed</div>
-                <Badge variant="outline" className="ml-2">
-                  {completions?.length || 0} / 20
-                </Badge>
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  <span>Stats Summary</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Total Prompts Completed</div>
+                    <div className="flex items-center mt-1">
+                      <Badge variant="outline" className="text-base px-3 py-1">
+                        {completions?.length || 0}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="text-sm text-muted-foreground">Practice Sessions</div>
+                    <div className="flex items-center mt-1">
+                      <Badge variant="outline" className="text-base px-3 py-1">
+                        {sessions?.length || 0}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="mt-2 md:mt-0"
+                    onClick={() => setLocation('/badges')}
+                  >
+                    <Award className="h-4 w-4 mr-2" />
+                    View My Badges
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* My Progress Section with Toggle */}
+          <div className="mb-6">
+            <button
+              onClick={() => setShowProgress(!showProgress)}
+              className="flex w-full items-center justify-between rounded-lg border p-4 font-medium"
+            >
+              <div className="flex items-center">
+                <BarChart4 className="mr-2 h-5 w-5 text-primary" />
+                <span>My Progress</span>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="w-full mt-2"
-                onClick={() => setLocation('/badges')}
-              >
-                <Award className="h-4 w-4 mr-2" />
-                View My Badges
-              </Button>
-            </CardContent>
-          </Card>
+              {showProgress ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </button>
+            
+            {showProgress && (
+              <div className="mt-4">
+                <Tabs defaultValue="stats" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="stats">Stats</TabsTrigger>
+                    <TabsTrigger value="history">Session History</TabsTrigger>
+                    <TabsTrigger value="timeline">Timeline</TabsTrigger>
+                    <TabsTrigger value="export">Export Data</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="stats" className="mt-4">
+                    <LifetimeStats stats={stats} isLoading={isStatsLoading} />
+                  </TabsContent>
+                  
+                  <TabsContent value="history" className="mt-4">
+                    <SessionHistory sessions={sessions} isLoading={isStatsLoading} />
+                  </TabsContent>
+                  
+                  <TabsContent value="timeline" className="mt-4">
+                    <ProgressChart data={timelineData} isLoading={isStatsLoading} />
+                  </TabsContent>
+                  
+                  <TabsContent value="export" className="mt-4">
+                    <DataExport sessions={sessions} isLoading={isStatsLoading} />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+          </div>
 
           <div className="flex flex-col gap-3">
             <Button 

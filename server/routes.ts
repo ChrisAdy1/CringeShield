@@ -298,6 +298,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get user's lifetime stats
+  app.get("/api/user/stats", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as Express.User).id;
+      
+      // Get all sessions for this user
+      const sessions = await storage.getSessionsByUser(userId);
+      
+      // Get challenge progress
+      const challengeProgress = await storage.getChallengeProgress(userId);
+      
+      // Get prompt completions
+      const promptCompletions = await storage.getPromptCompletions(userId);
+      
+      // Calculate stats
+      const totalRecordingSessions = sessions.length;
+      const totalPromptsCompleted = promptCompletions.length;
+      
+      // Calculate average rating
+      let sumRatings = 0;
+      let ratingCount = 0;
+      sessions.forEach(session => {
+        if (session.userRating) {
+          const rating = parseInt(session.userRating);
+          if (!isNaN(rating)) {
+            sumRatings += rating;
+            ratingCount++;
+          }
+        }
+      });
+      const averageRating = ratingCount > 0 ? (sumRatings / ratingCount) : 0;
+      
+      // Calculate longest streak
+      let longestStreak = 0;
+      if (challengeProgress.length > 0) {
+        // Sort challenge progress by day number
+        const sortedProgress = [...challengeProgress].sort((a, b) => a.dayNumber - b.dayNumber);
+        
+        let currentStreak = 1;
+        for (let i = 1; i < sortedProgress.length; i++) {
+          if (sortedProgress[i].dayNumber === sortedProgress[i-1].dayNumber + 1) {
+            currentStreak++;
+          } else {
+            if (currentStreak > longestStreak) {
+              longestStreak = currentStreak;
+            }
+            currentStreak = 1;
+          }
+        }
+        
+        if (currentStreak > longestStreak) {
+          longestStreak = currentStreak;
+        }
+      }
+      
+      res.json({
+        totalPrompts: totalPromptsCompleted,
+        totalSessions: totalRecordingSessions,
+        longestStreak: longestStreak,
+        averageRating: parseFloat(averageRating.toFixed(1))
+      });
+    } catch (error: any) {
+      console.error("Error getting user stats:", error);
+      res.status(500).json({ message: "Failed to get user statistics" });
+    }
+  });
+  
   // Challenge progress routes
   
   // Get user's challenge progress
