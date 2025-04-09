@@ -113,7 +113,7 @@ export default function AdminPage() {
   // Function to handle user selection and tab switching
   const handleSelectUser = (userId: number) => {
     setSelectedUserId(userId);
-    setActiveTab("details");
+    setActiveTab("users");
   };
 
   return (
@@ -121,10 +121,9 @@ export default function AdminPage() {
       <h1 className="text-3xl font-bold mb-6 text-center">CringeShield Admin Dashboard</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full grid grid-cols-3 mb-6">
+        <TabsList className="w-full grid grid-cols-2 mb-6">
           <TabsTrigger value="stats">Overview</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="details">User Details</TabsTrigger>
         </TabsList>
         
         <TabsContent value="stats">
@@ -132,19 +131,23 @@ export default function AdminPage() {
         </TabsContent>
         
         <TabsContent value="users">
-          <UserList onSelectUser={handleSelectUser} />
-        </TabsContent>
-        
-        <TabsContent value="details">
           {selectedUserId ? (
-            <UserDetails userId={selectedUserId} />
+            <>
+              <div className="mb-6 flex items-center justify-between">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setSelectedUserId(null)}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                  Back to Users List
+                </Button>
+              </div>
+              <UserDetails userId={selectedUserId} />
+            </>
           ) : (
-            <Alert className="my-4">
-              <AlertTitle>No User Selected</AlertTitle>
-              <AlertDescription>
-                Please select a user from the Users tab to view detailed statistics.
-              </AlertDescription>
-            </Alert>
+            <UserList onSelectUser={handleSelectUser} />
           )}
         </TabsContent>
       </Tabs>
@@ -193,23 +196,19 @@ function GlobalStats() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard 
           title="Total Users" 
-          value={safeStats.totalUsers} 
-          icon={<Users className="h-5 w-5" />} 
+          value={safeStats.totalUsers}
         />
         <StatCard 
           title="Total Sessions" 
-          value={safeStats.totalSessions} 
-          icon={<Clock className="h-5 w-5" />} 
+          value={safeStats.totalSessions}
         />
         <StatCard 
           title="Prompts Completed" 
-          value={safeStats.totalPromptCompletions} 
-          icon={<CheckCircle className="h-5 w-5" />} 
+          value={safeStats.totalPromptCompletions}
         />
         <StatCard 
           title="Average Prompts/User" 
-          value={safeStats.avgPromptsPerUser} 
-          icon={<Calendar className="h-5 w-5" />} 
+          value={safeStats.avgPromptsPerUser}
         />
       </div>
 
@@ -321,19 +320,13 @@ function StatsSkeleton() {
 interface StatCardProps {
   title: string;
   value: number | string;
-  icon: React.ReactNode;
 }
 
-function StatCard({ title, value, icon }: StatCardProps) {
+function StatCard({ title, value }: StatCardProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <div className="p-1 bg-primary/10 rounded-md text-primary-foreground">
-            {icon}
-          </div>
-        </div>
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
