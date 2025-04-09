@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import useLocalStorage from '@/hooks/useLocalStorage';
-import { Trash2, Shield, Download } from 'lucide-react';
+import { Trash2, Shield, Download, SmilePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Settings: React.FC = () => {
@@ -15,8 +15,9 @@ const Settings: React.FC = () => {
   const handleClearData = () => {
     setSessions([]);
     toast({
-      title: "Data cleared",
+      title: "⚠️ All local data has been cleared",
       description: "All your practice sessions have been deleted.",
+      variant: "destructive",
     });
   };
 
@@ -33,13 +34,14 @@ const Settings: React.FC = () => {
       linkElement.click();
       
       toast({
-        title: "Data exported",
+        title: "✅ Data exported successfully",
         description: "Your data has been downloaded as a JSON file.",
+        // No variant to use default style as success variant isn't defined
       });
     } catch (error) {
       toast({
-        title: "Export failed",
-        description: "An error occurred while exporting your data.",
+        title: "❌ Export failed",
+        description: "There was a problem downloading your data. Please try again.",
         variant: "destructive"
       });
     }
@@ -57,7 +59,7 @@ const Settings: React.FC = () => {
       <div className="space-y-6">
         
         {/* Privacy & Data */}
-        <Card>
+        <Card className="bg-slate-50">
           <CardHeader>
             <CardTitle className="flex items-center">
               <Shield className="h-5 w-5 mr-2 text-primary" />
@@ -71,7 +73,7 @@ const Settings: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Store data locally</Label>
-                <p className="text-sm text-gray-500">Your data never leaves your device</p>
+                <p className="text-sm text-gray-500">Everything you record stays on your device. We never store or upload your videos.</p>
               </div>
               <Switch checked={true} disabled />
             </div>
@@ -117,9 +119,12 @@ const Settings: React.FC = () => {
         </Card>
         
         {/* App Information */}
-        <Card>
+        <Card className="bg-lavender-50">
           <CardHeader>
-            <CardTitle>About CringeShield</CardTitle>
+            <CardTitle className="flex items-center">
+              <SmilePlus className="h-5 w-5 mr-2 text-primary" />
+              About CringeShield
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-gray-600">

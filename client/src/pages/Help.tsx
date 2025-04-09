@@ -21,7 +21,14 @@ import {
   Settings,
   Mic,
   Camera,
-  HelpCircle
+  HelpCircle,
+  Clock,
+  Leaf,
+  Eye,
+  Heart,
+  Target,
+  Home,
+  TimerOff
 } from 'lucide-react';
 import { useTitle } from '@/hooks/useTitle';
 
@@ -34,7 +41,7 @@ const Help: React.FC = () => {
       <div className="container max-w-4xl py-8">
         <h1 className="text-2xl font-bold mb-2">Help & Information</h1>
         <p className="text-muted-foreground mb-8">
-          Learn how to use CringeShield to improve your speaking confidence
+          Your guide to building camera confidence and becoming a better speaker
         </p>
 
         {/* App Overview */}
@@ -260,14 +267,56 @@ const Help: React.FC = () => {
             <CardTitle className="text-lg">Overcoming Camera Anxiety</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Consistency is key:</strong> Practice regularly, even if just for a few minutes each day</li>
-              <li><strong>Start small:</strong> Begin with the Shy Starter challenges if you're feeling nervous</li>
-              <li><strong>Watch your recordings:</strong> Review your videos to see your improvement over time</li>
-              <li><strong>Be kind to yourself:</strong> Everyone feels awkward on camera at first</li>
-              <li><strong>Focus on progress:</strong> Don't aim for perfection, celebrate small improvements</li>
-              <li><strong>Practice in private:</strong> Find a quiet space where you won't be interrupted</li>
-              <li><strong>Keep it brief:</strong> Start with short practice sessions and gradually increase your time as you get more comfortable</li>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                <div>
+                  <strong className="text-primary">Consistency is key:</strong> 
+                  <p className="text-gray-600">Practice regularly, even if just for a few minutes each day. Small steps add up over time.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Leaf className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
+                <div>
+                  <strong className="text-green-600">Start small:</strong> 
+                  <p className="text-gray-600">Begin with the Shy Starter challenges if you're feeling nervous. Everyone has to start somewhere.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Eye className="h-5 w-5 text-blue-500 mt-1 flex-shrink-0" />
+                <div>
+                  <strong className="text-blue-600">Watch your recordings:</strong> 
+                  <p className="text-gray-600">Review your videos to see your improvement over time. You'll be surprised by your progress!</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Heart className="h-5 w-5 text-rose-500 mt-1 flex-shrink-0" />
+                <div>
+                  <strong className="text-rose-600">Be kind to yourself:</strong> 
+                  <p className="text-gray-600">Everyone feels awkward on camera at first. Self-compassion is essential for growth.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Target className="h-5 w-5 text-amber-500 mt-1 flex-shrink-0" />
+                <div>
+                  <strong className="text-amber-600">Focus on progress:</strong> 
+                  <p className="text-gray-600">Don't aim for perfection, celebrate small improvements. Each step forward is meaningful.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <Home className="h-5 w-5 text-violet-500 mt-1 flex-shrink-0" />
+                <div>
+                  <strong className="text-violet-600">Practice in private:</strong> 
+                  <p className="text-gray-600">Find a quiet space where you won't be interrupted. Create a comfortable environment.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
+                <TimerOff className="h-5 w-5 text-orange-500 mt-1 flex-shrink-0" />
+                <div>
+                  <strong className="text-orange-600">Keep it brief:</strong> 
+                  <p className="text-gray-600">Start with short practice sessions and gradually increase your time as you get more comfortable.</p>
+                </div>
+              </li>
             </ul>
           </CardContent>
         </Card>

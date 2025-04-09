@@ -203,7 +203,16 @@ function GlobalStats() {
                 <span>7-Day Challenge (Week One Warrior)</span>
                 <span>{safeStats.challengeCompletion.day7Percentage}%</span>
               </div>
-              <Progress value={safeStats.challengeCompletion.day7Percentage} className="h-2" />
+              <Progress 
+                value={safeStats.challengeCompletion.day7Percentage} 
+                className={`h-2 ${
+                  safeStats.challengeCompletion.day7Percentage < 30 
+                    ? "bg-red-200 [&>div]:bg-red-500" 
+                    : safeStats.challengeCompletion.day7Percentage < 70 
+                      ? "bg-amber-200 [&>div]:bg-amber-500"
+                      : "bg-green-200 [&>div]:bg-green-500"
+                }`} 
+              />
             </div>
             
             <div>
@@ -211,7 +220,16 @@ function GlobalStats() {
                 <span>15-Day Challenge (Halfway Hero)</span>
                 <span>{safeStats.challengeCompletion.day15Percentage}%</span>
               </div>
-              <Progress value={safeStats.challengeCompletion.day15Percentage} className="h-2" />
+              <Progress 
+                value={safeStats.challengeCompletion.day15Percentage} 
+                className={`h-2 ${
+                  safeStats.challengeCompletion.day15Percentage < 30 
+                    ? "bg-red-200 [&>div]:bg-red-500" 
+                    : safeStats.challengeCompletion.day15Percentage < 70 
+                      ? "bg-amber-200 [&>div]:bg-amber-500"
+                      : "bg-green-200 [&>div]:bg-green-500"
+                }`} 
+              />
             </div>
             
             <div>
@@ -219,7 +237,16 @@ function GlobalStats() {
                 <span>30-Day Challenge (Challenge Conqueror)</span>
                 <span>{safeStats.challengeCompletion.day30Percentage}%</span>
               </div>
-              <Progress value={safeStats.challengeCompletion.day30Percentage} className="h-2" />
+              <Progress 
+                value={safeStats.challengeCompletion.day30Percentage} 
+                className={`h-2 ${
+                  safeStats.challengeCompletion.day30Percentage < 30 
+                    ? "bg-red-200 [&>div]:bg-red-500" 
+                    : safeStats.challengeCompletion.day30Percentage < 70 
+                      ? "bg-amber-200 [&>div]:bg-amber-500"
+                      : "bg-green-200 [&>div]:bg-green-500"
+                }`} 
+              />
             </div>
           </div>
         </CardContent>
