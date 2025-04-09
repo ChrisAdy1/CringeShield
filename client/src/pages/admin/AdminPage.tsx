@@ -98,6 +98,7 @@ function RoleBadge({ label, icon }: RoleBadgeProps) {
 export default function AdminPage() {
   const { user } = useAuth();
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("stats");
 
   // Redirect if user is not logged in
   if (!user) {
@@ -109,11 +110,17 @@ export default function AdminPage() {
     return <Redirect to="/" />;
   }
 
+  // Function to handle user selection and tab switching
+  const handleSelectUser = (userId: number) => {
+    setSelectedUserId(userId);
+    setActiveTab("details");
+  };
+
   return (
     <div className="container mx-auto p-4 max-w-7xl">
       <h1 className="text-3xl font-bold mb-6 text-center">CringeShield Admin Dashboard</h1>
       
-      <Tabs defaultValue="stats" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full grid grid-cols-3 mb-6">
           <TabsTrigger value="stats">Overview</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
@@ -125,7 +132,7 @@ export default function AdminPage() {
         </TabsContent>
         
         <TabsContent value="users">
-          <UserList onSelectUser={setSelectedUserId} />
+          <UserList onSelectUser={handleSelectUser} />
         </TabsContent>
         
         <TabsContent value="details">
