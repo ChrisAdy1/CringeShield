@@ -76,6 +76,11 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
                 <Activity className="h-4 w-4 text-primary" />
                 <Progress value={Math.min(totalPracticeSessions * 10, 100)} className="h-2" />
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {totalPracticeSessions > 0 ? 
+                  `You've completed ${totalPracticeSessions} sessions — amazing!` : 
+                  `Ready to start your first session?`}
+              </p>
             </div>
             
             {/* Weekly Challenge */}
@@ -108,14 +113,16 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
                 <Progress value={challengePercentage} className="h-2" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {completedDays.length} of 30 days completed
+                {completedDays.length > 0 ? 
+                  `${completedDays.length} of 30 days completed - keep showing up!` : 
+                  `Start your 30-day journey today`}
               </p>
             </div>
             
-            {/* Confidence Score */}
+            {/* Comfort Progress */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm font-medium">Average Confidence</span>
+                <span className="text-sm font-medium">Comfort Progress</span>
                 <span className="text-sm font-medium">{formattedConfidence}/5</span>
               </div>
               <div className="flex items-center gap-2">
@@ -123,7 +130,7 @@ const ProgressDashboard: React.FC<ProgressDashboardProps> = ({ userId }) => {
                 <Progress value={(averageConfidence / 5) * 100} className="h-2" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Based on your last {reflections?.length || 0} self-reflections
+                Based on your last 25 check-ins
               </p>
             </div>
             
@@ -176,7 +183,7 @@ const Home: React.FC = () => {
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold mb-1">CringeShield</h1>
           <p className="text-muted-foreground">
-            Practice your speaking skills without the cringe
+            Your safe space to get camera confident — one practice at a time.
           </p>
         </div>
         
@@ -231,7 +238,8 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 gap-6 mb-6">
           <Card className="overflow-hidden">
             <CardContent className="p-4">
-              <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
+              <h2 className="text-lg font-bold mb-1">Quick Actions</h2>
+              <p className="text-xs text-muted-foreground mb-3">Choose how you'd like to start</p>
               <div className="grid grid-cols-2 gap-3">
                 <Button 
                   className="h-auto py-3 flex flex-col"
@@ -278,8 +286,8 @@ const Home: React.FC = () => {
                 <span className="font-semibold">1</span>
               </div>
               <div>
-                <h4 className="font-medium">Choose a Challenge</h4>
-                <p className="text-sm text-muted-foreground">Start your practice by picking how you want to improve—select the Weekly Challenge for focused speaking topics or dive into the 30-Day Challenge for consistent practice.</p>
+                <h4 className="font-medium">Pick How You Want to Practice</h4>
+                <p className="text-sm text-muted-foreground">Weekly challenges or a 30-day journey — it's your call.</p>
               </div>
             </div>
             
@@ -288,8 +296,8 @@ const Home: React.FC = () => {
                 <span className="font-semibold">2</span>
               </div>
               <div>
-                <h4 className="font-medium">Press Record</h4>
-                <p className="text-sm text-muted-foreground">Record yourself speaking. When you're done, you can download the video (it stays local, nothing is uploaded), then move on to self-reflection.</p>
+                <h4 className="font-medium">Start Talking</h4>
+                <p className="text-sm text-muted-foreground">Just hit record. Don't overthink it. Nobody's watching but you.</p>
               </div>
             </div>
             
@@ -298,8 +306,8 @@ const Home: React.FC = () => {
                 <span className="font-semibold">3</span>
               </div>
               <div>
-                <h4 className="font-medium">Rate Your Session</h4>
-                <p className="text-sm text-muted-foreground">After recording, rate how uncomfortable it felt—1 being the easiest, 5 the hardest. You can retry, or save your rating and continue.</p>
+                <h4 className="font-medium">Reflect + Rate</h4>
+                <p className="text-sm text-muted-foreground">How did that feel? Pick a comfort level, and keep going.</p>
               </div>
             </div>
           </div>
