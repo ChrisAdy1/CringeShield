@@ -63,7 +63,7 @@ interface ChallengeBadge {
 }
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronDown, ChevronUp, Users, CheckCircle, Calendar, Award, Clock } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, CheckCircle, Calendar, Award, Clock, ShieldCheck } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -78,6 +78,21 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+
+// Role Badge Component that matches solid blue button design
+interface RoleBadgeProps {
+  label: string;
+  icon?: React.ReactNode;
+}
+
+function RoleBadge({ label, icon }: RoleBadgeProps) {
+  return (
+    <span className="inline-flex items-center gap-1 px-3 py-1 text-white text-sm font-medium bg-primary rounded-md shadow-sm">
+      {icon || <ShieldCheck className="w-4 h-4" />}
+      {label}
+    </span>
+  );
+}
 
 // Admin Dashboard Page
 export default function AdminPage() {
@@ -510,9 +525,11 @@ function UserDetails({ userId }: UserDetailsProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">{user.email}</h2>
-        <Badge variant={user.isAdmin ? "default" : "outline"}>
-          {user.isAdmin ? "Admin" : "User"}
-        </Badge>
+        {user.isAdmin ? (
+          <RoleBadge label="Admin" />
+        ) : (
+          <Badge variant="outline">User</Badge>
+        )}
       </div>
 
       <Card>
