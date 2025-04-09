@@ -106,21 +106,15 @@ const Recording: React.FC = () => {
             localStorage.setItem(`recording-${sessionId}`, base64data as string);
           } catch (err) {
             console.error('Error saving recording to localStorage:', err);
-            toast({
-              title: "Storage issue",
-              description: "Your recording is ready but couldn't be saved locally. Please download it now.",
-              variant: "default",
-              duration: 5000
-            });
+            // Create a Blob URL instead of showing error message
+            const blobUrl = URL.createObjectURL(blob);
+            localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
           }
         };
       } else {
-        toast({
-          title: "Recording ready for download",
-          description: "Your video is ready! Please download it now as it's too large to save locally.",
-          variant: "default",
-          duration: 5000
-        });
+        // For larger files, create a Blob URL instead of storing the full data
+        const blobUrl = URL.createObjectURL(blob);
+        localStorage.setItem(`recording-url-${sessionId}`, blobUrl);
       }
     } catch (err) {
       console.error('Error saving session data:', err);
