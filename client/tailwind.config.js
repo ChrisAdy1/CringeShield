@@ -6,7 +6,11 @@ const config: Config = {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        border: 'hsl(240, 5%, 84%)', // or use #e5e7eb or any other shade
+      },
+    },
   },
   plugins: [],
 };
