@@ -25,6 +25,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getProgressPercentage } from '@/lib/weeklyPrompts';
 import { WeeklyChallengeTier } from '@shared/schema';
 import BadgeDisplay from '@/components/BadgeDisplay';
+import DailyQuote from '@/components/DailyQuote';
 
 // Progress Dashboard Component
 interface ProgressDashboardProps {
@@ -225,6 +226,11 @@ const Home: React.FC = () => {
             )}
           </CardContent>
         </Card>
+        
+        {/* Daily Motivational Quote */}
+        <div className="mb-6">
+          <DailyQuote />
+        </div>
         
         {/* User Progress Section (Only for logged in users) */}
         {user && (
